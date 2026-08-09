@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "status": "approved_frozen_gold",
+  "approved_on": "2026-08-04",
+  "reviewer_role": "benchmark_owner",
+  "approval_basis": "Explicit benchmark-owner confirmation after human review.",
+  "approved_case_count": 300,
+  "testset_sha256": "e0173d337a62060775ceae2833989d5f831f85bd585c6d8d129d925ba2d6e497",
+  "source_bundle_sha256": "23f0583c645d65520bbfeca428db2f35870c8c4eaf6986dafcfd1ffddb589807",
+  "gold_metadata_sha256": "c616a5c497ea620d84fba2532c167b67e97cf8cacb27e56da58e51531ddd0dd2"
+}

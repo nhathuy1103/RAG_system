@@ -1,0 +1,44 @@
+[
+  {
+    "variant": "v0_raw_text",
+    "embedding_text": "chunk text only",
+    "search_text": "chunk text only",
+    "purpose": "Baseline thấp nhất, dùng để biết metadata có giúp gì không."
+  },
+  {
+    "variant": "v1_document_identity",
+    "embedding_text": "title + document_type + chunk text",
+    "search_text": "title + document_type + chunk text",
+    "purpose": "Đo title/document_type có giảm nhầm giữa DOCX CSKH và PDF hợp đồng không."
+  },
+  {
+    "variant": "v2_section_structure",
+    "embedding_text": "v1 + section_title + section_path",
+    "search_text": "v1 + section_title + section_path",
+    "purpose": "Đo heading/section_path có kéo đúng điều/phụ lục không."
+  },
+  {
+    "variant": "v3_block_aware",
+    "embedding_text": "v2 + content_kind + table_header when available",
+    "search_text": "v2 + content_kind + table_header",
+    "purpose": "Đo table_header có cải thiện câu hỏi bảng trong DOCX không."
+  },
+  {
+    "variant": "v4_context_summary",
+    "embedding_text": "v3 + contextual_summary",
+    "search_text": "v3 + contextual_summary",
+    "purpose": "Đo contextual_summary có cải thiện câu hỏi diễn giải/ngữ nghĩa không."
+  },
+  {
+    "variant": "v5_context_terms",
+    "embedding_text": "v4",
+    "search_text": "v4 + contextual_search_terms",
+    "purpose": "Đo contextual_search_terms có cải thiện hybrid/BM25 cho keyword chính xác không."
+  },
+  {
+    "variant": "v6_domain_metadata",
+    "embedding_text": "v5 + domain-specific fields where useful",
+    "search_text": "v5 + domain-specific identifiers",
+    "purpose": "Đo metadata chuyên ngành như policy_field, clause_type, fee_type, deadline_type."
+  }
+]

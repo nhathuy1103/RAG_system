@@ -1,0 +1,4 @@
+severity,issue_type,field_name,record_type,record_id,document_id,related_record_id,value,expected,details
+critical,missing_parent_document,document_id,chunk,cccccccc-1111-4111-8111-111111111111,44444444-4444-4444-8444-444444444444,,44444444-4444-4444-8444-444444444444,existing document_id,Chunk parent is absent from this export snapshot.
+high,dangling_reference,document_id,chunk,cccccccc-1111-4111-8111-111111111111,44444444-4444-4444-8444-444444444444,,44444444-4444-4444-8444-444444444444,existing document_id,Referenced record is absent from the export snapshot.
+medium,section_title_not_in_path,retrieval_metadata.section_path,chunk,cccccccc-1111-4111-8111-111111111111,44444444-4444-4444-8444-444444444444,,[],Unknown,Section path does not contain the chunk section title.

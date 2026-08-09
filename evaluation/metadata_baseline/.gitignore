@@ -1,0 +1,6 @@
+# Corpus-derived artifacts may contain document text, identifiers, or source paths.
+metadata_gold_sample.csv
+metadata_gold_sample.csv.manifest.json
+results/metadata_*
+results/accuracy/
+

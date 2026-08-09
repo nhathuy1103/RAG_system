@@ -1,0 +1,322 @@
+{
+  "file": "D:\\VIN_AI\\VSF\\week2\\agentic-rag-batch-2-g1-develop (1)\\agentic-rag-batch-2-g1-develop\\docs\\reports\\BAO_CAO_DUPLICATE_CONFLICT_CHI_TIET.docx",
+  "counts": {
+    "high": 0,
+    "medium": 39,
+    "low": 0
+  },
+  "findings": [
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    },
+    {
+      "severity": "medium",
+      "kind": "table_no_header_row",
+      "message": "Table first row is not marked as header (w:tblHeader missing)",
+      "context": {
+        "part": "word/document.xml"
+      }
+    }
+  ]
+}

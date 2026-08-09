@@ -1,0 +1,66 @@
+{
+  "name": "retrieval_metadata_testset",
+  "version": "2026-08-03.v1",
+  "case_count": 39,
+  "source_files": {
+    "Vinhomes_TayMo.pdf": {
+      "kind": "pdf",
+      "expected_document_type": "contract",
+      "domain": "real_estate_contract",
+      "page_count_observed": 51,
+      "local_path": "C:\\Users\\Admin\\Downloads\\Vinhomes_TayMo.pdf"
+    },
+    "Vinhomes_HaiVan.pdf": {
+      "kind": "pdf",
+      "expected_document_type": "contract",
+      "domain": "real_estate_contract",
+      "page_count_observed": 47,
+      "local_path": "C:\\Users\\Admin\\Downloads\\Vinhomes_HaiVan.pdf"
+    },
+    "demo_kb_chinh_sach_doi_tra_cskh - Copy.docx": {
+      "kind": "docx",
+      "expected_document_type": "policy",
+      "domain": "customer_support_policy",
+      "page_count_observed": null,
+      "local_path": "C:\\Users\\Admin\\Downloads\\demo_kb_chinh_sach_doi_tra_cskh - Copy.docx"
+    }
+  },
+  "categories": [
+    "appendix_lookup",
+    "clause_lookup",
+    "condition_lookup",
+    "document_disambiguation",
+    "keyword_clause",
+    "list_lookup",
+    "negative_clause_lookup",
+    "negative_policy_fact",
+    "numeric_deadline",
+    "numeric_rate",
+    "numeric_value",
+    "process_lookup",
+    "section_lookup",
+    "semantic_clause",
+    "semantic_location",
+    "table_lookup"
+  ],
+  "recommended_k_values": [
+    1,
+    3,
+    5,
+    10
+  ],
+  "pass_thresholds": {
+    "recall_at_5": 0.85,
+    "mrr_at_10": 0.65,
+    "term_hit_rate_at_5": 0.9,
+    "forbidden_top1_rate": 0.1,
+    "top1_mojibake_rate": 0.0,
+    "p95_latency_ms_without_generation": 1000
+  },
+  "outputs": {
+    "testset_jsonl": "testset.jsonl",
+    "manual_csv": "test_queries.csv",
+    "evaluation_queries_csv": "evaluation_queries.csv",
+    "ablation_matrix": "ablation_matrix.json"
+  }
+}

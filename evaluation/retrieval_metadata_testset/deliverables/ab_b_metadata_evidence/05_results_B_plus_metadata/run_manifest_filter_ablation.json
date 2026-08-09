@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.0",
+  "status": "completed",
+  "embedding_provider": "openai",
+  "embedding_model": "text-embedding-3-small",
+  "current_context_source": "fixture",
+  "context_enrichment_model": null,
+  "context_enrichment_prompt_version": null,
+  "contextual_text_version": "contextual-text-v4",
+  "context_enrichment_max_context_words": 45,
+  "context_enrichment_cache_hits": 0,
+  "context_enrichment_generated_count": 0,
+  "context_enrichment_not_needed_count": 0,
+  "context_enrichment_fallback_count": 0,
+  "estimated_new_context_input_tokens": 0,
+  "benchmark_kind": "real_document_snapshot",
+  "production_comparable": true,
+  "production_comparability_note": "Frozen real-document corpus snapshot with OpenAI dense embeddings and deterministic header projection; local BM25/RRF/MMR is production-like, but PostgreSQL FTS tokenization may still differ.",
+  "modes": [
+    "filter_full",
+    "filter_drop_document_type",
+    "filter_drop_project_name",
+    "filter_drop_year",
+    "filter_drop_lifecycle_status",
+    "filter_drop_source",
+    "filter_drop_all_domain"
+  ],
+  "domain_metadata_channel_policy_by_mode": {
+    "filter_full": {
+      "filter": true,
+      "search_text": false,
+      "embedding_text": false
+    },
+    "filter_drop_document_type": {
+      "filter": true,
+      "search_text": false,
+      "embedding_text": false
+    },
+    "filter_drop_project_name": {
+      "filter": true,
+      "search_text": false,
+      "embedding_text": false
+    },
+    "filter_drop_year": {
+      "filter": true,
+      "search_text": false,
+      "embedding_text": false
+    },
+    "filter_drop_lifecycle_status": {
+      "filter": true,
+      "search_text": false,
+      "embedding_text": false
+    },
+    "filter_drop_source": {
+      "filter": true,
+      "search_text": false,
+      "embedding_text": false
+    },
+    "filter_drop_all_domain": {
+      "filter": true,
+      "search_text": false,
+      "embedding_text": false
+    }
+  },
+  "ablation_metadata_source": "gold",
+  "seed": 20260803,
+  "query_count": 300,
+  "chunk_count": 277,
+  "gold_annotated_chunk_count": 106,
+  "ground_truth_unresolved_count": 0,
+  "result_row_count": 2100,
+  "embedding_cache_hits": 562,
+  "new_embedding_count": 0,
+  "estimated_new_embedding_input_tokens": 0,
+  "index_build_ms_by_mode": {
+    "filter_full": 58.67,
+    "filter_drop_document_type": 71.058,
+    "filter_drop_project_name": 113.026,
+    "filter_drop_year": 47.129,
+    "filter_drop_lifecycle_status": 44.728,
+    "filter_drop_source": 43.819,
+    "filter_drop_all_domain": 41.947
+  },
+  "outputs": {
+    "corpus": "corpus.jsonl",
+    "resolved_testset": "testset.resolved.jsonl",
+    "ground_truth_audit": "ground_truth_audit.csv",
+    "metadata_audit": "metadata_audit.csv",
+    "retrieval_results": "retrieval_results.jsonl",
+    "frozen_snapshot": "frozen_snapshot.json"
+  }
+}

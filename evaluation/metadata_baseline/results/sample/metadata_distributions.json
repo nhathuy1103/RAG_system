@@ -1,0 +1,2224 @@
+{
+  "__schema_inventory__": {
+    "observed_leaf_path_count": 86,
+    "registered_canonical_field_count": 125,
+    "unregistered_leaf_path_count": 0,
+    "unregistered_leaf_paths": []
+  },
+  "chunk.analysis_confidence": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "analysis_confidence",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.authority_metadata": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "authority_metadata",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.canonical_text": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "canonical_text",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.character_count": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "character_count",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "39"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.children": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "children",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.chunk_id": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.25,
+    "entropy": 2.0,
+    "field_name": "chunk_id",
+    "long_tail_singleton_count": 4,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "aaaaaaaa-1111-4111-8111-111111111111"
+      },
+      {
+        "count": 1,
+        "value": "aaaaaaaa-2222-4222-8222-222222222222"
+      },
+      {
+        "count": 1,
+        "value": "bbbbbbbb-1111-4111-8111-111111111111"
+      },
+      {
+        "count": 1,
+        "value": "cccccccc-1111-4111-8111-111111111111"
+      }
+    ],
+    "unique_count": 4
+  },
+  "chunk.chunk_index": {
+    "cardinality_ratio": 0.5,
+    "dominant_value_ratio": 0.75,
+    "entropy": 0.811278,
+    "field_name": "chunk_index",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 0.5,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 3,
+        "value": "0"
+      },
+      {
+        "count": 1,
+        "value": "1"
+      }
+    ],
+    "unique_count": 2
+  },
+  "chunk.chunk_version": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "chunk_version",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.config_checksum": {
+    "cardinality_ratio": 0.25,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "config_checksum",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 4,
+        "value": "1111111111111111111111111111111111111111111111111111111111111111"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.content": {
+    "cardinality_ratio": 0.75,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.5,
+    "field_name": "content",
+    "long_tail_singleton_count": 2,
+    "long_tail_singleton_ratio": 0.666667,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "Hạng A | Hà Nội | 1.500.000 VND/đêm"
+      },
+      {
+        "count": 1,
+        "value": "Chi phí ăn tối đa 300.000 VND/ngày."
+      },
+      {
+        "count": 1,
+        "value": "Orphan fixture chunk."
+      }
+    ],
+    "unique_count": 3
+  },
+  "chunk.content_checksum": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "content_checksum",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "111111111111"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.content_kind": {
+    "cardinality_ratio": 0.666667,
+    "dominant_value_ratio": 0.666667,
+    "entropy": 0.918296,
+    "field_name": "content_kind",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 0.5,
+    "non_empty_count": 3,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "table"
+      },
+      {
+        "count": 1,
+        "value": "paragraph"
+      }
+    ],
+    "unique_count": 2
+  },
+  "chunk.context_enrichment": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.333333,
+    "entropy": 1.584963,
+    "field_name": "context_enrichment",
+    "long_tail_singleton_count": 3,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 3,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "{\"error_code\":null,\"input_checksum\":\"4444444444444444444444444444444444444444444444444444444444444444\",\"model\":\"gpt-4o\",\"prompt_version\":\"chunk-context-v1\",\"provider\":\"openai\",\"status\":\"generated\"}"
+      },
+      {
+        "count": 1,
+        "value": "{\"input_checksum\":\"5555555555555555555555555555555555555555555555555555555555555555\",\"model\":\"gpt-4o\",\"prompt_version\":\"chunk-context-v1\",\"provider\":\"openai\",\"status\":\"generated\"}"
+      },
+      {
+        "count": 1,
+        "value": "{\"error_code\":\"timeout\",\"input_checksum\":\"7777777777777777777777777777777777777777777777777777777777777777\",\"model\":\"gpt-4o\",\"prompt_version\":\"chunk-context-v1\",\"provider\":\"openai\",\"status\":\"fallback\"}"
+      }
+    ],
+    "unique_count": 3
+  },
+  "chunk.context_enrichment.error_code": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "context_enrichment.error_code",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "timeout"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.context_enrichment.input_checksum": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.333333,
+    "entropy": 1.584963,
+    "field_name": "context_enrichment.input_checksum",
+    "long_tail_singleton_count": 3,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 3,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "4444444444444444444444444444444444444444444444444444444444444444"
+      },
+      {
+        "count": 1,
+        "value": "5555555555555555555555555555555555555555555555555555555555555555"
+      },
+      {
+        "count": 1,
+        "value": "7777777777777777777777777777777777777777777777777777777777777777"
+      }
+    ],
+    "unique_count": 3
+  },
+  "chunk.context_enrichment.model": {
+    "cardinality_ratio": 0.333333,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "context_enrichment.model",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 3,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 3,
+        "value": "gpt-4o"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.context_enrichment.prompt_version": {
+    "cardinality_ratio": 0.333333,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "context_enrichment.prompt_version",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 3,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 3,
+        "value": "chunk-context-v1"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.context_enrichment.provider": {
+    "cardinality_ratio": 0.333333,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "context_enrichment.provider",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 3,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 3,
+        "value": "openai"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.context_enrichment.status": {
+    "cardinality_ratio": 0.666667,
+    "dominant_value_ratio": 0.666667,
+    "entropy": 0.918296,
+    "field_name": "context_enrichment.status",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 0.5,
+    "non_empty_count": 3,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "generated"
+      },
+      {
+        "count": 1,
+        "value": "fallback"
+      }
+    ],
+    "unique_count": 2
+  },
+  "chunk.contextual_search_terms": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.333333,
+    "entropy": 1.584963,
+    "field_name": "contextual_search_terms",
+    "long_tail_singleton_count": 3,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 3,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "[\"công tác phí\",\"khách sạn Hà Nội\"]"
+      },
+      {
+        "count": 1,
+        "value": "[\"ăn tối\",\"tiền ăn\",\"phụ cấp\",\"bữa tối\",\"bữa trưa\",\"công tác\",\"chi phí\",\"định mức\",\"thanh toán\"]"
+      },
+      {
+        "count": 1,
+        "value": "[\"khách sạn Hà Nội\"]"
+      }
+    ],
+    "unique_count": 3
+  },
+  "chunk.contextual_summary": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.0,
+    "field_name": "contextual_summary",
+    "long_tail_singleton_count": 2,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 2,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "Mức trần lưu trú cho nhân sự hạng A tại Hà Nội."
+      },
+      {
+        "count": 1,
+        "value": "Mức trần lưu trú tại Hà Nội."
+      }
+    ],
+    "unique_count": 2
+  },
+  "chunk.contextual_text_version": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "contextual_text_version",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.created_at": {
+    "cardinality_ratio": 0.75,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.5,
+    "field_name": "created_at",
+    "long_tail_singleton_count": 2,
+    "long_tail_singleton_ratio": 0.666667,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "2026-01-02T09:00:00Z"
+      },
+      {
+        "count": 1,
+        "value": "2026-02-01T09:00:00+00:00"
+      },
+      {
+        "count": 1,
+        "value": "2026-03-01T00:00:00Z"
+      }
+    ],
+    "unique_count": 3
+  },
+  "chunk.document_id": {
+    "cardinality_ratio": 0.75,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.5,
+    "field_name": "document_id",
+    "long_tail_singleton_count": 2,
+    "long_tail_singleton_ratio": 0.666667,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "11111111-1111-4111-8111-111111111111"
+      },
+      {
+        "count": 1,
+        "value": "22222222-2222-4222-8222-222222222222"
+      },
+      {
+        "count": 1,
+        "value": "44444444-4444-4444-8444-444444444444"
+      }
+    ],
+    "unique_count": 3
+  },
+  "chunk.document_type": {
+    "cardinality_ratio": 0.666667,
+    "dominant_value_ratio": 0.666667,
+    "entropy": 0.918296,
+    "field_name": "document_type",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 0.5,
+    "non_empty_count": 3,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "policy"
+      },
+      {
+        "count": 1,
+        "value": "report"
+      }
+    ],
+    "unique_count": 2
+  },
+  "chunk.document_version": {
+    "cardinality_ratio": 0.5,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.0,
+    "field_name": "document_version",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "1"
+      },
+      {
+        "count": 2,
+        "value": "2"
+      }
+    ],
+    "unique_count": 2
+  },
+  "chunk.embedding_context": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "embedding_context",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.embedding_model": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "embedding_model",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.embedding_text_checksum": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.25,
+    "entropy": 2.0,
+    "field_name": "embedding_text_checksum",
+    "long_tail_singleton_count": 4,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      {
+        "count": 1,
+        "value": "5555555555555555555555555555555555555555555555555555555555555555"
+      },
+      {
+        "count": 1,
+        "value": "6666666666666666666666666666666666666666666666666666666666666666"
+      },
+      {
+        "count": 1,
+        "value": "8888888888888888888888888888888888888888888888888888888888888888"
+      }
+    ],
+    "unique_count": 4
+  },
+  "chunk.estimated_ocr_required": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "estimated_ocr_required",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.exact_duplicate_group_id": {
+    "cardinality_ratio": 0.75,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.5,
+    "field_name": "exact_duplicate_group_id",
+    "long_tail_singleton_count": 2,
+    "long_tail_singleton_ratio": 0.666667,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "77777777-7777-4777-8777-777777777777"
+      },
+      {
+        "count": 1,
+        "value": "66666666-6666-4666-8666-666666666666"
+      },
+      {
+        "count": 1,
+        "value": "55555555-5555-4555-8555-555555555555"
+      }
+    ],
+    "unique_count": 3
+  },
+  "chunk.extraction_strategy": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "extraction_strategy",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.ingestion_generation": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "ingestion_generation",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.keyword_aliases": {
+    "cardinality_ratio": 0.5,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "keyword_aliases",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 2,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "[\"CTP-2026\"]"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.language": {
+    "cardinality_ratio": 0.75,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.5,
+    "field_name": "language",
+    "long_tail_singleton_count": 2,
+    "long_tail_singleton_ratio": 0.666667,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "vi"
+      },
+      {
+        "count": 1,
+        "value": "vi_VN"
+      },
+      {
+        "count": 1,
+        "value": "en"
+      }
+    ],
+    "unique_count": 3
+  },
+  "chunk.loose_content_signature": {
+    "cardinality_ratio": 0.75,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.5,
+    "field_name": "loose_content_signature",
+    "long_tail_singleton_count": 2,
+    "long_tail_singleton_ratio": 0.666667,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "abcdef0123456789"
+      },
+      {
+        "count": 1,
+        "value": "bbcdef0123456789"
+      },
+      {
+        "count": 1,
+        "value": "1234567890abcdef"
+      }
+    ],
+    "unique_count": 3
+  },
+  "chunk.metadata": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.25,
+    "entropy": 2.0,
+    "field_name": "metadata",
+    "long_tail_singleton_count": 4,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "{\"block_type\":\"table\",\"character_count\":39,\"chunk_index\":0,\"config_checksum\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"content_checksum\":\"111111111111\",\"context_enrichment\":{\"error_code\":null,\"input_checksum\":\"4444444444444444444444444444444444444444444444444444444444444444\",\"model\":\"gpt-4o\",\"prompt_version\":\"chunk-context-v1\",\"provider\":\"openai\",\"status\":\"generated\"},\"document_id\":\"11111111-1111-4111-8111-111111111111\",\"document_version\":1,\"embedding_text_checksum\":..."
+      },
+      {
+        "count": 1,
+        "value": "{\"block_type\":\"paragraph\",\"config_checksum\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"context_enrichment\":{\"input_checksum\":\"5555555555555555555555555555555555555555555555555555555555555555\",\"model\":\"gpt-4o\",\"prompt_version\":\"chunk-context-v1\",\"provider\":\"openai\",\"status\":\"generated\"},\"document_version\":2,\"embedding_text_checksum\":\"5555555555555555555555555555555555555555555555555555555555555555\",\"exact_duplicate_group_id\":\"66666666-6666-4666-8666-666666666666\",\"head..."
+      },
+      {
+        "count": 1,
+        "value": "{\"block_type\":\"table\",\"config_checksum\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"context_enrichment\":{\"error_code\":\"timeout\",\"input_checksum\":\"7777777777777777777777777777777777777777777777777777777777777777\",\"model\":\"gpt-4o\",\"prompt_version\":\"chunk-context-v1\",\"provider\":\"openai\",\"status\":\"fallback\"},\"document_version\":2,\"embedding_text_checksum\":\"6666666666666666666666666666666666666666666666666666666666666666\",\"exact_duplicate_group_id\":\"77777777-7777-4777-8777-7..."
+      },
+      {
+        "count": 1,
+        "value": "{\"block_type\":\"unknown\",\"config_checksum\":\"1111111111111111111111111111111111111111111111111111111111111111\",\"document_version\":1,\"embedding_text_checksum\":\"8888888888888888888888888888888888888888888888888888888888888888\",\"exact_duplicate_group_id\":\"55555555-5555-4555-8555-555555555555\",\"heading\":\"Unknown\",\"language\":\"en\",\"loose_content_signature\":\"1234567890abcdef\",\"normalization_version\":\"chunk-fingerprint-v1\",\"normalized_content_hash\":\"cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdc..."
+      }
+    ],
+    "unique_count": 4
+  },
+  "chunk.metadata_version": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "metadata_version",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.normalization_version": {
+    "cardinality_ratio": 0.25,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "normalization_version",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 4,
+        "value": "chunk-fingerprint-v1"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.normalized_content_hash": {
+    "cardinality_ratio": 0.75,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.5,
+    "field_name": "normalized_content_hash",
+    "long_tail_singleton_count": 2,
+    "long_tail_singleton_ratio": 0.666667,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      {
+        "count": 1,
+        "value": "abababababababababababababababababababababababababababababababab"
+      },
+      {
+        "count": 1,
+        "value": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd"
+      }
+    ],
+    "unique_count": 3
+  },
+  "chunk.notebook_id": {
+    "cardinality_ratio": 0.25,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "notebook_id",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 4,
+        "value": "00000000-0000-4000-8000-000000000101"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.offset_end": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "offset_end",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.offset_start": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "offset_start",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.owner_id": {
+    "cardinality_ratio": 0.25,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "owner_id",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 4,
+        "value": "00000000-0000-4000-8000-000000000001"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.page_count": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "page_count",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.page_number": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.25,
+    "entropy": 2.0,
+    "field_name": "page_number",
+    "long_tail_singleton_count": 4,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "12"
+      },
+      {
+        "count": 1,
+        "value": "13"
+      },
+      {
+        "count": 1,
+        "value": "5"
+      },
+      {
+        "count": 1,
+        "value": "0"
+      }
+    ],
+    "unique_count": 4
+  },
+  "chunk.parent_chunk_id": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "parent_chunk_id",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.parser_name": {
+    "cardinality_ratio": 0.75,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.5,
+    "field_name": "parser_name",
+    "long_tail_singleton_count": 2,
+    "long_tail_singleton_ratio": 0.666667,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "pdf"
+      },
+      {
+        "count": 1,
+        "value": "docx"
+      },
+      {
+        "count": 1,
+        "value": "txt"
+      }
+    ],
+    "unique_count": 3
+  },
+  "chunk.parser_version": {
+    "cardinality_ratio": 0.5,
+    "dominant_value_ratio": 0.75,
+    "entropy": 0.811278,
+    "field_name": "parser_version",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 0.5,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 3,
+        "value": "2.1"
+      },
+      {
+        "count": 1,
+        "value": "1.0"
+      }
+    ],
+    "unique_count": 2
+  },
+  "chunk.pdf_type": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "pdf_type",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.pre_embedding_quality": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "pre_embedding_quality",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "{\"action\":\"near_duplicate\",\"confidence\":0.82,\"containment\":1.0,\"detector_version\":\"chunk-quality-v1\",\"embedding_reused\":false,\"lexical_similarity\":0.91,\"lsh_band_matches\":6,\"reason_codes\":[\"high_lexical_overlap\"],\"relation_type\":\"near_duplicate\",\"simhash_hamming_distance\":2}"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.pre_embedding_quality.action": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "pre_embedding_quality.action",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "near_duplicate"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.pre_embedding_quality.confidence": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "pre_embedding_quality.confidence",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "0.82"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.pre_embedding_quality.containment": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "pre_embedding_quality.containment",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "1.0"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.pre_embedding_quality.detector_version": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "pre_embedding_quality.detector_version",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "chunk-quality-v1"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.pre_embedding_quality.embedding_reused": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "pre_embedding_quality.embedding_reused",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "false"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.pre_embedding_quality.lexical_similarity": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "pre_embedding_quality.lexical_similarity",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "0.91"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.pre_embedding_quality.lsh_band_matches": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "pre_embedding_quality.lsh_band_matches",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "6"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.pre_embedding_quality.match_source": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "pre_embedding_quality.match_source",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.pre_embedding_quality.reason_codes": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "pre_embedding_quality.reason_codes",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "[\"high_lexical_overlap\"]"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.pre_embedding_quality.relation_type": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "pre_embedding_quality.relation_type",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "near_duplicate"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.pre_embedding_quality.simhash_hamming_distance": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "pre_embedding_quality.simhash_hamming_distance",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "2"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.pre_embedding_quality.target_chunk_id": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "pre_embedding_quality.target_chunk_id",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.pre_embedding_quality.target_chunk_index": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "pre_embedding_quality.target_chunk_index",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.pre_embedding_quality.target_document_id": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "pre_embedding_quality.target_document_id",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.provenance_metadata": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "provenance_metadata",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.qdrant_point_id": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "qdrant_point_id",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.retrieval_metadata": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.25,
+    "entropy": 2.0,
+    "field_name": "retrieval_metadata",
+    "long_tail_singleton_count": 4,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "{\"content_kind\":\"table\",\"contextual_search_terms\":[\"công tác phí\",\"khách sạn Hà Nội\"],\"contextual_summary\":\"Mức trần lưu trú cho nhân sự hạng A tại Hà Nội.\",\"document_type\":\"policy\",\"keyword_aliases\":[\"CTP-2026\"],\"language\":\"vi\",\"section_path\":[\"Chi phí\",\"Lưu trú\"],\"section_title\":\"Lưu trú\",\"table_header\":\"Hạng nhân sự | Khu vực | Mức tối đa\",\"title\":\"Quy chế công tác phí 2026\"}"
+      },
+      {
+        "count": 1,
+        "value": "{\"content_kind\":\"paragraph\",\"contextual_search_terms\":[\"ăn tối\",\"tiền ăn\",\"phụ cấp\",\"bữa tối\",\"bữa trưa\",\"công tác\",\"chi phí\",\"định mức\",\"thanh toán\"],\"contextual_summary\":\"N/A\",\"document_type\":\"report\",\"keyword_aliases\":[],\"language\":\"vi_VN\",\"section_path\":[\"Chi phí\",\"Ăn uống\"],\"section_title\":\"Ăn uống\",\"title\":\"QUY CHẾ CÔNG TÁC PHÍ 2026\"}"
+      },
+      {
+        "count": 1,
+        "value": "{\"content_kind\":\"table\",\"contextual_search_terms\":[\"khách sạn Hà Nội\"],\"contextual_summary\":\"Mức trần lưu trú tại Hà Nội.\",\"document_type\":\"policy\",\"keyword_aliases\":[\"CTP-2026\"],\"language\":\"vi\",\"section_path\":[\"Chi phí\",\"Lưu trú\"],\"section_title\":\"Lưu trú\",\"table_header\":\"Hạng nhân sự | Khu vực | Mức tối đa\",\"title\":\"Quy chế công tác phí 2026 v2\"}"
+      },
+      {
+        "count": 1,
+        "value": "{\"content_kind\":\"unknown\",\"contextual_search_terms\":[],\"document_type\":\"unknown\",\"keyword_aliases\":[],\"language\":\"en\",\"section_path\":[],\"section_title\":\"Unknown\",\"title\":\"Unknown\"}"
+      }
+    ],
+    "unique_count": 4
+  },
+  "chunk.search_text_checksum": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "search_text_checksum",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "3333333333333333333333333333333333333333333333333333333333333333"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.section_id": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "section_id",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "luu-tru"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.section_path": {
+    "cardinality_ratio": 0.666667,
+    "dominant_value_ratio": 0.666667,
+    "entropy": 0.918296,
+    "field_name": "section_path",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 0.5,
+    "non_empty_count": 3,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "[\"Chi phí\",\"Lưu trú\"]"
+      },
+      {
+        "count": 1,
+        "value": "[\"Chi phí\",\"Ăn uống\"]"
+      }
+    ],
+    "unique_count": 2
+  },
+  "chunk.section_title": {
+    "cardinality_ratio": 0.666667,
+    "dominant_value_ratio": 0.666667,
+    "entropy": 0.918296,
+    "field_name": "section_title",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 0.5,
+    "non_empty_count": 3,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "Lưu trú"
+      },
+      {
+        "count": 1,
+        "value": "Ăn uống"
+      }
+    ],
+    "unique_count": 2
+  },
+  "chunk.sheet_count": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "sheet_count",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.source": {
+    "cardinality_ratio": 0.75,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.5,
+    "field_name": "source",
+    "long_tail_singleton_count": 2,
+    "long_tail_singleton_ratio": 0.666667,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "policy/ctp-2026"
+      },
+      {
+        "count": 1,
+        "value": "policy/ctp-2026-v2"
+      },
+      {
+        "count": 1,
+        "value": "fixture/orphan"
+      }
+    ],
+    "unique_count": 3
+  },
+  "chunk.source_block_ids": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "source_block_ids",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "[\"table-12-1\"]"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.source_chunk_id": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "source_chunk_id",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.strategy": {
+    "cardinality_ratio": 0.25,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "strategy",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 4,
+        "value": "structure_recursive"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.strategy_version": {
+    "cardinality_ratio": 0.25,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "strategy_version",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 4,
+        "value": "1.0"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.table_header": {
+    "cardinality_ratio": 0.5,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "table_header",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 2,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "Hạng nhân sự | Khu vực | Mức tối đa"
+      }
+    ],
+    "unique_count": 1
+  },
+  "chunk.table_identity": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "table_identity",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.table_row_group": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "table_row_group",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.table_row_group_index": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "table_row_group_index",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "chunk",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "chunk.title": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.333333,
+    "entropy": 1.584963,
+    "field_name": "title",
+    "long_tail_singleton_count": 3,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 3,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "Quy chế công tác phí 2026"
+      },
+      {
+        "count": 1,
+        "value": "QUY CHẾ CÔNG TÁC PHÍ 2026"
+      },
+      {
+        "count": 1,
+        "value": "Quy chế công tác phí 2026 v2"
+      }
+    ],
+    "unique_count": 3
+  },
+  "chunk.token_count": {
+    "cardinality_ratio": 0.75,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.5,
+    "field_name": "token_count",
+    "long_tail_singleton_count": 2,
+    "long_tail_singleton_ratio": 0.666667,
+    "non_empty_count": 4,
+    "record_type": "chunk",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "9"
+      },
+      {
+        "count": 1,
+        "value": "7"
+      },
+      {
+        "count": 1,
+        "value": "3"
+      }
+    ],
+    "unique_count": 3
+  },
+  "document.canonical_document_id": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "canonical_document_id",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "document",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "document.content_hash": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.333333,
+    "entropy": 1.584963,
+    "field_name": "content_hash",
+    "long_tail_singleton_count": 3,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      {
+        "count": 1,
+        "value": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      {
+        "count": 1,
+        "value": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+      }
+    ],
+    "unique_count": 3
+  },
+  "document.created_at": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.333333,
+    "entropy": 1.584963,
+    "field_name": "created_at",
+    "long_tail_singleton_count": 3,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "2026-01-02T08:00:00Z"
+      },
+      {
+        "count": 1,
+        "value": "2026-02-01T08:00:00+00:00"
+      },
+      {
+        "count": 1,
+        "value": "2026-03-03T10:00:00Z"
+      }
+    ],
+    "unique_count": 3
+  },
+  "document.document_id": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.333333,
+    "entropy": 1.584963,
+    "field_name": "document_id",
+    "long_tail_singleton_count": 3,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "11111111-1111-4111-8111-111111111111"
+      },
+      {
+        "count": 1,
+        "value": "22222222-2222-4222-8222-222222222222"
+      },
+      {
+        "count": 1,
+        "value": "33333333-3333-4333-8333-333333333333"
+      }
+    ],
+    "unique_count": 3
+  },
+  "document.effective_from": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.333333,
+    "entropy": 1.584963,
+    "field_name": "effective_from",
+    "long_tail_singleton_count": 3,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "2026-01-01"
+      },
+      {
+        "count": 1,
+        "value": "2025-12-01"
+      },
+      {
+        "count": 1,
+        "value": "2026/03/01"
+      }
+    ],
+    "unique_count": 3
+  },
+  "document.effective_to": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.0,
+    "field_name": "effective_to",
+    "long_tail_singleton_count": 2,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 2,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "2026-12-31"
+      },
+      {
+        "count": 1,
+        "value": "2027-12-31"
+      }
+    ],
+    "unique_count": 2
+  },
+  "document.error_message": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "error_message",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "fixture parse failure"
+      }
+    ],
+    "unique_count": 1
+  },
+  "document.is_active": {
+    "cardinality_ratio": 0.333333,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "is_active",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 3,
+        "value": "true"
+      }
+    ],
+    "unique_count": 1
+  },
+  "document.is_current": {
+    "cardinality_ratio": 0.333333,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "is_current",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 3,
+        "value": "true"
+      }
+    ],
+    "unique_count": 1
+  },
+  "document.loose_content_signature": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.0,
+    "field_name": "loose_content_signature",
+    "long_tail_singleton_count": 2,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 2,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "0123456789abcdef"
+      },
+      {
+        "count": 1,
+        "value": "1123456789abcdef"
+      }
+    ],
+    "unique_count": 2
+  },
+  "document.mime_type": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.333333,
+    "entropy": 1.584963,
+    "field_name": "mime_type",
+    "long_tail_singleton_count": 3,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "application/pdf"
+      },
+      {
+        "count": 1,
+        "value": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      },
+      {
+        "count": 1,
+        "value": "text/csv"
+      }
+    ],
+    "unique_count": 3
+  },
+  "document.normalization_version": {
+    "cardinality_ratio": 0.5,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "normalization_version",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 2,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "document-fingerprint-v2"
+      }
+    ],
+    "unique_count": 1
+  },
+  "document.normalized_content_hash": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.0,
+    "field_name": "normalized_content_hash",
+    "long_tail_singleton_count": 2,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 2,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      {
+        "count": 1,
+        "value": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+      }
+    ],
+    "unique_count": 2
+  },
+  "document.notebook_id": {
+    "cardinality_ratio": 0.333333,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "notebook_id",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 3,
+        "value": "00000000-0000-4000-8000-000000000101"
+      }
+    ],
+    "unique_count": 1
+  },
+  "document.original_filename": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.333333,
+    "entropy": 1.584963,
+    "field_name": "original_filename",
+    "long_tail_singleton_count": 3,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "Quy che cong tac phi 2026.pdf"
+      },
+      {
+        "count": 1,
+        "value": "Quy che cong tac phi 2026 v2.docx"
+      },
+      {
+        "count": 1,
+        "value": "Bang gia.csv"
+      }
+    ],
+    "unique_count": 3
+  },
+  "document.owner_id": {
+    "cardinality_ratio": 0.333333,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "owner_id",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 3,
+        "value": "00000000-0000-4000-8000-000000000001"
+      }
+    ],
+    "unique_count": 1
+  },
+  "document.quality_metadata": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.0,
+    "field_name": "quality_metadata",
+    "long_tail_singleton_count": 2,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 2,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "{\"character_count\":1800,\"knowledge_quality_mode\":\"on\",\"token_count\":260}"
+      },
+      {
+        "count": 1,
+        "value": "{\"character_count\":1900,\"knowledge_quality_mode\":\"on\",\"token_count\":280}"
+      }
+    ],
+    "unique_count": 2
+  },
+  "document.quality_metadata.character_count": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.0,
+    "field_name": "quality_metadata.character_count",
+    "long_tail_singleton_count": 2,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 2,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "1800"
+      },
+      {
+        "count": 1,
+        "value": "1900"
+      }
+    ],
+    "unique_count": 2
+  },
+  "document.quality_metadata.dates": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "quality_metadata.dates",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "document",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "document.quality_metadata.fallback_used": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "quality_metadata.fallback_used",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "document",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "document.quality_metadata.has_negation": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "quality_metadata.has_negation",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "document",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "document.quality_metadata.identity_trusted": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "quality_metadata.identity_trusted",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "document",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "document.quality_metadata.knowledge_quality_mode": {
+    "cardinality_ratio": 0.5,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "quality_metadata.knowledge_quality_mode",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 2,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "on"
+      }
+    ],
+    "unique_count": 1
+  },
+  "document.quality_metadata.normalization_version": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "quality_metadata.normalization_version",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "document",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "document.quality_metadata.numbers": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "quality_metadata.numbers",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "document",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "document.quality_metadata.projection_source": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "quality_metadata.projection_source",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "document",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "document.quality_metadata.replacement_character_count": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "quality_metadata.replacement_character_count",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "document",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "document.quality_metadata.table_count": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "quality_metadata.table_count",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "document",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "document.quality_metadata.token_count": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.5,
+    "entropy": 1.0,
+    "field_name": "quality_metadata.token_count",
+    "long_tail_singleton_count": 2,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 2,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "260"
+      },
+      {
+        "count": 1,
+        "value": "280"
+      }
+    ],
+    "unique_count": 2
+  },
+  "document.quality_metadata.unrepresented_visual_count": {
+    "cardinality_ratio": null,
+    "dominant_value_ratio": null,
+    "entropy": 0.0,
+    "field_name": "quality_metadata.unrepresented_visual_count",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": null,
+    "non_empty_count": 0,
+    "record_type": "document",
+    "top_values": [],
+    "unique_count": 0
+  },
+  "document.quality_status": {
+    "cardinality_ratio": 0.666667,
+    "dominant_value_ratio": 0.666667,
+    "entropy": 0.918296,
+    "field_name": "quality_status",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 0.5,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "clean"
+      },
+      {
+        "count": 1,
+        "value": "review_required"
+      }
+    ],
+    "unique_count": 2
+  },
+  "document.size_bytes": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.333333,
+    "entropy": 1.584963,
+    "field_name": "size_bytes",
+    "long_tail_singleton_count": 3,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "42000"
+      },
+      {
+        "count": 1,
+        "value": "38000"
+      },
+      {
+        "count": 1,
+        "value": "800"
+      }
+    ],
+    "unique_count": 3
+  },
+  "document.status": {
+    "cardinality_ratio": 0.666667,
+    "dominant_value_ratio": 0.666667,
+    "entropy": 0.918296,
+    "field_name": "status",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 0.5,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "ready"
+      },
+      {
+        "count": 1,
+        "value": "failed"
+      }
+    ],
+    "unique_count": 2
+  },
+  "document.storage_bucket": {
+    "cardinality_ratio": 0.333333,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "storage_bucket",
+    "long_tail_singleton_count": 0,
+    "long_tail_singleton_ratio": 0.0,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 3,
+        "value": "documents"
+      }
+    ],
+    "unique_count": 1
+  },
+  "document.storage_object_path": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.333333,
+    "entropy": 1.584963,
+    "field_name": "storage_object_path",
+    "long_tail_singleton_count": 3,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000101/11111111-1111-4111-8111-111111111111/Quy-che.pdf"
+      },
+      {
+        "count": 1,
+        "value": "00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000101/22222222-2222-4222-8222-222222222222/Quy-che-v2.docx"
+      },
+      {
+        "count": 1,
+        "value": "00000000-0000-4000-8000-000000000001/00000000-0000-4000-8000-000000000101/33333333-3333-4333-8333-333333333333/Bang-gia.csv"
+      }
+    ],
+    "unique_count": 3
+  },
+  "document.supersedes_document_id": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 1.0,
+    "entropy": -0.0,
+    "field_name": "supersedes_document_id",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 1,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "11111111-1111-4111-8111-111111111111"
+      }
+    ],
+    "unique_count": 1
+  },
+  "document.updated_at": {
+    "cardinality_ratio": 1.0,
+    "dominant_value_ratio": 0.333333,
+    "entropy": 1.584963,
+    "field_name": "updated_at",
+    "long_tail_singleton_count": 3,
+    "long_tail_singleton_ratio": 1.0,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 1,
+        "value": "2026-01-02T09:00:00Z"
+      },
+      {
+        "count": 1,
+        "value": "2026-02-01T09:00:00+00:00"
+      },
+      {
+        "count": 1,
+        "value": "2026-03-03T09:00:00Z"
+      }
+    ],
+    "unique_count": 3
+  },
+  "document.version_group_id": {
+    "cardinality_ratio": 0.666667,
+    "dominant_value_ratio": 0.666667,
+    "entropy": 0.918296,
+    "field_name": "version_group_id",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 0.5,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "99999999-9999-4999-8999-999999999999"
+      },
+      {
+        "count": 1,
+        "value": "88888888-8888-4888-8888-888888888888"
+      }
+    ],
+    "unique_count": 2
+  },
+  "document.version_number": {
+    "cardinality_ratio": 0.666667,
+    "dominant_value_ratio": 0.666667,
+    "entropy": 0.918296,
+    "field_name": "version_number",
+    "long_tail_singleton_count": 1,
+    "long_tail_singleton_ratio": 0.5,
+    "non_empty_count": 3,
+    "record_type": "document",
+    "top_values": [
+      {
+        "count": 2,
+        "value": "1"
+      },
+      {
+        "count": 1,
+        "value": "2"
+      }
+    ],
+    "unique_count": 2
+  }
+}

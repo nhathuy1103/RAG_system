@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0",
+  "evidence_run": "live-document-scope-ablation-2026-08-06",
+  "status": "no_business_filter_approved",
+  "hard_filter_fields": [],
+  "mandatory_scope_fields": [
+    "owner_id",
+    "notebook_id",
+    "document_ids"
+  ],
+  "payload_fields": [
+    "title",
+    "section_title",
+    "section_path",
+    "content_kind",
+    "contextual_summary",
+    "contextual_search_terms",
+    "year"
+  ],
+  "resolver_only_fields": [
+    "documents.original_filename"
+  ],
+  "shadow_only_fields": [
+    "documents.original_filename"
+  ],
+  "ranking_context_fields": [
+    "title",
+    "section_title",
+    "section_path",
+    "content_kind"
+  ],
+  "held_from_automatic_filtering": [
+    "content_kind",
+    "project_name",
+    "section_title",
+    "year"
+  ],
+  "benchmark_candidates_not_approved_for_production": [
+    "project_code",
+    "project_name",
+    "project_aliases",
+    "document_type",
+    "data_period",
+    "effective_status",
+    "lifecycle_status",
+    "domain",
+    "clause_type",
+    "region",
+    "source"
+  ],
+  "activation_gate": {
+    "source_provenance_required": true,
+    "existing_corpus_coverage_required": true,
+    "minimum_labeled_overlap_agreement": 0.98,
+    "minimum_relevant_retention": 1.0,
+    "maximum_recall_at_5_regression": 0.0
+  },
+  "latest_live_ablation": {
+    "source": "live Supabase + pgvector",
+    "active_documents": 8,
+    "active_chunks": 187,
+    "queries": 19,
+    "repeats": 3,
+    "routed_queries": 16,
+    "gold_metadata_injected": false,
+    "candidate_reduction_ratio": 0.656347,
+    "recall_at_5_delta": -0.052632,
+    "mrr_delta": 0.0,
+    "median_latency_delta_ms": 18.195,
+    "grounded_answer_pass_rate_delta": 0.0,
+    "decision": "shadow_only_failed_non_regression_and_latency_gates"
+  }
+}

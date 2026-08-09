@@ -1,0 +1,92 @@
+{
+  "schema_version": "1.0",
+  "status": "completed",
+  "embedding_provider": "openai",
+  "embedding_model": "text-embedding-3-small",
+  "current_context_source": "openai",
+  "context_enrichment_model": "gpt-4o-mini",
+  "context_enrichment_prompt_version": "chunk-context-v4",
+  "contextual_text_version": "contextual-text-v4",
+  "context_enrichment_max_context_words": 45,
+  "context_enrichment_cache_hits": 271,
+  "context_enrichment_generated_count": 89,
+  "context_enrichment_not_needed_count": 188,
+  "context_enrichment_fallback_count": 0,
+  "estimated_new_context_input_tokens": 9512,
+  "benchmark_kind": "real_document_metadata_benchmark",
+  "production_comparable": true,
+  "production_comparability_note": "OpenAI contextual enrichment and dense embeddings with local BM25/RRF/MMR; PostgreSQL FTS tokenization may still differ.",
+  "modes": [
+    "ctx_a_chunk_only",
+    "ctx_b_deterministic_header",
+    "ctx_c_raw_context_dense_only",
+    "ctx_c_raw_context_sparse_only",
+    "ctx_c_raw_context",
+    "ctx_d_effective_context",
+    "ctx_e_shuffled_context"
+  ],
+  "domain_metadata_channel_policy_by_mode": {
+    "ctx_a_chunk_only": {
+      "filter": true,
+      "search_text": false,
+      "embedding_text": false
+    },
+    "ctx_b_deterministic_header": {
+      "filter": true,
+      "search_text": false,
+      "embedding_text": false
+    },
+    "ctx_c_raw_context_dense_only": {
+      "filter": true,
+      "search_text": false,
+      "embedding_text": false
+    },
+    "ctx_c_raw_context_sparse_only": {
+      "filter": true,
+      "search_text": false,
+      "embedding_text": false
+    },
+    "ctx_c_raw_context": {
+      "filter": true,
+      "search_text": false,
+      "embedding_text": false
+    },
+    "ctx_d_effective_context": {
+      "filter": true,
+      "search_text": false,
+      "embedding_text": false
+    },
+    "ctx_e_shuffled_context": {
+      "filter": true,
+      "search_text": false,
+      "embedding_text": false
+    }
+  },
+  "ablation_metadata_source": "gold",
+  "seed": 20260803,
+  "query_count": 300,
+  "chunk_count": 277,
+  "gold_annotated_chunk_count": 106,
+  "ground_truth_unresolved_count": 0,
+  "result_row_count": 2100,
+  "embedding_cache_hits": 1081,
+  "new_embedding_count": 0,
+  "estimated_new_embedding_input_tokens": 0,
+  "index_build_ms_by_mode": {
+    "ctx_a_chunk_only": 37.289,
+    "ctx_b_deterministic_header": 43.675,
+    "ctx_c_raw_context_dense_only": 35.958,
+    "ctx_c_raw_context_sparse_only": 37.459,
+    "ctx_c_raw_context": 37.223,
+    "ctx_d_effective_context": 36.252,
+    "ctx_e_shuffled_context": 30.675
+  },
+  "outputs": {
+    "corpus": "corpus.jsonl",
+    "resolved_testset": "testset.resolved.jsonl",
+    "ground_truth_audit": "ground_truth_audit.csv",
+    "metadata_audit": "metadata_audit.csv",
+    "retrieval_results": "retrieval_results.jsonl",
+    "frozen_snapshot": "frozen_snapshot.json"
+  }
+}

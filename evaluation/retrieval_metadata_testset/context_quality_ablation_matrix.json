@@ -1,0 +1,37 @@
+[
+  {
+    "variant": "ctx_a_chunk_only",
+    "embedding_text": "chunk text only",
+    "search_text": "chunk text only",
+    "filter_metadata": "fixed gold domain metadata",
+    "purpose": "Baseline retrieval khi index không có deterministic header hoặc contextual summary."
+  },
+  {
+    "variant": "ctx_b_deterministic_header",
+    "embedding_text": "semantic document title + document type + semantic section + content/table header + chunk",
+    "search_text": "same deterministic header + chunk",
+    "filter_metadata": "fixed gold domain metadata",
+    "purpose": "Đo riêng giá trị của metadata cấu trúc deterministic."
+  },
+  {
+    "variant": "ctx_c_raw_context",
+    "embedding_text": "ctx_b + current_metadata.contextual_summary + chunk",
+    "search_text": "ctx_b + current_metadata.contextual_summary + chunk",
+    "filter_metadata": "fixed gold domain metadata",
+    "purpose": "Đo riêng contextual summary do OpenAI sinh; không thêm contextual search terms."
+  },
+  {
+    "variant": "ctx_d_effective_context",
+    "embedding_text": "ctx_b + gold/effective contextual_summary + chunk",
+    "search_text": "ctx_b + gold/effective contextual_summary + chunk",
+    "filter_metadata": "fixed gold domain metadata",
+    "purpose": "So raw OpenAI với summary effective sau annotation/merge."
+  },
+  {
+    "variant": "ctx_e_shuffled_context",
+    "embedding_text": "ctx_b + raw summary from another chunk in the same document + chunk",
+    "search_text": "same shuffled context + chunk",
+    "filter_metadata": "fixed gold domain metadata",
+    "purpose": "Negative control: nếu gần bằng ctx_c thì summary quá generic hoặc chỉ mang keyword cấp tài liệu."
+  }
+]

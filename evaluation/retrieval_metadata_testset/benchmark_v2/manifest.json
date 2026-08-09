@@ -1,0 +1,84 @@
+{
+  "schema_version": "2.0",
+  "name": "metadata_retrieval_controlled_benchmark",
+  "version": "2026-08-04.v2",
+  "benchmark_kind": "controlled_synthetic",
+  "language": "vi",
+  "query_count": 300,
+  "chunk_count": 270,
+  "scenario_count": 30,
+  "primary_slice_counts": {
+    "content_only": 30,
+    "cross_document_confusion": 30,
+    "explicit_filter": 30,
+    "implicit_filter": 30,
+    "multi_hop": 30,
+    "null_insufficient": 30,
+    "permission_sensitive": 30,
+    "section_localization": 30,
+    "table_visual": 30,
+    "version_conflict": 30
+  },
+  "all_slice_counts": {
+    "content_only": 30,
+    "cross_document_confusion": 30,
+    "explicit_filter": 30,
+    "implicit_filter": 30,
+    "multi_hop": 60,
+    "null_insufficient": 30,
+    "permission_sensitive": 30,
+    "section_localization": 30,
+    "table_visual": 30,
+    "version_conflict": 30
+  },
+  "required_metadata_field_counts": {
+    "allowed_groups": 30,
+    "content_kind": 30,
+    "document_type": 120,
+    "document_version": 30,
+    "effective_status": 90,
+    "faculty": 150,
+    "figure_caption": 15,
+    "lifecycle_status": 60,
+    "notebook_id": 30,
+    "owner_id": 30,
+    "policy_field": 30,
+    "section_path": 60,
+    "section_title": 30,
+    "source": 60,
+    "table_header": 15,
+    "visibility": 30,
+    "year": 90
+  },
+  "split_counts": {
+    "dev": 60,
+    "test": 240
+  },
+  "ground_truth": {
+    "single_chunk": "relevant_chunk_ids",
+    "multi_hop": "relevant_chunk_groups; all groups are required",
+    "null": "no matching chunk; success requires an empty retrieval result",
+    "permission": "protected_chunk_ids must never be returned"
+  },
+  "filter_evaluation": {
+    "policy": "Apply only query filters supported by fields present in each mode.",
+    "purpose": "Isolate index metadata quality from natural-language filter parsing."
+  },
+  "recommended_metrics": {
+    "answerable_recall_at_5_min": 0.85,
+    "multi_hop_all_groups_at_10_min": 0.8,
+    "null_rejection_at_10_min": 0.95,
+    "permission_leak_at_10_max": 0.0
+  },
+  "limitations": [
+    "Synthetic stress data validates metadata behavior, not production-domain accuracy.",
+    "Table/visual cases evaluate retrieval after text/caption extraction, not OCR quality.",
+    "Use the uploaded-document pilot and later 200-300 real queries before production sign-off."
+  ],
+  "outputs": {
+    "corpus": "corpus.jsonl",
+    "testset": "testset.jsonl",
+    "queries": "queries.csv",
+    "slice_distribution": "slice_distribution.csv"
+  }
+}

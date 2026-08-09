@@ -1,0 +1,261 @@
+{
+  "classification": {
+    "accuracy": 1.0,
+    "confusion_matrix": {
+      "conflict": {
+        "conflict": 6,
+        "distinct": 0,
+        "exact": 0,
+        "near_duplicate": 0,
+        "version": 0
+      },
+      "distinct": {
+        "conflict": 0,
+        "distinct": 5,
+        "exact": 0,
+        "near_duplicate": 0,
+        "version": 0
+      },
+      "exact": {
+        "conflict": 0,
+        "distinct": 0,
+        "exact": 5,
+        "near_duplicate": 0,
+        "version": 0
+      },
+      "near_duplicate": {
+        "conflict": 0,
+        "distinct": 0,
+        "exact": 0,
+        "near_duplicate": 5,
+        "version": 0
+      },
+      "version": {
+        "conflict": 0,
+        "distinct": 0,
+        "exact": 0,
+        "near_duplicate": 0,
+        "version": 5
+      }
+    },
+    "errors": [],
+    "macro_f1": 1.0,
+    "per_class": {
+      "conflict": {
+        "f1": 1.0,
+        "precision": 1.0,
+        "predicted_count": 6,
+        "recall": 1.0,
+        "support": 6,
+        "true_positive": 6
+      },
+      "distinct": {
+        "f1": 1.0,
+        "precision": 1.0,
+        "predicted_count": 5,
+        "recall": 1.0,
+        "support": 5,
+        "true_positive": 5
+      },
+      "exact": {
+        "f1": 1.0,
+        "precision": 1.0,
+        "predicted_count": 5,
+        "recall": 1.0,
+        "support": 5,
+        "true_positive": 5
+      },
+      "near_duplicate": {
+        "f1": 1.0,
+        "precision": 1.0,
+        "predicted_count": 5,
+        "recall": 1.0,
+        "support": 5,
+        "true_positive": 5
+      },
+      "version": {
+        "f1": 1.0,
+        "precision": 1.0,
+        "predicted_count": 5,
+        "recall": 1.0,
+        "support": 5,
+        "true_positive": 5
+      }
+    }
+  },
+  "dataset": {
+    "case_count": 29,
+    "case_count_by_label": {
+      "conflict": 7,
+      "distinct": 5,
+      "exact": 6,
+      "near_duplicate": 6,
+      "version": 5
+    },
+    "cross_scope_case_count": 3,
+    "eligible_count_by_label": {
+      "conflict": 6,
+      "distinct": 5,
+      "exact": 5,
+      "near_duplicate": 5,
+      "version": 5
+    },
+    "eligible_relation_case_count": 26,
+    "phenomena": [
+      "content-extension",
+      "cross-notebook",
+      "cross-owner",
+      "currency",
+      "date",
+      "different-topic",
+      "linebreak",
+      "negation",
+      "number",
+      "paraphrase",
+      "permission-scope",
+      "policy",
+      "unicode",
+      "unit",
+      "whitespace"
+    ],
+    "retrieval_proxy_case_count": 26
+  },
+  "dataset_schema_version": "knowledge-quality-vi-v1",
+  "dataset_sha256": "08b69d1ef5868c7e8fc0323133ec7d5ac4d94312b2509ed81f8682630ae6a0f9",
+  "gates": {
+    "all_passed": true,
+    "results": {
+      "conflict_recall": {
+        "comparator": ">=",
+        "measured": 1.0,
+        "passed": true,
+        "threshold": 1.0
+      },
+      "cross_scope_suppression_rate": {
+        "comparator": ">=",
+        "measured": 1.0,
+        "passed": true,
+        "threshold": 1.0
+      },
+      "exact_auto_reuse_false_positive_rate": {
+        "comparator": "<=",
+        "measured": 0.0,
+        "passed": true,
+        "threshold": 0.0
+      },
+      "exact_auto_reuse_recall": {
+        "comparator": ">=",
+        "measured": 1.0,
+        "passed": true,
+        "threshold": 1.0
+      },
+      "macro_f1": {
+        "comparator": ">=",
+        "measured": 1.0,
+        "passed": true,
+        "threshold": 0.9
+      },
+      "minimum_per_class_f1": {
+        "comparator": ">=",
+        "measured": 1.0,
+        "passed": true,
+        "threshold": 0.85
+      },
+      "on_conflict_both_sides_rate": {
+        "comparator": ">=",
+        "measured": 1.0,
+        "passed": true,
+        "threshold": 1.0
+      },
+      "on_current_version_hit_rate": {
+        "comparator": ">=",
+        "measured": 1.0,
+        "passed": true,
+        "threshold": 1.0
+      },
+      "on_distinct_preservation_rate": {
+        "comparator": ">=",
+        "measured": 1.0,
+        "passed": true,
+        "threshold": 1.0
+      },
+      "on_duplicate_redundancy_rate": {
+        "comparator": "<=",
+        "measured": 0.0,
+        "passed": true,
+        "threshold": 0.0
+      },
+      "on_quality_improvement_over_off": {
+        "comparator": ">=",
+        "measured": 0.128205,
+        "passed": true,
+        "threshold": 0.1
+      },
+      "on_retrieval_quality_proxy": {
+        "comparator": ">=",
+        "measured": 1.0,
+        "passed": true,
+        "threshold": 0.95
+      },
+      "on_stale_version_exposure_rate": {
+        "comparator": "<=",
+        "measured": 0.0,
+        "passed": true,
+        "threshold": 0.0
+      },
+      "shadow_behavior_matches_off": {
+        "comparator": ">=",
+        "measured": 1.0,
+        "passed": true,
+        "threshold": 1.0
+      }
+    }
+  },
+  "report_schema_version": "knowledge-quality-benchmark-report-v1",
+  "retrieval_proxy": {
+    "description": "Policy proxy over labeled document pairs; no embedding or live database is used.",
+    "modes": {
+      "off": {
+        "conflict_both_sides_rate": 1.0,
+        "current_version_hit_rate": 1.0,
+        "distinct_preservation_rate": 1.0,
+        "duplicate_redundancy_rate": 1.0,
+        "near_duplicate_preservation_rate": 1.0,
+        "retrieval_quality_proxy": 0.871795,
+        "selection_exact_match_rate": 0.615385,
+        "stale_version_exposure_rate": 1.0
+      },
+      "on": {
+        "conflict_both_sides_rate": 1.0,
+        "current_version_hit_rate": 1.0,
+        "distinct_preservation_rate": 1.0,
+        "duplicate_redundancy_rate": 0.0,
+        "near_duplicate_preservation_rate": 1.0,
+        "retrieval_quality_proxy": 1.0,
+        "selection_exact_match_rate": 1.0,
+        "stale_version_exposure_rate": 0.0
+      },
+      "shadow": {
+        "conflict_both_sides_rate": 1.0,
+        "current_version_hit_rate": 1.0,
+        "distinct_preservation_rate": 1.0,
+        "duplicate_redundancy_rate": 1.0,
+        "near_duplicate_preservation_rate": 1.0,
+        "retrieval_quality_proxy": 0.871795,
+        "selection_exact_match_rate": 0.615385,
+        "stale_version_exposure_rate": 1.0
+      }
+    }
+  },
+  "safety": {
+    "cross_scope_case_count": 3,
+    "cross_scope_suppression_rate": 1.0,
+    "exact_auto_reuse_false_discovery_rate": 0.0,
+    "exact_auto_reuse_false_negative": 0,
+    "exact_auto_reuse_false_positive": 0,
+    "exact_auto_reuse_false_positive_rate": 0.0,
+    "exact_auto_reuse_recall": 1.0,
+    "exact_auto_reuse_true_negative": 24,
+    "exact_auto_reuse_true_positive": 5
+  }
+}

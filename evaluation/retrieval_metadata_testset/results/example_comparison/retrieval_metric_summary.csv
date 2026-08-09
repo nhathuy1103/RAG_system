@@ -1,0 +1,2 @@
+﻿mode,count,mrr_at_10,ndcg_at_10,forbidden_top1_rate,empty_result_rate,top1_mojibake_rate,latency_p50_ms,latency_p95_ms,recall_at_1,term_hit_rate_at_1,recall_at_3,term_hit_rate_at_3,recall_at_5,term_hit_rate_at_5,recall_at_10,term_hit_rate_at_10
+v5_context_terms,2,1.0,1.0,0.0,0.0,0.0,320.0,410.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0

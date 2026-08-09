@@ -1,0 +1,268 @@
+{
+  "schema_version": "1.0",
+  "annotation_policy": "Gold metadata is curated from document structure and evidence, never from a generated answer.",
+  "documents": {
+    "Vinhomes_TayMo.pdf": {
+      "document_metadata": {
+        "title": "Vinhomes_TayMo.pdf",
+        "document_type": "contract",
+        "domain": "real_estate_contract",
+        "source_kind": "pdf",
+        "keyword_aliases": [
+          "Hợp đồng mua bán diện tích thương mại",
+          "Khu đô thị Tây Mỗ - Đại Mỗ",
+          "Vinhomes Park"
+        ]
+      },
+      "rules": [
+        {
+          "pages": [1],
+          "metadata": {
+            "section_title": "Hợp đồng mua bán diện tích thương mại",
+            "section_path": ["Hợp đồng mua bán diện tích thương mại"],
+            "clause_type": "document_identity",
+            "contextual_search_terms": ["Hợp đồng mua bán", "Diện Tích Thương Mại"]
+          }
+        },
+        {
+          "pages": [4],
+          "metadata": {
+            "section_title": "Dự Án",
+            "section_path": ["Định nghĩa", "Dự Án"],
+            "clause_type": "project_identity",
+            "contextual_search_terms": ["Tây Mỗ", "Đại Mỗ", "Vinhomes Park", "địa điểm dự án"]
+          }
+        },
+        {
+          "pages": [7, 8],
+          "metadata": {
+            "section_title": "Giá Bán Diện Tích Thương Mại",
+            "section_path": ["Giá bán và thanh toán", "Giá Bán Diện Tích Thương Mại"],
+            "clause_type": "price_and_payment",
+            "contextual_search_terms": ["thuế giá trị gia tăng", "Kinh Phí Bảo Trì", "lệ phí trước bạ", "diện tích chênh lệch"]
+          }
+        },
+        {
+          "pages": [12],
+          "metadata": {
+            "section_title": "Quyền và nghĩa vụ của Bên Mua",
+            "section_path": ["Quyền và nghĩa vụ các bên", "Bên Mua"],
+            "clause_type": "buyer_rights_obligations",
+            "contextual_search_terms": ["hoàn trả giá bán", "lãi suất", "10%/năm"]
+          }
+        },
+        {
+          "pages": [16],
+          "metadata": {
+            "section_title": "Giao nhận Diện Tích Thương Mại",
+            "section_path": ["Bàn giao", "Giao nhận Diện Tích Thương Mại"],
+            "clause_type": "handover",
+            "contextual_search_terms": ["Thông Báo Bàn Giao", "không đến nhận bàn giao", "05 ngày"]
+          }
+        },
+        {
+          "pages": [18],
+          "metadata": {
+            "section_title": "Điều 9. Bảo hành",
+            "section_path": ["Điều 9", "Bảo hành"],
+            "clause_type": "warranty",
+            "contextual_search_terms": ["bảo hành", "Diện Tích Thương Mại"]
+          }
+        },
+        {
+          "pages": [23],
+          "metadata": {
+            "section_title": "Điều 14. Sự kiện bất khả kháng",
+            "section_path": ["Điều 14", "Sự kiện bất khả kháng"],
+            "clause_type": "force_majeure",
+            "contextual_search_terms": ["bất khả kháng", "chiến tranh", "thiên tai"]
+          }
+        },
+        {
+          "pages": [27],
+          "metadata": {
+            "section_title": "Điều 18. Giải quyết tranh chấp",
+            "section_path": ["Điều 18", "Giải quyết tranh chấp"],
+            "clause_type": "dispute_resolution",
+            "contextual_search_terms": ["tranh chấp", "thương lượng", "60 ngày"]
+          }
+        },
+        {
+          "pages": [37],
+          "metadata": {
+            "section_title": "Quyền và trách nhiệm của Cư Dân",
+            "section_path": ["Nội quy Khu Thương Mại", "Quyền và trách nhiệm của Cư Dân"],
+            "clause_type": "community_rules",
+            "contextual_search_terms": ["Khu TM", "đỗ xe", "cản trở lưu thông"]
+          }
+        },
+        {
+          "pages": [47],
+          "metadata": {
+            "section_title": "Quỹ Bảo Trì Khu Thương Mại",
+            "section_path": ["Phụ lục 4", "Quỹ Bảo Trì Khu Thương Mại"],
+            "clause_type": "maintenance_fund",
+            "contextual_search_terms": ["PHỤ LỤC 4", "quỹ bảo trì", "Khu Thương Mại"]
+          }
+        }
+      ]
+    },
+    "Vinhomes_HaiVan.pdf": {
+      "document_metadata": {
+        "title": "Vinhomes_HaiVan.pdf",
+        "document_type": "contract",
+        "domain": "real_estate_contract",
+        "source_kind": "pdf",
+        "keyword_aliases": [
+          "Hợp đồng mua bán Nhà Ở",
+          "VHHVB/HĐMBNO",
+          "Làng Vân",
+          "Hải Vân"
+        ]
+      },
+      "rules": [
+        {
+          "pages": [1],
+          "metadata": {
+            "section_title": "Hợp đồng mua bán nhà ở",
+            "section_path": ["Hợp đồng mua bán nhà ở"],
+            "clause_type": "document_identity",
+            "contextual_search_terms": ["Hợp đồng mua bán Nhà Ở", "VHHVB/HĐMBNO"]
+          }
+        },
+        {
+          "pages": [2],
+          "metadata": {
+            "section_title": "Các thông tin về Nhà Ở",
+            "section_path": ["Định nghĩa", "Các thông tin về Nhà Ở"],
+            "clause_type": "project_identity",
+            "contextual_search_terms": ["Làng Vân", "Hòa Hiệp Bắc", "Hải Vân", "Đà Nẵng"]
+          }
+        },
+        {
+          "pages": [3],
+          "metadata": {
+            "section_title": "Giá Bán Nhà Ở",
+            "section_path": ["Giá bán và thanh toán", "Giá Bán Nhà Ở"],
+            "clause_type": "price_and_payment",
+            "contextual_search_terms": ["quyền sử dụng đất", "thuế giá trị gia tăng", "Kinh Phí Bảo Trì", "lệ phí trước bạ", "kinh phí quản lý vận hành"]
+          }
+        },
+        {
+          "pages": [5, 6],
+          "metadata": {
+            "section_title": "Giao nhận Nhà Ở",
+            "section_path": ["Bàn giao", "Giao nhận Nhà Ở"],
+            "clause_type": "handover",
+            "contextual_search_terms": ["Thông Báo Bàn Giao", "05 ngày", "không đến nhận bàn giao"]
+          }
+        },
+        {
+          "pages": [7],
+          "metadata": {
+            "section_title": "Bảo hành",
+            "section_path": ["Bảo hành Nhà Ở", "Nội dung bảo hành"],
+            "clause_type": "warranty",
+            "contextual_search_terms": ["khung", "cột", "dầm", "sàn", "tường"]
+          }
+        },
+        {
+          "pages": [8],
+          "metadata": {
+            "section_title": "Chuyển giao quyền và nghĩa vụ",
+            "section_path": ["Hợp đồng", "Chuyển giao quyền và nghĩa vụ"],
+            "clause_type": "contract_transfer",
+            "contextual_search_terms": ["chuyển nhượng", "chuyển giao Hợp Đồng", "nghĩa vụ đến hạn"]
+          }
+        },
+        {
+          "pages": [12],
+          "metadata": {
+            "section_title": "Quyền và nghĩa vụ của Bên Mua",
+            "section_path": ["Quyền và nghĩa vụ các bên", "Bên Mua"],
+            "clause_type": "buyer_rights_obligations",
+            "contextual_search_terms": ["Nộp bổ sung Kinh Phí Bảo Trì", "quỹ bảo trì không đủ"]
+          }
+        },
+        {
+          "pages": [16],
+          "metadata": {
+            "section_title": "Điều 13. Sự kiện bất khả kháng",
+            "section_path": ["Điều 13", "Sự kiện bất khả kháng"],
+            "clause_type": "force_majeure",
+            "contextual_search_terms": ["bất khả kháng", "chiến tranh", "thiên tai"]
+          }
+        },
+        {
+          "pages": [19],
+          "metadata": {
+            "section_title": "Điều 17. Giải quyết tranh chấp",
+            "section_path": ["Điều 17", "Giải quyết tranh chấp"],
+            "clause_type": "dispute_resolution",
+            "contextual_search_terms": ["tranh chấp", "thương lượng", "60 ngày"]
+          }
+        },
+        {
+          "pages": [42],
+          "metadata": {
+            "section_title": "Quỹ Bảo Trì Khu Biệt Thự/Khu Nhà Ở",
+            "section_path": ["Phụ lục 4", "Quỹ Bảo Trì Khu Biệt Thự/Khu Nhà Ở"],
+            "clause_type": "maintenance_fund",
+            "contextual_search_terms": ["PHỤ LỤC 4", "quỹ bảo trì", "Khu Biệt Thự", "Khu Nhà Ở"]
+          }
+        }
+      ]
+    },
+    "demo_kb_chinh_sach_doi_tra_cskh - Copy.docx": {
+      "document_metadata": {
+        "title": "demo_kb_chinh_sach_doi_tra_cskh - Copy.docx",
+        "document_type": "policy",
+        "domain": "customer_support_policy",
+        "source_kind": "docx",
+        "keyword_aliases": ["chính sách đổi trả", "CSKH", "CSKH-RET-01"]
+      },
+      "rules": [
+        {
+          "contains_any": ["CSKH-RET-01", "Đơn vị ban hành", "Ngày ban hành"],
+          "metadata": {
+            "section_title": "Thông tin tài liệu",
+            "section_path": ["Chính sách đổi trả hàng", "Thông tin tài liệu"],
+            "content_kind": "table",
+            "table_header": "Mã tài liệu | Giá trị",
+            "policy_field": "document_metadata",
+            "contextual_search_terms": ["Mã tài liệu", "Ngày ban hành", "Phạm vi", "Trạng thái"]
+          }
+        },
+        {
+          "contains_any": ["Thời hạn đổi trả", "Tình trạng sản phẩm", "Hàng khuyến mại", "Giá sản phẩm"],
+          "metadata": {
+            "section_title": "Chính sách áp dụng",
+            "section_path": ["Chính sách đổi trả hàng", "Chính sách áp dụng"],
+            "content_kind": "table",
+            "table_header": "Nội dung | Quy định",
+            "policy_field": "return_policy",
+            "contextual_search_terms": ["đổi trả", "phí vận chuyển", "hoàn tiền", "tình trạng sản phẩm"]
+          }
+        },
+        {
+          "contains_any": ["Khách hàng liên hệ tổng đài", "CSKH xác nhận điều kiện", "Kho kiểm tra sản phẩm"],
+          "metadata": {
+            "section_title": "Quy trình xử lý",
+            "section_path": ["Chính sách đổi trả hàng", "Quy trình xử lý"],
+            "clause_type": "process",
+            "contextual_search_terms": ["mã đơn hàng", "mã yêu cầu", "gửi sản phẩm về kho", "thông báo kết quả"]
+          }
+        },
+        {
+          "contains_any": ["không nêu rõ quan hệ ưu tiên"],
+          "metadata": {
+            "section_title": "Lưu ý",
+            "section_path": ["Chính sách đổi trả hàng", "Lưu ý"],
+            "clause_type": "policy_precedence_note",
+            "contextual_search_terms": ["quan hệ ưu tiên", "quy định bộ phận khác"]
+          }
+        }
+      ]
+    }
+  }
+}

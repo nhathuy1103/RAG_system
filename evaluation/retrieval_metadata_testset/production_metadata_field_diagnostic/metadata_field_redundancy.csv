@@ -1,0 +1,10 @@
+﻿left_field,right_field,overlap_chunks,distinct_left,distinct_right,left_determines_right_rate,right_determines_left_rate,one_to_one
+document_type,domain,277,5,4,1.0,0.736462,False
+project_name,project_code,18,18,18,1.0,1.0,True
+year,data_period,125,4,5,0.312,1.0,False
+year,as_of_date,125,4,1,1.0,0.0,False
+lifecycle_status,effective_status,125,2,2,1.0,1.0,True
+lifecycle_status,document_version,125,2,4,0.0,0.312,False
+source,source_code,0,0,0,,,False
+source,source_kind,125,1,1,1.0,1.0,True
+section_title,project_code,18,18,18,1.0,1.0,True

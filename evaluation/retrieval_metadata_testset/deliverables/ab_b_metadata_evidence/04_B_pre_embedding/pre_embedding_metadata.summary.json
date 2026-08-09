@@ -1,0 +1,42 @@
+{
+  "policy": "deterministic_header",
+  "contextual_enrichment_enabled": false,
+  "contextual_text_version": "contextual-text-v4",
+  "chunk_count": 277,
+  "document_count": 9,
+  "chunks_by_document": {
+    "Vinhomes_Gia_Nha_2023.docx": 13,
+    "Vinhomes_Gia_Nha_2024.docx": 13,
+    "Vinhomes_Gia_Nha_2025.docx": 13,
+    "Vinhomes_Gia_Nha_2026.docx": 13,
+    "Vinhomes_HaiVan.pdf": 69,
+    "Vinhomes_Ke_Hoach_Xay_Dung_Trien_Khai.docx": 21,
+    "Vinhomes_TayMo.pdf": 76,
+    "Vinhomes_Tien_Ich_Toan_Quoc.docx": 52,
+    "demo_kb_chinh_sach_doi_tra_cskh - Copy.docx": 7
+  },
+  "chunks_by_content_kind": {
+    "paragraph": 217,
+    "table": 60
+  },
+  "metadata_field_coverage": {
+    "title": 277,
+    "document_type": 277,
+    "section_title": 277,
+    "section_path": 277,
+    "content_kind": 277,
+    "table_header": 0,
+    "keyword_aliases": 152,
+    "domain": 152
+  },
+  "embedding_header_coverage": {
+    "Document": 277,
+    "Document type": 277,
+    "Section": 105,
+    "Content type": 60,
+    "Table header": 0,
+    "Context": 0
+  },
+  "embedding_inputs_with_context_line": 0,
+  "metadata_rows_with_llm_context": 0
+}

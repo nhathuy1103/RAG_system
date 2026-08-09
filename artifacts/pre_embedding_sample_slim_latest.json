@@ -1,0 +1,48 @@
+{
+  "chunk_id": "b872599b-ac6c-4403-b69b-935a7ffb7df5:v1:structure_recursive:2.0:3e5532914830e3c8:0:6e2d99e4f10e",
+  "document_id": "b872599b-ac6c-4403-b69b-935a7ffb7df5",
+  "document_version": 1,
+  "chunk_index": 0,
+  "page_number": 1,
+  "section_title": "Text",
+  "text": "{\n\n\"CUSTOMERNAME\": \"ODS_MCP_UPL_CUSTOMER.CUSTOMER_NAME\",\n\n\"APPNUMBER\": \"ODS_MCP_UPL_CUSTOMER.APP_NUMBER\",\n\n\"DISBURSEMENT_DATE\": \"ODS_MCP_UPL_CUSTOMER.DISBURSEMENT_DATE\",\n\n\"CITIZENID\": [\n\n{ \"id\": \"ODS_MCP_UPL_CUSTOMER.IDENTITY_NUMBER\" },\n\n{ \"id\": \"ODS_MCP_UPL_CUSTOMER.IDENTITY_NUMBER_ARMY\" }\n\n],\n\n\"PCT_IMC_LN\": \"CUST_FINANCIAL_INFO.CUST_INCOME / UPL_CUSTOMER.APP_LOAN_APPROVED_AMT\",\n\n\"CREDIT\": \"CUST_FINANCIAL_INFO.CREDIT_IN_OTHER_BANK / CUST_FINANCIAL_INFO.SPOUSE_CREDIT_IN_OTHER_BANK (Có/Không)\"\n\n}\n\nkết quả đưa ra các file : CUSTOMERNAME, APPNUMBER, DISBURSEMENT_DATE, PCT_IMC_LN(numeric),CREDIT(con lại kiểu string)\n\ncâu truy vấn\n\nMCETL.ODS_MCP_UPL_CUSTOMER a\n\nMCPORTALUSER.CUST_FINANCIAL_INFO b\n\nMCPORTALUSER.UPL_CUSTOMER c\n\nSELECT\n\nFROM SCHEMA_A.ODS_MCP_UPL_CUSTOMER a\n\nJOIN SCHEMA_B.CUST_FINANCIAL_INFO b\n\nON a.CUST_ID = b.CUST_ID.\n\nWHERE a.CUST_ID IS NOT NULL\n\nAND ROWNUM <= 100;\n\nROUND((total_sales / NULLIF(target_sales, 0)) * 100, 2) AS pct_achieved\n\nCASE\n\nWHEN điều_kiện_1 THEN giá_trị_nếu_đúng\n\nWHEN điều_kiện_2 THEN giá_trị_khác\n\nELSE giá_trị_mặc_định\n\nEND AS tên_cột_mới\n\n------------------------------------------------------------------------------------------------------------------------------------------------------\n\nMấu chốt của bài H_TEST4 này là:\n\n1. JOIN nhiều bảng lại với nhau\n\n2. Sử dung các hàm để tính toán và xử lí logic\n\n3. Chuyển sang file json\n\n4. Phần này đã không transformer\n\n5. Xử lý vài kĩ thuật đặc biệt như array=1,\n\n------------------------------------------------------------------------------------------------------------------------------------------------------\n\nBài 4 này, trích xuất dữ liệu từ 2 schema khác nhau sử dụng 2 con orc cho 2 bang riêng lẻ, sử dụng join để nối 2 bảng này. Điều kiện nối phải nhất quán giống nhau. Cách tính xử lí dữ lieu trong transfomer",
+  "metadata": {
+    "document_id": "b872599b-ac6c-4403-b69b-935a7ffb7df5",
+    "document_version": 1,
+    "chunk_index": 0,
+    "page": 1,
+    "heading": "Text",
+    "section_path": [
+      "Text"
+    ],
+    "block_type": "paragraph",
+    "retrieval_metadata": {
+      "title": "H_TEST4.txt",
+      "content_kind": "paragraph",
+      "section_path": [
+        "Text"
+      ],
+      "document_type": "structured_document",
+      "section_title": "Text",
+      "contextual_summary": "Đoạn này thuộc phần 'Text' của tài liệu H_TEST4.txt, mô tả cách trích xuất dữ liệu từ hai schema khác nhau và sử dụng JOIN để kết nối các bảng. Nó cũng đề cập đến các hàm tính toán và xử lý logic trong truy vấn SQL.",
+      "contextual_search_terms": [
+        "CUSTOMERNAME",
+        "APPNUMBER",
+        "DISBURSEMENT_DATE",
+        "PCT_IMC_LN",
+        "CREDIT"
+      ]
+    },
+    "context_enrichment": {
+      "model": "gpt-4o-mini",
+      "status": "generated",
+      "provider": "openai",
+      "input_checksum": "a7c8daa6aae9ad31eca3edd5e6a845680725cca6a0c85dc65e0b7d95fa60bb7d",
+      "prompt_version": "chunk-context-v1"
+    },
+    "contextual_text_version": "contextual-text-v2",
+    "search_text_checksum": "7fe3a0d66dbb932d5c21318159419ea5b3f2d1894c7616ffd7c26119f897a439"
+  },
+  "embedding_text": "Document: H_TEST4.txt\nDocument type: structured_document\nSection: Text\nContext: Đoạn này thuộc phần 'Text' của tài liệu H_TEST4.txt, mô tả cách trích xuất dữ liệu từ hai schema khác nhau và sử dụng JOIN để kết nối các bảng. Nó cũng đề cập đến các hàm tính toán và xử lý logic trong truy vấn SQL.\n\n{\n\n\"CUSTOMERNAME\": \"ODS_MCP_UPL_CUSTOMER.CUSTOMER_NAME\",\n\n\"APPNUMBER\": \"ODS_MCP_UPL_CUSTOMER.APP_NUMBER\",\n\n\"DISBURSEMENT_DATE\": \"ODS_MCP_UPL_CUSTOMER.DISBURSEMENT_DATE\",\n\n\"CITIZENID\": [\n\n{ \"id\": \"ODS_MCP_UPL_CUSTOMER.IDENTITY_NUMBER\" },\n\n{ \"id\": \"ODS_MCP_UPL_CUSTOMER.IDENTITY_NUMBER_ARMY\" }\n\n],\n\n\"PCT_IMC_LN\": \"CUST_FINANCIAL_INFO.CUST_INCOME / UPL_CUSTOMER.APP_LOAN_APPROVED_AMT\",\n\n\"CREDIT\": \"CUST_FINANCIAL_INFO.CREDIT_IN_OTHER_BANK / CUST_FINANCIAL_INFO.SPOUSE_CREDIT_IN_OTHER_BANK (Có/Không)\"\n\n}\n\nkết quả đưa ra các file : CUSTOMERNAME, APPNUMBER, DISBURSEMENT_DATE, PCT_IMC_LN(numeric),CREDIT(con lại kiểu string)\n\ncâu truy vấn\n\nMCETL.ODS_MCP_UPL_CUSTOMER a\n\nMCPORTALUSER.CUST_FINANCIAL_INFO b\n\nMCPORTALUSER.UPL_CUSTOMER c\n\nSELECT\n\nFROM SCHEMA_A.ODS_MCP_UPL_CUSTOMER a\n\nJOIN SCHEMA_B.CUST_FINANCIAL_INFO b\n\nON a.CUST_ID = b.CUST_ID.\n\nWHERE a.CUST_ID IS NOT NULL\n\nAND ROWNUM <= 100;\n\nROUND((total_sales / NULLIF(target_sales, 0)) * 100, 2) AS pct_achieved\n\nCASE\n\nWHEN điều_kiện_1 THEN giá_trị_nếu_đúng\n\nWHEN điều_kiện_2 THEN giá_trị_khác\n\nELSE giá_trị_mặc_định\n\nEND AS tên_cột_mới\n\n------------------------------------------------------------------------------------------------------------------------------------------------------\n\nMấu chốt của bài H_TEST4 này là:\n\n1. JOIN nhiều bảng lại với nhau\n\n2. Sử dung các hàm để tính toán và xử lí logic\n\n3. Chuyển sang file json\n\n4. Phần này đã không transformer\n\n5. Xử lý vài kĩ thuật đặc biệt như array=1,\n\n------------------------------------------------------------------------------------------------------------------------------------------------------\n\nBài 4 này, trích xuất dữ liệu từ 2 schema khác nhau sử dụng 2 con orc cho 2 bang riêng lẻ, sử dụng join để nối 2 bảng này. Điều kiện nối phải nhất quán giống nhau. Cách tính xử lí dữ lieu trong transfomer",
+  "search_text": "H_TEST4.txt\nstructured_document\nText\nĐoạn này thuộc phần 'Text' của tài liệu H_TEST4.txt, mô tả cách trích xuất dữ liệu từ hai schema khác nhau và sử dụng JOIN để kết nối các bảng. Nó cũng đề cập đến các hàm tính toán và xử lý logic trong truy vấn SQL.\nCUSTOMERNAME\nAPPNUMBER\nDISBURSEMENT_DATE\nPCT_IMC_LN\nCREDIT\n{ \"CUSTOMERNAME\": \"ODS_MCP_UPL_CUSTOMER.CUSTOMER_NAME\", \"APPNUMBER\": \"ODS_MCP_UPL_CUSTOMER.APP_NUMBER\", \"DISBURSEMENT_DATE\": \"ODS_MCP_UPL_CUSTOMER.DISBURSEMENT_DATE\", \"CITIZENID\": [ { \"id\": \"ODS_MCP_UPL_CUSTOMER.IDENTITY_NUMBER\" }, { \"id\": \"ODS_MCP_UPL_CUSTOMER.IDENTITY_NUMBER_ARMY\" } ], \"PCT_IMC_LN\": \"CUST_FINANCIAL_INFO.CUST_INCOME / UPL_CUSTOMER.APP_LOAN_APPROVED_AMT\", \"CREDIT\": \"CUST_FINANCIAL_INFO.CREDIT_IN_OTHER_BANK / CUST_FINANCIAL_INFO.SPOUSE_CREDIT_IN_OTHER_BANK (Có/Không)\" } kết quả đưa ra các file : CUSTOMERNAME, APPNUMBER, DISBURSEMENT_DATE, PCT_IMC_LN(numeric),CREDIT(con lại kiểu string) câu truy vấn MCETL.ODS_MCP_UPL_CUSTOMER a MCPORTALUSER.CUST_FINANCIAL_INFO b MCPORTALUSER.UPL_CUSTOMER c SELECT FROM SCHEMA_A.ODS_MCP_UPL_CUSTOMER a JOIN SCHEMA_B.CUST_FINANCIAL_INFO b ON a.CUST_ID = b.CUST_ID. WHERE a.CUST_ID IS NOT NULL AND ROWNUM <= 100; ROUND((total_sales / NULLIF(target_sales, 0)) * 100, 2) AS pct_achieved CASE WHEN điều_kiện_1 THEN giá_trị_nếu_đúng WHEN điều_kiện_2 THEN giá_trị_khác ELSE giá_trị_mặc_định END AS tên_cột_mới ------------------------------------------------------------------------------------------------------------------------------------------------------ Mấu chốt của bài H_TEST4 này là: 1. JOIN nhiều bảng lại với nhau 2. Sử dung các hàm để tính toán và xử lí logic 3. Chuyển sang file json 4. Phần này đã không transformer 5. Xử lý vài kĩ thuật đặc biệt như array=1, ------------------------------------------------------------------------------------------------------------------------------------------------------ Bài 4 này, trích xuất dữ liệu từ 2 schema khác nhau sử dụng 2 con orc cho 2 bang riêng lẻ, sử dụng join để nối 2 bảng này. Điều kiện nối phải nhất quán giống nhau. Cách tính xử lí dữ lieu trong transfomer"
+}

@@ -1,0 +1,11 @@
+﻿slice,primary_query_count,all_tagged_query_count,minimum_required,passes_minimum
+content_only,30,30,30,True
+explicit_filter,30,30,30,True
+implicit_filter,30,30,30,True
+cross_document_confusion,30,30,30,True
+version_conflict,30,30,30,True
+section_localization,30,30,30,True
+table_visual,30,30,30,True
+multi_hop,30,60,30,True
+null_insufficient,30,30,30,True
+permission_sensitive,30,30,30,True

@@ -1,0 +1,321 @@
+schema_version: "1.0"
+evaluation:
+  name: metadata-current-baseline
+  version: v1
+  created_at: "2026-08-03T14:00:00+07:00"
+  corpus_snapshot: "2026-08-03T08:16:21.749141+00:00"
+  repository_commit: null
+
+corpus:
+  name: "public.documents + public.document_chunks"
+  collection: public.document_chunks
+  document_count: 24
+  chunk_count: 257
+  retrievable_ready_document_count: 6
+  document_status_distribution:
+    ready: 6
+    processing: 10
+    failed: 8
+  chunk_count_by_parent_status:
+    ready: 257
+    processing: 0
+    failed: 0
+  snapshot_at: "2026-08-03T08:16:21.749141+00:00"
+  sources:
+    - Supabase Storage documents bucket
+    - Supabase PostgreSQL metadata tables
+  formats:
+    - application/pdf
+    - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    - application/vnd.openxmlformats-officedocument.presentationml.presentation
+    - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+    - text/csv
+    - text/markdown
+    - text/html
+    - text/plain
+
+experiment:
+  name: current_metadata_baseline
+  frozen_at: "2026-08-03T00:00:00+07:00"
+  timezone: Asia/Bangkok
+  mode: read_only_observational
+  objective: "Measure current metadata quality before any production metadata change"
+  repository:
+    branch: huy_dev
+    commit: null
+    commit_resolution: "unborn repository: git rev-parse --verify HEAD failed"
+    uv_lock_sha256: "f7445dc22092b92258e6fd1e94f38dcd591698ecd2b073a9118bf0365281ad4"
+    env_sha256: "fca711649e3d55f23bfc9833efc2aba754860747ec546f0fc62f4fd6b8b64628"
+  exclusions:
+    - no production metadata generation changes
+    - no production retrieval changes
+    - no embedding regeneration
+    - no LLM calls
+
+corpus_snapshot:
+  source: "Supabase PostgREST tables public.documents and public.document_chunks"
+  snapshot_at: "2026-08-03T08:16:21.749141+00:00"
+  document_count: 24
+  chunk_count: 257
+  retrievable_ready_document_count: 6
+  file_type_distribution:
+    application/pdf: 22
+    application/vnd.openxmlformats-officedocument.wordprocessingml.document: 2
+  state: exported_read_only_best_effort
+  consistency: "paginated PostgREST GET export; not a database transaction"
+  embeddings_exported: false
+
+ingestion:
+  advanced_extraction_enabled: true
+  extraction_quality_mode: rag
+  ocr_enabled: true
+  supported_mime_types:
+    - application/pdf
+    - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+    - application/vnd.openxmlformats-officedocument.presentationml.presentation
+    - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+    - text/csv
+    - text/markdown
+    - text/html
+    - text/plain
+  evidence:
+    - "app/pipeline/bootstrap/settings.py:_load_settings"
+    - "app/pipeline/bootstrap/composition.py:build_ingestion_pipeline"
+    - "supabase/migrations/02_tables.sql:public.documents"
+
+chunking:
+  method: structure_recursive
+  active_strategy: structure_recursive
+  chunk_size: 600
+  chunk_overlap: 80
+  size_unit: whitespace_tokens
+  overlap_unit: whitespace_tokens
+  boundary_priority: [paragraph, sentence, token]
+  table_atomicity: true
+  section_hard_boundary: true
+  page_metadata_policy: first_source_token
+  oversize_table_policy: atomic_table_oversize_exception
+  config_version: structure-v1
+  semantic_chunking: false
+  separators: [paragraph, sentence, token]
+  preserve_headings: true
+  parent_child_enabled: false
+  hierarchy:
+    parent_chunk_populated: false
+    children_populated: false
+  runtime_proof:
+    - "app/pipeline/bootstrap/composition.py builds Chunker.from_settings(settings)"
+    - "app/pipeline/indexing/application/chunker.py:Chunker.from_settings forwards settings.chunking_strategy"
+    - "local .env resolves CHUNKING_STRATEGY=structure_recursive"
+
+embedding:
+  provider: openai
+  model: text-embedding-3-small
+  model_revision: null
+  version: null
+  dimension: 1536
+  dimensions: 1536
+  batch_size: 64
+  explicit_output_normalization: false
+  normalization: none_explicit
+  metadata_in_embedding: true
+  observed_snapshot_retrieval_metadata_coverage: 0.0
+  metadata_fields:
+    - title
+    - document_type
+    - section_path
+    - section_title
+    - content_kind
+    - table_header
+    - keyword_aliases
+    - contextual_summary
+  input: embedding_text
+  evidence:
+    - "app/pipeline/indexing/adapters/embedding_providers.py:OpenAIEmbeddingProvider"
+    - "app/pipeline/indexing/application/pipeline.py:IngestionEmbeddingPipeline"
+    - "supabase/migrations/02_tables.sql:document_chunks.embedding vector(1536)"
+
+contextual_enrichment:
+  enabled: true
+  provider: openai
+  model: gpt-4o
+  model_revision: null
+  document_max_chars: 12000
+  chunk_context_max_chars: 600
+  max_search_terms: 8
+  max_output_tokens: 220
+  max_retries: 2
+  retry_backoff_ms: 500
+  strict: false
+  prompt_version: "resolved at runtime; persisted per chunk when enrichment runs"
+  fallback_on_error: true
+  output_fields:
+    - retrieval_metadata.contextual_summary
+    - retrieval_metadata.contextual_search_terms
+    - context_enrichment.status
+    - context_enrichment.provider
+    - context_enrichment.model
+    - context_enrichment.prompt_version
+    - context_enrichment.input_checksum
+    - context_enrichment.error_code
+  observed_snapshot:
+    chunk_count: 257
+    generated_count: 0
+    fallback_count: 0
+    absent_count: 257
+    coverage: 0.0
+
+indexes:
+  vector_store:
+    active_backend: pgvector
+    table: public.document_chunks
+    index_type: HNSW
+    distance: cosine
+    index_name: document_chunks_embedding_hnsw_idx
+  sparse_store:
+    implementation: PostgreSQL full-text search
+    bm25: false
+    vector_type: tsvector
+    dictionary: simple
+    index_type: GIN
+    rank_function: "ts_rank_cd(search_vector, websearch_to_tsquery('simple', query), 32)"
+    observed_snapshot_contextual_metadata_coverage: 0.0
+    weights:
+      A: [retrieval_metadata.title]
+      B:
+        - retrieval_metadata.section_title
+        - retrieval_metadata.section_path
+        - retrieval_metadata.table_header
+        - retrieval_metadata.contextual_summary
+      C:
+        - retrieval_metadata.document_type
+        - retrieval_metadata.content_kind
+        - retrieval_metadata.keyword_aliases
+        - retrieval_metadata.contextual_search_terms
+      D: [content]
+    evidence:
+      - "supabase/migrations/11_contextual_metadata_fts.sql"
+      - "supabase/migrations/12_llm_contextual_retrieval.sql"
+      - "app/retrieval/adapters/postgrest_full_text_search.py"
+  qdrant:
+    configured_collection: rag_chunks_openai_v1
+    active_in_this_runtime: false
+
+retrieval:
+  method: hybrid_postgresql_fts_plus_pgvector
+  similarity_metric: cosine
+  bm25_parameters: null
+  top_k: 5
+  candidate_count: 40
+  metadata_filter_enabled: true
+  metadata_boost_enabled: true
+  hybrid_weights:
+    method: reciprocal_rank_fusion
+    static_dense_weight: null
+    static_sparse_weight: null
+  reranker: lexical_shingle_mmr
+  dense_candidate_limit: 20
+  sparse_candidate_limit: 20
+  final_top_k: 5
+  minimum_dense_score: 0.0
+  fusion:
+    algorithm: reciprocal_rank_fusion
+    rrf_k: 60
+  diversification:
+    algorithm: lexical_shingle_mmr
+    lambda: 0.7
+    max_chunks_per_document: 2
+  exact_duplicate_collapse: true
+  hard_filters:
+    - owner_id
+    - notebook_id
+    - document_ids
+  unsupported_direct_filters:
+    - retrieval_metadata.document_type
+    - document.status
+    - document.version_number
+  document_scope:
+    knowledge_quality_mode: "on"
+    current_canonical_only_in_chat_scope: true
+  query_processing:
+    contextualization: heuristic
+    query_expansion: false
+    rewrite: heuristic
+    rewrite_behavior: "retry with missing evidence phrase, otherwise original question"
+    sufficiency: heuristic
+    adaptive_strategy: heuristic
+    max_agentic_rounds: 3
+  evidence:
+    - "app/api/dependencies/services.py"
+    - "app/retrieval/adapters/hybrid_search.py"
+    - "app/retrieval/adapters/fusion.py"
+    - "app/retrieval/application/agentic_retrieval.py"
+    - "app/chat/application/services.py"
+
+generation:
+  provider: openai
+  model: gpt-4o
+  model_revision: null
+  temperature: 0.0
+  max_output_tokens: 1200
+  request_timeout_seconds: 60
+  retries: 3
+  closed_book: true
+  history_messages: 10
+  max_context_tokens: null
+  citation_enabled: true
+  citation_contract: SRC-N
+  abstention_enabled: true
+  abstention: prompt_directed
+  conflict_prompt_enabled: true
+  prompt_template_location: app/generation/adapters/openai_generator.py
+  prompt_version: null
+  prompt_version_state: "inline prompt is not assigned a stable version identifier"
+  no_retrieval_behavior: "closed-book prompt directs abstention when evidence is insufficient"
+  evidence:
+    - "app/generation/adapters/openai_generator.py"
+    - "app/bootstrap/settings.py"
+
+dependencies:
+  python: ">=3.12,<3.13"
+  fastapi: 0.139.2
+  httpx2: 2.9.1
+  langfuse: 4.14.1
+  openai: 2.48.0
+  openpyxl: 3.1.5
+  pydantic: 2.13.4
+  pydantic_settings: 2.14.2
+  pypdf: 6.14.2
+  python_docx: 1.2.0
+  qdrant_client: 1.18.0
+  source: uv.lock
+
+baseline_outputs:
+  export_path: data/metadata_export.jsonl
+  audit_dir: evaluation/metadata_baseline/results
+  gold_sample: evaluation/metadata_baseline/metadata_gold_sample.csv
+  accuracy_dir: evaluation/metadata_baseline/results/accuracy
+  random_seed: 20260803
+
+infrastructure:
+  vector_database: PostgreSQL pgvector
+  collection_name: public.document_chunks
+  index_type: HNSW vector_cosine_ops
+  sparse_index: GIN tsvector
+  important_dependencies:
+    openai: 2.48.0
+    qdrant_client: 1.18.0
+    pydantic: 2.13.4
+    fastapi: 0.139.2
+
+unresolved:
+  - field: evaluation.repository_commit
+    reason: "Repository has no resolvable HEAD commit"
+  - field: embedding.version
+    reason: "Hosted OpenAI model revision is not pinned in repository config"
+  - field: contextual_enrichment.model_revision
+    reason: "Hosted OpenAI model revision is not pinned"
+  - field: generation.max_context_tokens
+    reason: "No dedicated context-token limit was found in production config"
+  - field: generation.prompt_version
+    reason: "Generation prompt is inline without a stable version ID"

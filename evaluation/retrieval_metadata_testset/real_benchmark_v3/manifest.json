@@ -1,0 +1,415 @@
+{
+  "schema_version": "3.0",
+  "name": "vinhomes_real_document_metadata_benchmark",
+  "version": "2026-08-04.real-v3-frozen",
+  "release_status": "frozen_gold",
+  "benchmark_kind": "real_document_metadata_benchmark",
+  "language": "vi",
+  "query_count": 300,
+  "retrieval_corpus_document_count": 9,
+  "query_source_document_count": 6,
+  "retrieval_corpus_chunk_count": 277,
+  "query_source_chunk_count": 125,
+  "price_fact_count": 65,
+  "utility_project_count": 18,
+  "project_status_count": 18,
+  "milestone_count": 10,
+  "numeric_fact_integrity": {
+    "audited_fact_count": 18,
+    "thousands_separator_fact_count": 6,
+    "failed_count": 0,
+    "rows": [
+      {
+        "fact_id": "utility_p02",
+        "project_code": "P02",
+        "project": "Happy Home Tràng Cát",
+        "source_first_clause": "59 tiện ích ngoài trời",
+        "extracted_anchor": "59 tiện ích ngoài trời",
+        "numeric_phrases": "59",
+        "contains_thousands_separator": false,
+        "status": "match"
+      },
+      {
+        "fact_id": "utility_p04",
+        "project_code": "P04",
+        "project": "Vinhomes Global Gate Hạ Long",
+        "source_first_clause": "Paradise Lagoon hơn 680 ha, công viên rừng ngập mặn 800 ha, Global Sportia 9,4 ha, hồ bơi nổi 5.000 m², golf, outlet/TOD 73 ha, làng đại học 200 ha",
+        "extracted_anchor": "Paradise Lagoon hơn 680 ha, công viên rừng ngập mặn 800 ha, Global Sportia 9,4 ha, hồ bơi nổi 5.000 m², golf, outlet/TOD 73 ha, làng đại học 200 ha",
+        "numeric_phrases": "680 ha | 800 ha | 9,4 ha | 5.000 m² | 73 ha | 200 ha",
+        "contains_thousands_separator": true,
+        "status": "match"
+      },
+      {
+        "fact_id": "utility_p07",
+        "project_code": "P07",
+        "project": "Vinhomes Golden City",
+        "source_first_clause": "Khoảng 41 ha mặt nước–cây xanh, 5 công viên chủ đề trên 18 ha, Central Forest 5 ha và 164 tiện ích",
+        "extracted_anchor": "Khoảng 41 ha mặt nước–cây xanh, 5 công viên chủ đề trên 18 ha, Central Forest 5 ha và 164 tiện ích",
+        "numeric_phrases": "41 ha | 5 | 18 ha | 5 ha | 164",
+        "contains_thousands_separator": false,
+        "status": "match"
+      },
+      {
+        "fact_id": "utility_p09",
+        "project_code": "P09",
+        "project": "Vinhomes Wonder City",
+        "source_first_clause": "99 tiện ích, hồ cảnh quan 51.000 m², 24,5 ha cây xanh–mặt nước, Adventure Park, Wellness Park, Vincom Plaza và trường học",
+        "extracted_anchor": "99 tiện ích, hồ cảnh quan 51.000 m², 24,5 ha cây xanh–mặt nước, Adventure Park, Wellness Park, Vincom Plaza và trường học",
+        "numeric_phrases": "99 | 51.000 m² | 24,5 ha",
+        "contains_thousands_separator": true,
+        "status": "match"
+      },
+      {
+        "fact_id": "utility_p11",
+        "project_code": "P11",
+        "project": "Vinhomes Global Gate",
+        "source_first_clause": "Trung tâm Hội chợ Triển lãm Quốc gia 90 ha, Wonderland 5,6 ha, công viên–hồ cảnh quan, thương mại và giáo dục",
+        "extracted_anchor": "Trung tâm Hội chợ Triển lãm Quốc gia 90 ha, Wonderland 5,6 ha, công viên–hồ cảnh quan, thương mại và giáo dục",
+        "numeric_phrases": "90 ha | 5,6 ha",
+        "contains_thousands_separator": false,
+        "status": "match"
+      },
+      {
+        "fact_id": "utility_p12",
+        "project_code": "P12",
+        "project": "Vinhomes Star City",
+        "source_first_clause": "Vinschool, Vinmec, trung tâm thương mại 6 tầng, hồ bơi Sentosa Oasis, công viên và thể thao",
+        "extracted_anchor": "Vinschool, Vinmec, trung tâm thương mại 6 tầng, hồ bơi Sentosa Oasis, công viên và thể thao",
+        "numeric_phrases": "6",
+        "contains_thousands_separator": false,
+        "status": "match"
+      },
+      {
+        "fact_id": "utility_p13",
+        "project_code": "P13",
+        "project": "Vinhomes Royal Island",
+        "source_first_clause": "Sân golf 36 hố, VinWonders gần 20 ha, Vincom Mega Mall trên 55.000 m², học viện cưỡi ngựa, Royal Marina và quảng trường châu Âu",
+        "extracted_anchor": "Sân golf 36 hố, VinWonders gần 20 ha, Vincom Mega Mall trên 55.000 m², học viện cưỡi ngựa, Royal Marina và quảng trường châu Âu",
+        "numeric_phrases": "36 | 20 ha | 55.000 m²",
+        "contains_thousands_separator": true,
+        "status": "match"
+      },
+      {
+        "fact_id": "utility_p14",
+        "project_code": "P14",
+        "project": "Vinhomes Ocean Park 3",
+        "source_first_clause": "Tropical Lagoon, bể bơi bốn mùa, bể Olympic, Aqua Bay, VinWonders Water Park, Marina Square và liên kết Mega Grand World",
+        "extracted_anchor": "Tropical Lagoon, bể bơi bốn mùa, bể Olympic, Aqua Bay, VinWonders Water Park, Marina Square và liên kết Mega Grand World",
+        "numeric_phrases": "",
+        "contains_thousands_separator": false,
+        "status": "match"
+      },
+      {
+        "fact_id": "utility_p15",
+        "project_code": "P15",
+        "project": "Vinhomes Ocean Park 2",
+        "source_first_clause": "Royal Wave Park, Kingdom Avenue, Empire Park, K-Town, Vincom Mega Mall, trường học và Vinmec",
+        "extracted_anchor": "Royal Wave Park, Kingdom Avenue, Empire Park, K-Town, Vincom Mega Mall, trường học và Vinmec",
+        "numeric_phrases": "",
+        "contains_thousands_separator": false,
+        "status": "match"
+      },
+      {
+        "fact_id": "utility_p16",
+        "project_code": "P16",
+        "project": "Vinhomes Smart City",
+        "source_first_clause": "Vincom Mega Mall 68.000 m², Vinschool, Vinmec và hệ thống an ninh–vận hành thông minh",
+        "extracted_anchor": "Vincom Mega Mall 68.000 m², Vinschool, Vinmec và hệ thống an ninh–vận hành thông minh",
+        "numeric_phrases": "68.000 m²",
+        "contains_thousands_separator": true,
+        "status": "match"
+      },
+      {
+        "fact_id": "utility_p18",
+        "project_code": "P18",
+        "project": "Vinhomes Ocean Park",
+        "source_first_clause": "Hồ nước ngọt 24,5 ha, biển hồ nước mặn 6,1 ha, VinUniversity, Vinschool, Vincom Mega Mall và mạng công viên–thể thao",
+        "extracted_anchor": "Hồ nước ngọt 24,5 ha, biển hồ nước mặn 6,1 ha, VinUniversity, Vinschool, Vincom Mega Mall và mạng công viên–thể thao",
+        "numeric_phrases": "24,5 ha | 6,1 ha",
+        "contains_thousands_separator": false,
+        "status": "match"
+      },
+      {
+        "fact_id": "utility_p03",
+        "project_code": "P03",
+        "project": "Vinhomes Pearl Bay",
+        "source_first_clause": "Bãi biển riêng 2,14 ha, ga cáp treo, VinWonders Nha Trang 50 ha, Vinpearl Harbour 24/7, hai sân golf 18 hố",
+        "extracted_anchor": "Bãi biển riêng 2,14 ha, ga cáp treo, VinWonders Nha Trang 50 ha, Vinpearl Harbour 24/7, hai sân golf 18 hố",
+        "numeric_phrases": "2,14 ha | 50 ha | 24 | 7 | 18",
+        "contains_thousands_separator": false,
+        "status": "match"
+      },
+      {
+        "fact_id": "utility_p05",
+        "project_code": "P05",
+        "project": "Vinhomes Hải Vân Bay",
+        "source_first_clause": "VinWonders 24,8 ha, Lifestyle Hub, làng ẩm thực, công viên chủ đề, Malibu Wellness Hub và trường học",
+        "extracted_anchor": "VinWonders 24,8 ha, Lifestyle Hub, làng ẩm thực, công viên chủ đề, Malibu Wellness Hub và trường học",
+        "numeric_phrases": "24,8 ha",
+        "contains_thousands_separator": false,
+        "status": "match"
+      },
+      {
+        "fact_id": "utility_p10",
+        "project_code": "P10",
+        "project": "Vincom Shophouse Royal Park",
+        "source_first_clause": "Vincom Plaza, hồ bơi rooftop, hồ bơi bốn mùa 400 m², khu thể thao 7.000 m², công viên gia đình 800 m² và hồ sinh thái 6.000 m²",
+        "extracted_anchor": "Vincom Plaza, hồ bơi rooftop, hồ bơi bốn mùa 400 m², khu thể thao 7.000 m², công viên gia đình 800 m² và hồ sinh thái 6.000 m²",
+        "numeric_phrases": "400 m² | 7.000 m² | 800 m² | 6.000 m²",
+        "contains_thousands_separator": true,
+        "status": "match"
+      },
+      {
+        "fact_id": "utility_p01",
+        "project_code": "P01",
+        "project": "Vinhomes Sài Gòn Park",
+        "source_first_clause": "Hệ sinh thái đô thị–giáo dục–giải trí",
+        "extracted_anchor": "Hệ sinh thái đô thị–giáo dục–giải trí",
+        "numeric_phrases": "",
+        "contains_thousands_separator": false,
+        "status": "match"
+      },
+      {
+        "fact_id": "utility_p06",
+        "project_code": "P06",
+        "project": "Vinhomes Green Paradise",
+        "source_first_clause": "Paradise Lagoon hơn 800 ha, khu giải trí 122 ha, hai sân golf, Blue Waves Theatre, cảng quốc tế và khoảng 7.000 phòng khách sạn",
+        "extracted_anchor": "Paradise Lagoon hơn 800 ha, khu giải trí 122 ha, hai sân golf, Blue Waves Theatre, cảng quốc tế và khoảng 7.000 phòng khách sạn",
+        "numeric_phrases": "800 ha | 122 ha | 7.000 phòng",
+        "contains_thousands_separator": true,
+        "status": "match"
+      },
+      {
+        "fact_id": "utility_p08",
+        "project_code": "P08",
+        "project": "Vinhomes Green City",
+        "source_first_clause": "Vincom Mega Mall, Vinschool, 7 hồ cảnh quan 16,9 ha, 12 công viên 29,7 ha và 122 tiện ích",
+        "extracted_anchor": "Vincom Mega Mall, Vinschool, 7 hồ cảnh quan 16,9 ha, 12 công viên 29,7 ha và 122 tiện ích",
+        "numeric_phrases": "7 | 16,9 ha | 12 | 29,7 ha | 122",
+        "contains_thousands_separator": false,
+        "status": "match"
+      },
+      {
+        "fact_id": "utility_p17",
+        "project_code": "P17",
+        "project": "Vinhomes Grand Park",
+        "source_first_clause": "Vincom Mega Mall, Vinschool, phòng khám Vinmec, VinWonders, công viên Ánh Sáng 36 ha, Rainbow Park và bến du thuyền",
+        "extracted_anchor": "Vincom Mega Mall, Vinschool, phòng khám Vinmec, VinWonders, công viên Ánh Sáng 36 ha, Rainbow Park và bến du thuyền",
+        "numeric_phrases": "36 ha",
+        "contains_thousands_separator": false,
+        "status": "match"
+      }
+    ]
+  },
+  "primary_slice_counts": {
+    "content_only": 30,
+    "cross_document_confusion": 30,
+    "explicit_filter": 30,
+    "implicit_filter": 30,
+    "multi_hop": 30,
+    "null_insufficient": 30,
+    "permission_sensitive": 30,
+    "section_localization": 30,
+    "table_structured": 30,
+    "version_conflict": 30
+  },
+  "all_slice_counts": {
+    "content_only": 30,
+    "cross_document_confusion": 30,
+    "explicit_filter": 30,
+    "implicit_filter": 30,
+    "multi_hop": 40,
+    "null_insufficient": 30,
+    "permission_sensitive": 30,
+    "section_localization": 30,
+    "table_structured": 30,
+    "version_conflict": 30
+  },
+  "required_metadata_field_counts": {
+    "as_of_date": 30,
+    "content_kind": 30,
+    "document_ids": 30,
+    "document_type": 150,
+    "document_version": 20,
+    "effective_status": 30,
+    "lifecycle_status": 40,
+    "notebook_id": 30,
+    "owner_id": 30,
+    "project_code": 18,
+    "project_name": 150,
+    "project_status": 30,
+    "region": 4,
+    "section_path": 60,
+    "section_title": 78,
+    "source": 30,
+    "source_code": 10,
+    "table_header": 30,
+    "visibility": 30,
+    "year": 100
+  },
+  "split_counts": {
+    "dev": 66,
+    "test": 234
+  },
+  "target_type_counts": {
+    "multi_hop": 40,
+    "null": 30,
+    "permission_allowed": 15,
+    "permission_denied": 15,
+    "single": 200
+  },
+  "query_style_counts": {
+    "abbreviated": 49,
+    "canonical": 51,
+    "concise": 51,
+    "conversational": 51,
+    "light_typo": 49,
+    "no_accents": 49
+  },
+  "scenario_count": 121,
+  "evidence_fact_count": 123,
+  "ground_truth": {
+    "status": "approved_frozen_gold",
+    "single": "exact deterministic chunk IDs",
+    "multi_hop": "all relevant_chunk_groups are required",
+    "null": "no matching chunk after supported metadata filters",
+    "permission": "15 same-query allow/deny pairs; only query_context access scope changes",
+    "table_structured": "cell labels plus parser-native table provenance",
+    "version_conflict": "latest resolution, temporal qualification, and same-period scope differences",
+    "unresolved_count": 0
+  },
+  "approval": {
+    "schema_version": "1.0",
+    "status": "approved_frozen_gold",
+    "approved_on": "2026-08-04",
+    "reviewer_role": "benchmark_owner",
+    "approval_basis": "Explicit benchmark-owner confirmation after human review.",
+    "approved_case_count": 300,
+    "testset_sha256": "e0173d337a62060775ceae2833989d5f831f85bd585c6d8d129d925ba2d6e497",
+    "source_bundle_sha256": "23f0583c645d65520bbfeca428db2f35870c8c4eaf6986dafcfd1ffddb589807",
+    "gold_metadata_sha256": "c616a5c497ea620d84fba2532c167b67e97cf8cacb27e56da58e51531ddd0dd2"
+  },
+  "chunk_dependency": {
+    "unique_relevant_chunk_count": 45,
+    "max_queries_per_relevant_chunk": 40,
+    "note": "Price tables are atomic under structure_recursive, so several row-level facts share one relevant chunk. Use clustered bootstrap and review this dependency."
+  },
+  "source_documents": [
+    {
+      "filename": "Vinhomes_TayMo.pdf",
+      "path": "C:\\Users\\Admin\\Downloads\\Vinhomes_TayMo.pdf",
+      "sha256": "9c600883e400bf557ce791dfac762cd1fd84ac1aa3a217a5809026e63ba8504a",
+      "size_bytes": 988389,
+      "modified_at_epoch": 1785473214.3791525,
+      "parser": "pdf",
+      "parser_version": "1.0",
+      "chunk_count": 76
+    },
+    {
+      "filename": "Vinhomes_HaiVan.pdf",
+      "path": "C:\\Users\\Admin\\Downloads\\Vinhomes_HaiVan.pdf",
+      "sha256": "b1f837ecda3cad3d045962ae17bb1e4f53413e499fddb41b7338eabf22e7378c",
+      "size_bytes": 766074,
+      "modified_at_epoch": 1785473201.806432,
+      "parser": "pdf",
+      "parser_version": "1.0",
+      "chunk_count": 69
+    },
+    {
+      "filename": "demo_kb_chinh_sach_doi_tra_cskh - Copy.docx",
+      "path": "C:\\Users\\Admin\\Downloads\\demo_kb_chinh_sach_doi_tra_cskh - Copy.docx",
+      "sha256": "a8db816533d6a574bdd224f0f80e63d0011fc8ff85df39184ea2289d8434105b",
+      "size_bytes": 32228,
+      "modified_at_epoch": 1785465154.9472268,
+      "parser": "docx",
+      "parser_version": "2.1",
+      "chunk_count": 7
+    },
+    {
+      "filename": "Vinhomes_Gia_Nha_2023.docx",
+      "path": "C:\\Users\\Admin\\Downloads\\Vinhomes_Gia_Nha_2023.docx",
+      "sha256": "cc979b630c4f8de15b636942212d347ddd523f82c8b200b2731f109bbf4fd76e",
+      "size_bytes": 36531,
+      "modified_at_epoch": 1785820836.758624,
+      "parser": "docx",
+      "parser_version": "2.1",
+      "chunk_count": 13
+    },
+    {
+      "filename": "Vinhomes_Gia_Nha_2024.docx",
+      "path": "C:\\Users\\Admin\\Downloads\\Vinhomes_Gia_Nha_2024.docx",
+      "sha256": "d86ef3c408aa4a3b11bfb96cd3ef2f226e155818ed54a0924ee82306e67b1454",
+      "size_bytes": 36848,
+      "modified_at_epoch": 1785820820.8988297,
+      "parser": "docx",
+      "parser_version": "2.1",
+      "chunk_count": 13
+    },
+    {
+      "filename": "Vinhomes_Gia_Nha_2025.docx",
+      "path": "C:\\Users\\Admin\\Downloads\\Vinhomes_Gia_Nha_2025.docx",
+      "sha256": "4fe5fe94a08c579f9f6e6d11abafa66cda94fbe0e09e0076bd7b4b6f24e3cb57",
+      "size_bytes": 36843,
+      "modified_at_epoch": 1785820794.2739909,
+      "parser": "docx",
+      "parser_version": "2.1",
+      "chunk_count": 13
+    },
+    {
+      "filename": "Vinhomes_Gia_Nha_2026.docx",
+      "path": "C:\\Users\\Admin\\Downloads\\Vinhomes_Gia_Nha_2026.docx",
+      "sha256": "a068186ddde48b7add9a780449dcc1af75583b26e9b32f286f3b0a5d59eec0eb",
+      "size_bytes": 38174,
+      "modified_at_epoch": 1785820774.9663258,
+      "parser": "docx",
+      "parser_version": "2.1",
+      "chunk_count": 13
+    },
+    {
+      "filename": "Vinhomes_Tien_Ich_Toan_Quoc.docx",
+      "path": "C:\\Users\\Admin\\Downloads\\Vinhomes_Tien_Ich_Toan_Quoc.docx",
+      "sha256": "4edcf5eaa4d4d1c34a3e620b77ef85150a882a92038c7f30dc5098abff2878d8",
+      "size_bytes": 43786,
+      "modified_at_epoch": 1785820757.9946122,
+      "parser": "docx",
+      "parser_version": "2.1",
+      "chunk_count": 52
+    },
+    {
+      "filename": "Vinhomes_Ke_Hoach_Xay_Dung_Trien_Khai.docx",
+      "path": "C:\\Users\\Admin\\Downloads\\Vinhomes_Ke_Hoach_Xay_Dung_Trien_Khai.docx",
+      "sha256": "55e0dc1c6e927b9f2d90e8991550642227e786ac1b88b11a15b540e2c751fe8d",
+      "size_bytes": 41248,
+      "modified_at_epoch": 1785820728.0122595,
+      "parser": "docx",
+      "parser_version": "2.1",
+      "chunk_count": 21
+    }
+  ],
+  "query_source_sha256": {
+    "Vinhomes_Gia_Nha_2023.docx": "cc979b630c4f8de15b636942212d347ddd523f82c8b200b2731f109bbf4fd76e",
+    "Vinhomes_Gia_Nha_2024.docx": "d86ef3c408aa4a3b11bfb96cd3ef2f226e155818ed54a0924ee82306e67b1454",
+    "Vinhomes_Gia_Nha_2025.docx": "4fe5fe94a08c579f9f6e6d11abafa66cda94fbe0e09e0076bd7b4b6f24e3cb57",
+    "Vinhomes_Gia_Nha_2026.docx": "a068186ddde48b7add9a780449dcc1af75583b26e9b32f286f3b0a5d59eec0eb",
+    "Vinhomes_Tien_Ich_Toan_Quoc.docx": "4edcf5eaa4d4d1c34a3e620b77ef85150a882a92038c7f30dc5098abff2878d8",
+    "Vinhomes_Ke_Hoach_Xay_Dung_Trien_Khai.docx": "55e0dc1c6e927b9f2d90e8991550642227e786ac1b88b11a15b540e2c751fe8d"
+  },
+  "limitations": [
+    "Queries were human-approved, but future source, parser, chunking, or testset changes require a new review.",
+    "The table_structured slice covers DOCX tables; no image, chart, scan, or OCR source is present.",
+    "Permission labels exercise the isolated harness ACL scope, not an external production ACL.",
+    "Same-period scope-difference cases require an answer evaluator to judge qualification language.",
+    "DOCX pagination is unavailable, so ground truth uses chunk IDs and section headings.",
+    "Hashing embeddings are only a free structural smoke test, not production quality."
+  ],
+  "recommended_decision_metrics": {
+    "answerable_recall_at_5_min": 0.85,
+    "multi_hop_all_groups_at_10_min": 0.8,
+    "null_rejection_at_10_min": 0.95,
+    "permission_leak_at_10_max": 0.0,
+    "permission_allowed_recall_at_10_min": 0.95,
+    "sensitive_term_leak_at_10_max": 0.0,
+    "table_structured_success_at_10_min": 0.9,
+    "filter_preflight_pass_rate_min": 1.0
+  }
+}

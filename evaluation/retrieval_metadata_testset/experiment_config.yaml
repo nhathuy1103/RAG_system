@@ -1,0 +1,128 @@
+schema_version: "1.0"
+evaluation_version: metadata-retrieval-abcd-v1
+created_at: "2026-08-03"
+timezone: Asia/Bangkok
+
+objective: >
+  Measure whether metadata improves retrieval quality, how much room remains
+  versus gold metadata, and whether gains survive a shuffled-metadata placebo.
+
+frozen_system:
+  corpus_snapshot: "2026-08-03"
+  source_files:
+    - Vinhomes_TayMo.pdf
+    - Vinhomes_HaiVan.pdf
+    - demo_kb_chinh_sach_doi_tra_cskh - Copy.docx
+  corpus_policy: "Do not add, remove, or edit documents while comparing modes."
+  chunking_method: structure_recursive
+  chunk_size: 600
+  chunk_overlap: 80
+  chunk_size_unit: whitespace_tokens
+  embedding_provider: openai
+  embedding_model: text-embedding-3-small
+  embedding_dimensions: 1536
+  vector_database: PostgreSQL pgvector
+  sparse_index: PostgreSQL full-text search, simple dictionary
+  retrieval_method: hybrid_postgresql_fts_plus_pgvector
+  fusion: reciprocal_rank_fusion
+  dense_candidate_limit: 20
+  sparse_candidate_limit: 20
+  rrf_k: 60
+  retrieval_export_top_k: 10
+  production_final_top_k: 5
+  reranker: lexical_shingle_mmr
+  mmr_lambda: 0.7
+  llm_provider: openai
+  llm_model: gpt-4o
+  temperature: 0
+  test_queries: evaluation/retrieval_metadata_testset/testset.jsonl
+
+controlled_variables:
+  - corpus
+  - chunking
+  - embedding model
+  - vector database
+  - sparse/dense/hybrid method
+  - top_k
+  - reranker
+  - prompt
+  - LLM
+  - test queries
+
+experiment_modes:
+  - mode: no_metadata
+    label: "A - No Metadata"
+    purpose: "Retrieval without semantic metadata."
+    expected_use: "Lower bound."
+    true_implementation_requirement:
+      - Rebuild sparse search_text from raw chunk text only.
+      - Rebuild dense embeddings from raw chunk text only.
+      - Keep only security/scope filters such as owner_id, notebook_id, document_ids.
+    warning: "Using existing embeddings is not a true no-metadata run if embedding_text already contains metadata."
+
+  - mode: current_metadata
+    label: "B - Current Metadata"
+    purpose: "Production/current behavior."
+    expected_use: "Main baseline."
+    true_implementation_requirement:
+      - Use current embedding_text/search_text/retrieval_metadata.
+      - Keep production filter, boost, reranker, and prompt behavior unchanged.
+
+  - mode: shuffled_metadata
+    label: "C - Shuffled Metadata"
+    purpose: "Placebo test."
+    expected_use: "Detect whether gains are from metadata meaning or just longer inputs/score shifts."
+    true_implementation_requirement:
+      - Shuffle metadata values across documents/chunks while preserving distribution.
+      - Rebuild search_text and dense embeddings from shuffled metadata.
+      - Keep chunk text and chunk ids unchanged.
+
+  - mode: gold_metadata
+    label: "D - Gold Metadata"
+    purpose: "Upper bound on metadata usefulness."
+    expected_use: "Estimate D-B improvement potential."
+    true_implementation_requirement:
+      - Keep the same full corpus used by A/B/C.
+      - Replace current metadata on manually annotated chunks with gold metadata.
+      - Leave non-annotated chunks unchanged and report gold coverage.
+      - Rebuild search_text and dense embeddings for the complete corpus.
+
+primary_metric: recall_at_5
+secondary_metrics:
+  - hit_at_1
+  - recall_at_10
+  - mrr_at_10
+  - ndcg_at_10
+  - term_hit_rate_at_5
+  - forbidden_top1_rate
+  - empty_result_rate
+  - top1_mojibake_rate
+  - latency_p95_ms
+
+key_comparisons:
+  - comparison: B_minus_A
+    left: no_metadata
+    right: current_metadata
+    interpretation: "Metadata hiện tại có cải thiện retrieval thật không."
+  - comparison: D_minus_B
+    left: current_metadata
+    right: gold_metadata
+    interpretation: "Còn bao nhiêu tiềm năng do metadata hiện tại thiếu/sai."
+  - comparison: B_minus_C
+    left: shuffled_metadata
+    right: current_metadata
+    interpretation: "Lợi ích đến từ ý nghĩa metadata hay chỉ do input dài hơn/placebo."
+
+pass_thresholds:
+  recall_at_5: 0.85
+  mrr_at_10: 0.65
+  term_hit_rate_at_5: 0.90
+  forbidden_top1_rate_max: 0.10
+  empty_result_rate_max: 0.05
+  top1_mojibake_rate_max: 0.0
+  p95_latency_ms_without_generation_max: 1000
+
+notes:
+  - "For pure retrieval latency, do not use /chat because it includes generation."
+  - "The existing /chat runner is useful for quick end-to-end citation checks only."
+  - "A, C, and D require alternate indexes or an offline harness; B can use production directly."

@@ -1,0 +1,115 @@
+{
+  "schema_version": "1.0",
+  "created_at_epoch": 1785885122.6881108,
+  "source_documents": [
+    {
+      "filename": "Vinhomes_TayMo.pdf",
+      "path": "C:\\Users\\Admin\\Downloads\\Vinhomes_TayMo.pdf",
+      "sha256": "9c600883e400bf557ce791dfac762cd1fd84ac1aa3a217a5809026e63ba8504a",
+      "size_bytes": 988389,
+      "modified_at_epoch": 1785473214.3791525,
+      "parser": "pdf",
+      "parser_version": "1.0",
+      "chunk_count": 76
+    },
+    {
+      "filename": "Vinhomes_HaiVan.pdf",
+      "path": "C:\\Users\\Admin\\Downloads\\Vinhomes_HaiVan.pdf",
+      "sha256": "b1f837ecda3cad3d045962ae17bb1e4f53413e499fddb41b7338eabf22e7378c",
+      "size_bytes": 766074,
+      "modified_at_epoch": 1785473201.806432,
+      "parser": "pdf",
+      "parser_version": "1.0",
+      "chunk_count": 69
+    },
+    {
+      "filename": "demo_kb_chinh_sach_doi_tra_cskh - Copy.docx",
+      "path": "C:\\Users\\Admin\\Downloads\\demo_kb_chinh_sach_doi_tra_cskh - Copy.docx",
+      "sha256": "a8db816533d6a574bdd224f0f80e63d0011fc8ff85df39184ea2289d8434105b",
+      "size_bytes": 32228,
+      "modified_at_epoch": 1785465154.9472268,
+      "parser": "docx",
+      "parser_version": "2.1",
+      "chunk_count": 7
+    },
+    {
+      "filename": "Vinhomes_Gia_Nha_2023.docx",
+      "path": "C:\\Users\\Admin\\Downloads\\Vinhomes_Gia_Nha_2023.docx",
+      "sha256": "cc979b630c4f8de15b636942212d347ddd523f82c8b200b2731f109bbf4fd76e",
+      "size_bytes": 36531,
+      "modified_at_epoch": 1785820836.758624,
+      "parser": "docx",
+      "parser_version": "2.1",
+      "chunk_count": 13
+    },
+    {
+      "filename": "Vinhomes_Gia_Nha_2024.docx",
+      "path": "C:\\Users\\Admin\\Downloads\\Vinhomes_Gia_Nha_2024.docx",
+      "sha256": "d86ef3c408aa4a3b11bfb96cd3ef2f226e155818ed54a0924ee82306e67b1454",
+      "size_bytes": 36848,
+      "modified_at_epoch": 1785820820.8988297,
+      "parser": "docx",
+      "parser_version": "2.1",
+      "chunk_count": 13
+    },
+    {
+      "filename": "Vinhomes_Gia_Nha_2025.docx",
+      "path": "C:\\Users\\Admin\\Downloads\\Vinhomes_Gia_Nha_2025.docx",
+      "sha256": "4fe5fe94a08c579f9f6e6d11abafa66cda94fbe0e09e0076bd7b4b6f24e3cb57",
+      "size_bytes": 36843,
+      "modified_at_epoch": 1785820794.2739909,
+      "parser": "docx",
+      "parser_version": "2.1",
+      "chunk_count": 13
+    },
+    {
+      "filename": "Vinhomes_Gia_Nha_2026.docx",
+      "path": "C:\\Users\\Admin\\Downloads\\Vinhomes_Gia_Nha_2026.docx",
+      "sha256": "a068186ddde48b7add9a780449dcc1af75583b26e9b32f286f3b0a5d59eec0eb",
+      "size_bytes": 38174,
+      "modified_at_epoch": 1785820774.9663258,
+      "parser": "docx",
+      "parser_version": "2.1",
+      "chunk_count": 13
+    },
+    {
+      "filename": "Vinhomes_Tien_Ich_Toan_Quoc.docx",
+      "path": "C:\\Users\\Admin\\Downloads\\Vinhomes_Tien_Ich_Toan_Quoc.docx",
+      "sha256": "4edcf5eaa4d4d1c34a3e620b77ef85150a882a92038c7f30dc5098abff2878d8",
+      "size_bytes": 43786,
+      "modified_at_epoch": 1785820757.9946122,
+      "parser": "docx",
+      "parser_version": "2.1",
+      "chunk_count": 52
+    },
+    {
+      "filename": "Vinhomes_Ke_Hoach_Xay_Dung_Trien_Khai.docx",
+      "path": "C:\\Users\\Admin\\Downloads\\Vinhomes_Ke_Hoach_Xay_Dung_Trien_Khai.docx",
+      "sha256": "55e0dc1c6e927b9f2d90e8991550642227e786ac1b88b11a15b540e2c751fe8d",
+      "size_bytes": 41248,
+      "modified_at_epoch": 1785820728.0122595,
+      "parser": "docx",
+      "parser_version": "2.1",
+      "chunk_count": 21
+    }
+  ],
+  "testset_path": "D:\\VIN_AI\\VSF\\week2\\agentic-rag-batch-2-g1-develop (1)\\agentic-rag-batch-2-g1-develop\\evaluation\\retrieval_metadata_testset\\real_benchmark_v3\\testset.jsonl",
+  "testset_sha256": "e0173d337a62060775ceae2833989d5f831f85bd585c6d8d129d925ba2d6e497",
+  "gold_metadata_path": "D:\\VIN_AI\\VSF\\week2\\agentic-rag-batch-2-g1-develop (1)\\agentic-rag-batch-2-g1-develop\\evaluation\\retrieval_metadata_testset\\real_benchmark_v3\\gold_metadata.json",
+  "gold_metadata_sha256": "c616a5c497ea620d84fba2532c167b67e97cf8cacb27e56da58e51531ddd0dd2",
+  "corpus_fixture_path": "",
+  "corpus_fixture_sha256": "",
+  "chunking": {
+    "strategy": "structure_recursive",
+    "chunk_size": 600,
+    "chunk_overlap": 80
+  },
+  "retrieval": {
+    "method": "in_memory_bm25_plus_dense_rrf_mmr",
+    "candidate_k": 20,
+    "top_k": 10,
+    "rrf_k": 60,
+    "mmr_lambda": 0.7,
+    "repeats": 3
+  }
+}

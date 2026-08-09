@@ -1,0 +1,1 @@
+"""Governance persistence ports."""

@@ -1,0 +1,22 @@
+[
+  {
+    "mode": "v5_context_terms",
+    "evaluated_count": 2,
+    "missing_count": 37,
+    "mrr_at_max_k": 1.0,
+    "term_hit_rate_at_max_k": 1.0,
+    "forbidden_top1_rate": 0,
+    "empty_result_rate": 0,
+    "top1_mojibake_rate": 0,
+    "latency_p50_ms": 320.0,
+    "latency_p95_ms": 410.0,
+    "recall_at_1": 1,
+    "term_hit_rate_at_1": 1.0,
+    "recall_at_3": 1,
+    "term_hit_rate_at_3": 1.0,
+    "recall_at_5": 1,
+    "term_hit_rate_at_5": 1.0,
+    "recall_at_10": 1,
+    "term_hit_rate_at_10": 1.0
+  }
+]

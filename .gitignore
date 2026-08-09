@@ -1,0 +1,77 @@
+# Environment variables and local secrets
+.env
+.env.*
+!.env.example
+!**/.env.example
+
+# Python environments and generated files
+.venv/
+venv/
+env/
+ENV/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+site/
+*.egg
+*.egg-info/
+.eggs/
+
+# Python tooling, tests and coverage
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.tox/
+.nox/
+.hypothesis/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+
+# Frontend dependencies and build artifacts
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+.npm/
+.pnpm-store/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Supabase local state
+supabase/.branches/
+supabase/.temp/
+
+# Logs and temporary files
+logs/
+*.log
+*.tmp
+*.temp
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Operating system metadata
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Generated evaluation caches and benchmark run outputs
+evaluation/**/.cache/
+evaluation/**/runs/
+
+data

@@ -1,0 +1,1 @@
+field_name,expected_data_type,double_annotated_count,agreement_basis,raw_agreement,cohen_kappa,weighted_kappa,multilabel_jaccard_agreement

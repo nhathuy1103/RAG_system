@@ -1,0 +1,9 @@
+severity,issue_type,field_name,record_type,record_id,document_id,related_record_id,value,expected,details
+medium,date_format_variant,created_at,document,11111111-1111-4111-8111-111111111111,11111111-1111-4111-8111-111111111111,,datetime:-:offset | datetime:-:z,one ISO-8601 representation,
+medium,date_format_variant,updated_at,document,11111111-1111-4111-8111-111111111111,11111111-1111-4111-8111-111111111111,,datetime:-:offset | datetime:-:z,one ISO-8601 representation,
+medium,date_format_variant,effective_from,document,11111111-1111-4111-8111-111111111111,11111111-1111-4111-8111-111111111111,,date:-:naive | date:/:naive,one ISO-8601 representation,
+high,inconsistent_within_document,document_version,chunk,aaaaaaaa-1111-4111-8111-111111111111,11111111-1111-4111-8111-111111111111,,1 | 2,one normalized value per document,Document 11111111-1111-4111-8111-111111111111 has 2 values across chunks.
+medium,case_whitespace_or_unicode_variant,title,chunk,aaaaaaaa-1111-4111-8111-111111111111,11111111-1111-4111-8111-111111111111,,QUY CHẾ CÔNG TÁC PHÍ 2026 | Quy chế công tác phí 2026,quy chế công tác phí 2026,Values collapse to the same NFKC/casefold/whitespace form.
+low,possible_singular_plural_variant,title,chunk,aaaaaaaa-1111-4111-8111-111111111111,11111111-1111-4111-8111-111111111111,,QUY CHẾ CÔNG TÁC PHÍ 2026 | Quy chế công tác phí 2026,quy chế công tác phí 2026,English token singularization produced one surface group.
+high,inconsistent_within_document,document_type,chunk,aaaaaaaa-1111-4111-8111-111111111111,11111111-1111-4111-8111-111111111111,,policy | report,one normalized value per document,Document 11111111-1111-4111-8111-111111111111 has 2 values across chunks.
+high,inconsistent_within_document,language,chunk,aaaaaaaa-1111-4111-8111-111111111111,11111111-1111-4111-8111-111111111111,,vi | vi_vn,one normalized value per document,Document 11111111-1111-4111-8111-111111111111 has 2 values across chunks.

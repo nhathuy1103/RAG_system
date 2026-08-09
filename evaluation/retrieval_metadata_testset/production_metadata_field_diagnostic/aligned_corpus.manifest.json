@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0",
+  "status": "aligned",
+  "purpose": "isolate production metadata while preserving approved chunk identity/text",
+  "frozen_corpus": "D:\\VIN_AI\\VSF\\week2\\agentic-rag-batch-2-g1-develop (1)\\agentic-rag-batch-2-g1-develop\\evaluation\\retrieval_metadata_testset\\runs\\real-benchmark-v3-context-quality-v4-openai\\corpus.jsonl",
+  "frozen_corpus_sha256": "db46c1d937afe03d4f16ac02cc87c7f0e974627bcf9d6e363d6cbeac0cada311",
+  "production_corpus": "D:\\VIN_AI\\VSF\\week2\\agentic-rag-batch-2-g1-develop (1)\\agentic-rag-batch-2-g1-develop\\evaluation\\retrieval_metadata_testset\\runs\\production-metadata-field-study-corpus\\corpus.jsonl",
+  "production_corpus_sha256": "0eb6ad4ead5d22d3de01654e3519bf4f4b2fe805cd2d1b625b6c9743302175f0",
+  "output": "D:\\VIN_AI\\VSF\\week2\\agentic-rag-batch-2-g1-develop (1)\\agentic-rag-batch-2-g1-develop\\evaluation\\retrieval_metadata_testset\\production_metadata_field_diagnostic\\aligned_corpus.jsonl",
+  "chunk_count": 277,
+  "exact_text_match_count": 218,
+  "heading_normalized_text_match_count": 59,
+  "content_mismatch_count": 0
+}

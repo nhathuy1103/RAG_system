@@ -1,0 +1,34 @@
+{
+  "schema_version": "1.0",
+  "status": "generated_diagnostic_requires_human_review",
+  "benchmark_kind": "derived_real_document_metadata_diagnostic",
+  "frozen_gold_modified": false,
+  "production_decision_ready": false,
+  "source_testset": "D:\\VIN_AI\\VSF\\week2\\agentic-rag-batch-2-g1-develop (1)\\agentic-rag-batch-2-g1-develop\\evaluation\\retrieval_metadata_testset\\real_benchmark_v3\\testset.jsonl",
+  "source_testset_sha256": "e0173d337a62060775ceae2833989d5f831f85bd585c6d8d129d925ba2d6e497",
+  "source_corpus": "D:\\VIN_AI\\VSF\\week2\\agentic-rag-batch-2-g1-develop (1)\\agentic-rag-batch-2-g1-develop\\evaluation\\retrieval_metadata_testset\\runs\\real-benchmark-v3-context-quality-v4-openai\\corpus.jsonl",
+  "source_corpus_sha256": "db46c1d937afe03d4f16ac02cc87c7f0e974627bcf9d6e363d6cbeac0cada311",
+  "source_query_count": 300,
+  "corpus_chunk_count": 277,
+  "diagnostic_query_count": 581,
+  "field_query_counts": {
+    "content_kind": 30,
+    "data_period": 70,
+    "document_type": 90,
+    "domain": 60,
+    "effective_status": 40,
+    "lifecycle_status": 40,
+    "project_code": 36,
+    "project_name": 80,
+    "region": 4,
+    "section_title": 31,
+    "source": 30,
+    "year": 70
+  },
+  "condition_policy": [
+    "existing frozen condition",
+    "deterministic one-to-one substitution observed in gold",
+    "literal field value in query",
+    "deterministic table intent"
+  ]
+}

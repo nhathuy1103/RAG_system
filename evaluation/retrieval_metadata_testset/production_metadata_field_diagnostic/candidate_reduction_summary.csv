@@ -1,0 +1,13 @@
+﻿field,query_count,answerable_count,null_count,scenario_count,evidence_bases,mean_candidates,p50_candidates,p95_candidates,mean_candidate_reduction_pct,relevant_retention_rate
+content_kind,30,30,0,30,"{""deterministic_query_intent"": 30}",60.0,60.0,60.0,78.339,1.0
+data_period,70,40,30,69,"{""annual_period_equivalence"": 70}",0.0,0.0,0.0,100.0,0.0
+document_type,90,60,30,70,"{""frozen_condition"": 90}",0.0,0.0,0.0,100.0,0.0
+domain,60,60,0,40,"{""document_type_domain_mapping"": 60}",0.0,0.0,0.0,100.0,0.0
+effective_status,40,40,0,38,"{""current_latest_equivalence"": 40}",0.0,0.0,0.0,100.0,0.0
+lifecycle_status,40,40,0,38,"{""frozen_condition"": 40}",0.0,0.0,0.0,100.0,0.0
+project_code,36,36,0,18,"{""canonical_alias_resolution"": 18, ""query_literal_value"": 18}",2.0,2.0,2.0,99.278,1.0
+project_name,80,50,30,73,"{""frozen_condition"": 80}",0.45,0.0,2.0,99.838,0.36
+region,4,4,0,4,"{""query_literal_value"": 4}",0.0,0.0,0.0,100.0,0.0
+section_title,31,31,0,31,"{""query_literal_value"": 31}",3.032,2.0,10.0,98.905,1.0
+source,30,30,0,30,"{""frozen_condition"": 30}",0.0,0.0,0.0,100.0,0.0
+year,70,40,30,69,"{""frozen_condition"": 70}",7.429,13.0,13.0,97.318,0.55

@@ -1,0 +1,43 @@
+[
+  {
+    "mode": "no_metadata",
+    "label": "A - No Metadata",
+    "embedding_text": "chunk text only",
+    "search_text": "chunk text only",
+    "metadata_filters": "scope filters only: owner_id, notebook_id, document_ids",
+    "metadata_boosting": false,
+    "requires_reembedding": true,
+    "requires_rebuilding_search_vector": true
+  },
+  {
+    "mode": "current_metadata",
+    "label": "B - Current Metadata",
+    "embedding_text": "current production embedding_text",
+    "search_text": "current production search_text/search_vector",
+    "metadata_filters": "current production behavior",
+    "metadata_boosting": "current production behavior",
+    "requires_reembedding": false,
+    "requires_rebuilding_search_vector": false
+  },
+  {
+    "mode": "shuffled_metadata",
+    "label": "C - Shuffled Metadata",
+    "embedding_text": "chunk text plus randomly reassigned metadata values",
+    "search_text": "chunk text plus randomly reassigned metadata values",
+    "metadata_filters": "same filter logic, but metadata values are shuffled",
+    "metadata_boosting": "same boost logic, but metadata values are shuffled",
+    "requires_reembedding": true,
+    "requires_rebuilding_search_vector": true
+  },
+  {
+    "mode": "gold_metadata",
+    "label": "D - Gold Metadata",
+    "embedding_text": "chunk text plus manually corrected gold metadata",
+    "search_text": "chunk text plus manually corrected gold metadata",
+    "metadata_filters": "same filter logic, but metadata values are gold",
+    "metadata_boosting": "same boost logic, but metadata values are gold",
+    "requires_reembedding": true,
+    "requires_rebuilding_search_vector": true,
+    "scope": "same full corpus; curated gold overrides on annotated chunks and current metadata elsewhere"
+  }
+]

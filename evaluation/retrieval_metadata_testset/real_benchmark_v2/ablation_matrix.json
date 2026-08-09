@@ -1,0 +1,65 @@
+[
+  {
+    "variant": "v0_raw_text",
+    "fields": [],
+    "purpose": "Baseline chỉ dùng nội dung chunk."
+  },
+  {
+    "variant": "v1_document_identity",
+    "fields": [
+      "title",
+      "document_type"
+    ],
+    "purpose": "Đo tác động của định danh tài liệu."
+  },
+  {
+    "variant": "v2_section_structure",
+    "fields": [
+      "section_title",
+      "section_path"
+    ],
+    "purpose": "Đo khả năng định vị đúng heading."
+  },
+  {
+    "variant": "v3_block_aware",
+    "fields": [
+      "content_kind",
+      "table_header"
+    ],
+    "purpose": "Đo retrieval trên bảng và loại block."
+  },
+  {
+    "variant": "v4_context_summary",
+    "fields": [
+      "contextual_summary"
+    ],
+    "purpose": "Đo context ngắn có làm rõ ý nghĩa chunk hay không."
+  },
+  {
+    "variant": "v5_context_terms",
+    "fields": [
+      "contextual_search_terms",
+      "keyword_aliases"
+    ],
+    "purpose": "Đo từ khóa mở rộng trong hybrid/BM25."
+  },
+  {
+    "variant": "v6_domain_metadata",
+    "fields": [
+      "year",
+      "document_version",
+      "lifecycle_status",
+      "effective_status",
+      "as_of_date",
+      "project_name",
+      "project_code",
+      "project_status",
+      "region",
+      "market_type",
+      "reliability_grade",
+      "source",
+      "source_code"
+    ],
+    "purpose": "Đo metadata chuyên ngành bất động sản và phiên bản."
+  }
+]

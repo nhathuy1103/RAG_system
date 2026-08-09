@@ -1,0 +1,8 @@
+﻿comparison,left_mode,right_mode,metric,left_mean,right_mean,absolute_delta,relative_delta,ci95_low,ci95_high,win,tie,loss,n_pairs,p_value_permutation,note
+self_check,v5_context_terms,v5_context_terms,recall_at_5,1.0,1.0,0.0,0.0,0.0,0.0,0,2,0,2,1.0,
+self_check,v5_context_terms,v5_context_terms,mrr_at_10,1.0,1.0,0.0,0.0,0.0,0.0,0,2,0,2,1.0,
+self_check,v5_context_terms,v5_context_terms,ndcg_at_10,1.0,1.0,0.0,0.0,0.0,0.0,0,2,0,2,1.0,
+self_check,v5_context_terms,v5_context_terms,term_hit_rate_at_5,1.0,1.0,0.0,0.0,0.0,0.0,0,2,0,2,1.0,
+self_check,v5_context_terms,v5_context_terms,empty_result_rate,0.0,0.0,0.0,,0.0,0.0,0,2,0,2,1.0,
+self_check,v5_context_terms,v5_context_terms,forbidden_top1_rate,0.0,0.0,0.0,,0.0,0.0,0,2,0,2,1.0,
+self_check,v5_context_terms,v5_context_terms,top1_mojibake_rate,0.0,0.0,0.0,,0.0,0.0,0,2,0,2,1.0,

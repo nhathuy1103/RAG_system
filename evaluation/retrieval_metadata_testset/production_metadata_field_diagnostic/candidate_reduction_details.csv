@@ -1,0 +1,582 @@
+﻿test_id,source_test_id,scenario_id,field,value,basis,answerable,candidate_count,candidate_reduction_pct,relevant_count,relevant_retained,all_relevant_retained,forbidden_count,forbidden_rejected
+diag_year_real_explicit_filter_01,real_explicit_filter_01,utility_p02,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_01,real_explicit_filter_01,utility_p02,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_01,real_explicit_filter_01,utility_p02,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_01,real_explicit_filter_01,utility_p02,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_01,real_explicit_filter_01,utility_p02,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_01,real_explicit_filter_01,utility_p02,project_name,"""Happy Home Tràng Cát""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_01,real_explicit_filter_01,utility_p02,project_code,"""P02""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_02,real_explicit_filter_02,utility_p04,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_02,real_explicit_filter_02,utility_p04,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_02,real_explicit_filter_02,utility_p04,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_02,real_explicit_filter_02,utility_p04,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_02,real_explicit_filter_02,utility_p04,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_02,real_explicit_filter_02,utility_p04,project_name,"""Vinhomes Global Gate Hạ Long""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_02,real_explicit_filter_02,utility_p04,project_code,"""P04""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_03,real_explicit_filter_03,utility_p07,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_03,real_explicit_filter_03,utility_p07,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_03,real_explicit_filter_03,utility_p07,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_03,real_explicit_filter_03,utility_p07,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_03,real_explicit_filter_03,utility_p07,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_03,real_explicit_filter_03,utility_p07,project_name,"""Vinhomes Golden City""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_03,real_explicit_filter_03,utility_p07,project_code,"""P07""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_04,real_explicit_filter_04,utility_p09,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_04,real_explicit_filter_04,utility_p09,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_04,real_explicit_filter_04,utility_p09,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_04,real_explicit_filter_04,utility_p09,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_04,real_explicit_filter_04,utility_p09,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_04,real_explicit_filter_04,utility_p09,project_name,"""Vinhomes Wonder City""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_04,real_explicit_filter_04,utility_p09,project_code,"""P09""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_05,real_explicit_filter_05,utility_p11,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_05,real_explicit_filter_05,utility_p11,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_05,real_explicit_filter_05,utility_p11,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_05,real_explicit_filter_05,utility_p11,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_05,real_explicit_filter_05,utility_p11,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_05,real_explicit_filter_05,utility_p11,project_name,"""Vinhomes Global Gate""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_05,real_explicit_filter_05,utility_p11,project_code,"""P11""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_06,real_explicit_filter_06,utility_p12,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_06,real_explicit_filter_06,utility_p12,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_06,real_explicit_filter_06,utility_p12,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_06,real_explicit_filter_06,utility_p12,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_06,real_explicit_filter_06,utility_p12,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_06,real_explicit_filter_06,utility_p12,project_name,"""Vinhomes Star City""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_06,real_explicit_filter_06,utility_p12,project_code,"""P12""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_07,real_explicit_filter_07,utility_p13,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_07,real_explicit_filter_07,utility_p13,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_07,real_explicit_filter_07,utility_p13,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_07,real_explicit_filter_07,utility_p13,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_07,real_explicit_filter_07,utility_p13,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_07,real_explicit_filter_07,utility_p13,project_name,"""Vinhomes Royal Island""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_07,real_explicit_filter_07,utility_p13,project_code,"""P13""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_08,real_explicit_filter_08,utility_p14,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_08,real_explicit_filter_08,utility_p14,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_08,real_explicit_filter_08,utility_p14,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_08,real_explicit_filter_08,utility_p14,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_08,real_explicit_filter_08,utility_p14,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_08,real_explicit_filter_08,utility_p14,project_name,"""Vinhomes Ocean Park 3""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_08,real_explicit_filter_08,utility_p14,project_code,"""P14""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_09,real_explicit_filter_09,utility_p15,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_09,real_explicit_filter_09,utility_p15,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_09,real_explicit_filter_09,utility_p15,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_09,real_explicit_filter_09,utility_p15,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_09,real_explicit_filter_09,utility_p15,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_09,real_explicit_filter_09,utility_p15,project_name,"""Vinhomes Ocean Park 2""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_09,real_explicit_filter_09,utility_p15,project_code,"""P15""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_10,real_explicit_filter_10,utility_p16,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_10,real_explicit_filter_10,utility_p16,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_10,real_explicit_filter_10,utility_p16,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_10,real_explicit_filter_10,utility_p16,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_10,real_explicit_filter_10,utility_p16,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_10,real_explicit_filter_10,utility_p16,project_name,"""Vinhomes Smart City""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_10,real_explicit_filter_10,utility_p16,project_code,"""P16""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_11,real_explicit_filter_11,utility_p18,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_11,real_explicit_filter_11,utility_p18,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_11,real_explicit_filter_11,utility_p18,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_11,real_explicit_filter_11,utility_p18,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_11,real_explicit_filter_11,utility_p18,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_11,real_explicit_filter_11,utility_p18,project_name,"""Vinhomes Ocean Park""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_11,real_explicit_filter_11,utility_p18,project_code,"""P18""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_12,real_explicit_filter_12,utility_p03,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_12,real_explicit_filter_12,utility_p03,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_12,real_explicit_filter_12,utility_p03,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_12,real_explicit_filter_12,utility_p03,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_12,real_explicit_filter_12,utility_p03,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_12,real_explicit_filter_12,utility_p03,project_name,"""Vinhomes Pearl Bay""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_12,real_explicit_filter_12,utility_p03,project_code,"""P03""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_13,real_explicit_filter_13,utility_p05,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_13,real_explicit_filter_13,utility_p05,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_13,real_explicit_filter_13,utility_p05,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_13,real_explicit_filter_13,utility_p05,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_13,real_explicit_filter_13,utility_p05,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_13,real_explicit_filter_13,utility_p05,project_name,"""Vinhomes Hải Vân Bay""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_13,real_explicit_filter_13,utility_p05,project_code,"""P05""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_14,real_explicit_filter_14,utility_p10,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_14,real_explicit_filter_14,utility_p10,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_14,real_explicit_filter_14,utility_p10,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_14,real_explicit_filter_14,utility_p10,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_14,real_explicit_filter_14,utility_p10,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_14,real_explicit_filter_14,utility_p10,project_name,"""Vincom Shophouse Royal Park""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_14,real_explicit_filter_14,utility_p10,project_code,"""P10""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_15,real_explicit_filter_15,utility_p01,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_15,real_explicit_filter_15,utility_p01,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_15,real_explicit_filter_15,utility_p01,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_15,real_explicit_filter_15,utility_p01,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_15,real_explicit_filter_15,utility_p01,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_15,real_explicit_filter_15,utility_p01,project_name,"""Vinhomes Sài Gòn Park""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_15,real_explicit_filter_15,utility_p01,project_code,"""P01""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_16,real_explicit_filter_16,utility_p06,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_16,real_explicit_filter_16,utility_p06,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_16,real_explicit_filter_16,utility_p06,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_16,real_explicit_filter_16,utility_p06,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_16,real_explicit_filter_16,utility_p06,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_16,real_explicit_filter_16,utility_p06,project_name,"""Vinhomes Green Paradise""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_16,real_explicit_filter_16,utility_p06,project_code,"""P06""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_17,real_explicit_filter_17,utility_p08,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_17,real_explicit_filter_17,utility_p08,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_17,real_explicit_filter_17,utility_p08,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_17,real_explicit_filter_17,utility_p08,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_17,real_explicit_filter_17,utility_p08,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_17,real_explicit_filter_17,utility_p08,project_name,"""Vinhomes Green City""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_17,real_explicit_filter_17,utility_p08,project_code,"""P08""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_18,real_explicit_filter_18,utility_p17,year,2026,frozen_condition,True,13,95.307,1,0,False,0,0
+diag_data_period_real_explicit_filter_18,real_explicit_filter_18,utility_p17,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_18,real_explicit_filter_18,utility_p17,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_18,real_explicit_filter_18,utility_p17,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_18,real_explicit_filter_18,utility_p17,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_18,real_explicit_filter_18,utility_p17,project_name,"""Vinhomes Grand Park""",frozen_condition,True,2,99.278,1,1,True,0,0
+diag_project_code_real_explicit_filter_18,real_explicit_filter_18,utility_p17,project_code,"""P17""",canonical_alias_resolution,True,2,99.278,1,1,True,0,0
+diag_year_real_explicit_filter_19,real_explicit_filter_19,price_2023_01,year,2023,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_explicit_filter_19,real_explicit_filter_19,price_2023_01,data_period,"""2023""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_19,real_explicit_filter_19,price_2023_01,document_type,"""market_report""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_19,real_explicit_filter_19,price_2023_01,domain,"""real_estate_market""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_19,real_explicit_filter_19,price_2023_01,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_19,real_explicit_filter_19,price_2023_01,project_name,"""Grand Park""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_explicit_filter_20,real_explicit_filter_20,price_2024_01,year,2024,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_explicit_filter_20,real_explicit_filter_20,price_2024_01,data_period,"""2024""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_20,real_explicit_filter_20,price_2024_01,document_type,"""market_report""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_20,real_explicit_filter_20,price_2024_01,domain,"""real_estate_market""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_20,real_explicit_filter_20,price_2024_01,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_20,real_explicit_filter_20,price_2024_01,project_name,"""Royal Island""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_explicit_filter_21,real_explicit_filter_21,price_2025_01,year,2025,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_explicit_filter_21,real_explicit_filter_21,price_2025_01,data_period,"""2025""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_21,real_explicit_filter_21,price_2025_01,document_type,"""market_report""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_21,real_explicit_filter_21,price_2025_01,domain,"""real_estate_market""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_21,real_explicit_filter_21,price_2025_01,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_21,real_explicit_filter_21,price_2025_01,project_name,"""Wonder City""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_explicit_filter_22,real_explicit_filter_22,price_2026_01,year,2026,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_explicit_filter_22,real_explicit_filter_22,price_2026_01,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_22,real_explicit_filter_22,price_2026_01,document_type,"""market_report""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_22,real_explicit_filter_22,price_2026_01,domain,"""real_estate_market""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_22,real_explicit_filter_22,price_2026_01,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_22,real_explicit_filter_22,price_2026_01,project_name,"""Sài Gòn Park""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_explicit_filter_23,real_explicit_filter_23,price_2023_02,year,2023,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_explicit_filter_23,real_explicit_filter_23,price_2023_02,data_period,"""2023""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_23,real_explicit_filter_23,price_2023_02,document_type,"""market_report""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_23,real_explicit_filter_23,price_2023_02,domain,"""real_estate_market""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_23,real_explicit_filter_23,price_2023_02,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_23,real_explicit_filter_23,price_2023_02,project_name,"""Grand Park""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_explicit_filter_24,real_explicit_filter_24,price_2024_02,year,2024,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_explicit_filter_24,real_explicit_filter_24,price_2024_02,data_period,"""2024""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_24,real_explicit_filter_24,price_2024_02,document_type,"""market_report""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_24,real_explicit_filter_24,price_2024_02,domain,"""real_estate_market""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_24,real_explicit_filter_24,price_2024_02,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_24,real_explicit_filter_24,price_2024_02,project_name,"""Royal Island""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_explicit_filter_25,real_explicit_filter_25,price_2025_02,year,2025,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_explicit_filter_25,real_explicit_filter_25,price_2025_02,data_period,"""2025""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_25,real_explicit_filter_25,price_2025_02,document_type,"""market_report""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_25,real_explicit_filter_25,price_2025_02,domain,"""real_estate_market""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_25,real_explicit_filter_25,price_2025_02,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_25,real_explicit_filter_25,price_2025_02,project_name,"""Wonder City""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_explicit_filter_26,real_explicit_filter_26,price_2026_02,year,2026,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_explicit_filter_26,real_explicit_filter_26,price_2026_02,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_26,real_explicit_filter_26,price_2026_02,document_type,"""market_report""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_26,real_explicit_filter_26,price_2026_02,domain,"""real_estate_market""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_26,real_explicit_filter_26,price_2026_02,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_26,real_explicit_filter_26,price_2026_02,project_name,"""Sài Gòn Park""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_explicit_filter_27,real_explicit_filter_27,price_2023_03,year,2023,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_explicit_filter_27,real_explicit_filter_27,price_2023_03,data_period,"""2023""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_27,real_explicit_filter_27,price_2023_03,document_type,"""market_report""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_27,real_explicit_filter_27,price_2023_03,domain,"""real_estate_market""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_27,real_explicit_filter_27,price_2023_03,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_27,real_explicit_filter_27,price_2023_03,project_name,"""Grand Park""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_explicit_filter_28,real_explicit_filter_28,price_2024_03,year,2024,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_explicit_filter_28,real_explicit_filter_28,price_2024_03,data_period,"""2024""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_28,real_explicit_filter_28,price_2024_03,document_type,"""market_report""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_28,real_explicit_filter_28,price_2024_03,domain,"""real_estate_market""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_28,real_explicit_filter_28,price_2024_03,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_28,real_explicit_filter_28,price_2024_03,project_name,"""Royal Island""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_explicit_filter_29,real_explicit_filter_29,price_2025_03,year,2025,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_explicit_filter_29,real_explicit_filter_29,price_2025_03,data_period,"""2025""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_29,real_explicit_filter_29,price_2025_03,document_type,"""market_report""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_29,real_explicit_filter_29,price_2025_03,domain,"""real_estate_market""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_29,real_explicit_filter_29,price_2025_03,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_29,real_explicit_filter_29,price_2025_03,project_name,"""Wonder City""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_explicit_filter_30,real_explicit_filter_30,price_2026_03,year,2026,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_explicit_filter_30,real_explicit_filter_30,price_2026_03,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_explicit_filter_30,real_explicit_filter_30,price_2026_03,document_type,"""market_report""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_explicit_filter_30,real_explicit_filter_30,price_2026_03,domain,"""real_estate_market""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_source_real_explicit_filter_30,real_explicit_filter_30,price_2026_03,source,"""Vinhomes Market và nguồn công khai""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_name_real_explicit_filter_30,real_explicit_filter_30,price_2026_03,project_name,"""Sài Gòn Park""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_01,real_implicit_filter_01,utility_p02,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_01,real_implicit_filter_01,utility_p02,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_01,real_implicit_filter_01,utility_p02,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_01,real_implicit_filter_01,utility_p02,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_02,real_implicit_filter_02,utility_p04,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_02,real_implicit_filter_02,utility_p04,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_02,real_implicit_filter_02,utility_p04,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_02,real_implicit_filter_02,utility_p04,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_03,real_implicit_filter_03,utility_p07,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_03,real_implicit_filter_03,utility_p07,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_03,real_implicit_filter_03,utility_p07,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_03,real_implicit_filter_03,utility_p07,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_04,real_implicit_filter_04,utility_p09,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_04,real_implicit_filter_04,utility_p09,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_04,real_implicit_filter_04,utility_p09,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_04,real_implicit_filter_04,utility_p09,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_05,real_implicit_filter_05,utility_p11,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_05,real_implicit_filter_05,utility_p11,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_05,real_implicit_filter_05,utility_p11,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_05,real_implicit_filter_05,utility_p11,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_06,real_implicit_filter_06,utility_p12,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_06,real_implicit_filter_06,utility_p12,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_06,real_implicit_filter_06,utility_p12,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_06,real_implicit_filter_06,utility_p12,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_07,real_implicit_filter_07,utility_p13,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_07,real_implicit_filter_07,utility_p13,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_07,real_implicit_filter_07,utility_p13,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_07,real_implicit_filter_07,utility_p13,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_08,real_implicit_filter_08,utility_p14,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_08,real_implicit_filter_08,utility_p14,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_08,real_implicit_filter_08,utility_p14,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_08,real_implicit_filter_08,utility_p14,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_09,real_implicit_filter_09,utility_p15,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_09,real_implicit_filter_09,utility_p15,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_09,real_implicit_filter_09,utility_p15,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_09,real_implicit_filter_09,utility_p15,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_10,real_implicit_filter_10,utility_p16,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_10,real_implicit_filter_10,utility_p16,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_10,real_implicit_filter_10,utility_p16,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_10,real_implicit_filter_10,utility_p16,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_11,real_implicit_filter_11,utility_p18,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_11,real_implicit_filter_11,utility_p18,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_11,real_implicit_filter_11,utility_p18,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_11,real_implicit_filter_11,utility_p18,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_12,real_implicit_filter_12,utility_p03,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_12,real_implicit_filter_12,utility_p03,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_12,real_implicit_filter_12,utility_p03,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_12,real_implicit_filter_12,utility_p03,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_13,real_implicit_filter_13,utility_p05,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_13,real_implicit_filter_13,utility_p05,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_13,real_implicit_filter_13,utility_p05,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_13,real_implicit_filter_13,utility_p05,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_14,real_implicit_filter_14,utility_p10,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_14,real_implicit_filter_14,utility_p10,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_14,real_implicit_filter_14,utility_p10,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_14,real_implicit_filter_14,utility_p10,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_15,real_implicit_filter_15,utility_p01,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_15,real_implicit_filter_15,utility_p01,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_15,real_implicit_filter_15,utility_p01,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_15,real_implicit_filter_15,utility_p01,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_16,real_implicit_filter_16,utility_p06,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_16,real_implicit_filter_16,utility_p06,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_16,real_implicit_filter_16,utility_p06,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_16,real_implicit_filter_16,utility_p06,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_17,real_implicit_filter_17,utility_p08,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_17,real_implicit_filter_17,utility_p08,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_17,real_implicit_filter_17,utility_p08,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_17,real_implicit_filter_17,utility_p08,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_18,real_implicit_filter_18,utility_p17,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_18,real_implicit_filter_18,utility_p17,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_18,real_implicit_filter_18,utility_p17,document_type,"""amenity_catalog""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_18,real_implicit_filter_18,utility_p17,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_19,real_implicit_filter_19,plan_evidence_04_executive_summary,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_19,real_implicit_filter_19,plan_evidence_04_executive_summary,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_19,real_implicit_filter_19,plan_evidence_04_executive_summary,document_type,"""implementation_plan""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_19,real_implicit_filter_19,plan_evidence_04_executive_summary,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_20,real_implicit_filter_20,plan_evidence_05_phase_table,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_20,real_implicit_filter_20,plan_evidence_05_phase_table,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_20,real_implicit_filter_20,plan_evidence_05_phase_table,document_type,"""implementation_plan""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_20,real_implicit_filter_20,plan_evidence_05_phase_table,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_21,real_implicit_filter_21,plan_evidence_06_status_table,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_21,real_implicit_filter_21,plan_evidence_06_status_table,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_21,real_implicit_filter_21,plan_evidence_06_status_table,document_type,"""implementation_plan""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_21,real_implicit_filter_21,plan_evidence_06_status_table,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_22,real_implicit_filter_22,plan_evidence_07_status_limit,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_22,real_implicit_filter_22,plan_evidence_07_status_limit,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_22,real_implicit_filter_22,plan_evidence_07_status_limit,document_type,"""implementation_plan""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_22,real_implicit_filter_22,plan_evidence_07_status_limit,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_23,real_implicit_filter_23,plan_evidence_08_milestone_table,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_23,real_implicit_filter_23,plan_evidence_08_milestone_table,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_23,real_implicit_filter_23,plan_evidence_08_milestone_table,document_type,"""implementation_plan""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_23,real_implicit_filter_23,plan_evidence_08_milestone_table,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_24,real_implicit_filter_24,plan_evidence_09_cluster_capital,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_24,real_implicit_filter_24,plan_evidence_09_cluster_capital,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_24,real_implicit_filter_24,plan_evidence_09_cluster_capital,document_type,"""implementation_plan""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_24,real_implicit_filter_24,plan_evidence_09_cluster_capital,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_25,real_implicit_filter_25,plan_evidence_10_cluster_northeast,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_25,real_implicit_filter_25,plan_evidence_10_cluster_northeast,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_25,real_implicit_filter_25,plan_evidence_10_cluster_northeast,document_type,"""implementation_plan""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_25,real_implicit_filter_25,plan_evidence_10_cluster_northeast,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_26,real_implicit_filter_26,plan_evidence_11_cluster_central,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_26,real_implicit_filter_26,plan_evidence_11_cluster_central,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_26,real_implicit_filter_26,plan_evidence_11_cluster_central,document_type,"""implementation_plan""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_26,real_implicit_filter_26,plan_evidence_11_cluster_central,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_27,real_implicit_filter_27,plan_evidence_12_cluster_south,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_27,real_implicit_filter_27,plan_evidence_12_cluster_south,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_27,real_implicit_filter_27,plan_evidence_12_cluster_south,document_type,"""implementation_plan""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_27,real_implicit_filter_27,plan_evidence_12_cluster_south,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_28,real_implicit_filter_28,plan_evidence_13_tourism_table,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_28,real_implicit_filter_28,plan_evidence_13_tourism_table,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_28,real_implicit_filter_28,plan_evidence_13_tourism_table,document_type,"""implementation_plan""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_28,real_implicit_filter_28,plan_evidence_13_tourism_table,domain,"""real_estate_projects""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_29,real_implicit_filter_29,price_2026_01,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_29,real_implicit_filter_29,price_2026_01,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_29,real_implicit_filter_29,price_2026_01,document_type,"""market_report""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_29,real_implicit_filter_29,price_2026_01,domain,"""real_estate_market""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_lifecycle_status_real_implicit_filter_30,real_implicit_filter_30,price_2026_02,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_effective_status_real_implicit_filter_30,real_implicit_filter_30,price_2026_02,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,0,0
+diag_document_type_real_implicit_filter_30,real_implicit_filter_30,price_2026_02,document_type,"""market_report""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_domain_real_implicit_filter_30,real_implicit_filter_30,price_2026_02,domain,"""real_estate_market""",document_type_domain_mapping,True,0,100.0,1,0,False,0,0
+diag_section_title_real_cross_document_confusion_24,real_cross_document_confusion_24,plan_evidence_09_cluster_capital,section_title,"""Vùng Thủ đô""",query_literal_value,True,1,99.639,1,1,True,0,0
+diag_section_title_real_cross_document_confusion_25,real_cross_document_confusion_25,plan_evidence_10_cluster_northeast,section_title,"""Hải Phòng–Quảng Ninh""",query_literal_value,True,1,99.639,1,1,True,0,0
+diag_section_title_real_cross_document_confusion_26,real_cross_document_confusion_26,plan_evidence_11_cluster_central,section_title,"""Duyên hải miền Trung""",query_literal_value,True,1,99.639,1,1,True,0,0
+diag_section_title_real_cross_document_confusion_27,real_cross_document_confusion_27,plan_evidence_12_cluster_south,section_title,"""TP.HCM và vùng phụ cận""",query_literal_value,True,1,99.639,1,1,True,0,0
+diag_lifecycle_status_real_version_conflict_01,real_version_conflict_01,price_2025_05,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_effective_status_real_version_conflict_01,real_version_conflict_01,price_2025_05,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,1,1
+diag_project_name_real_version_conflict_01,real_version_conflict_01,price_2025_05,project_name,"""Golden City""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_lifecycle_status_real_version_conflict_02,real_version_conflict_02,price_2023_01,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_effective_status_real_version_conflict_02,real_version_conflict_02,price_2023_01,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,1,1
+diag_project_name_real_version_conflict_02,real_version_conflict_02,price_2023_01,project_name,"""Grand Park""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_lifecycle_status_real_version_conflict_03,real_version_conflict_03,price_2025_06,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_effective_status_real_version_conflict_03,real_version_conflict_03,price_2025_06,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,1,1
+diag_project_name_real_version_conflict_03,real_version_conflict_03,price_2025_06,project_name,"""Green City""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_lifecycle_status_real_version_conflict_04,real_version_conflict_04,price_2025_11,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_effective_status_real_version_conflict_04,real_version_conflict_04,price_2025_11,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,1,1
+diag_project_name_real_version_conflict_04,real_version_conflict_04,price_2025_11,project_name,"""Green Paradise""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_lifecycle_status_real_version_conflict_05,real_version_conflict_05,price_2023_08,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_effective_status_real_version_conflict_05,real_version_conflict_05,price_2023_08,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,1,1
+diag_project_name_real_version_conflict_05,real_version_conflict_05,price_2023_08,project_name,"""Ocean Park""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_lifecycle_status_real_version_conflict_06,real_version_conflict_06,price_2023_10,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_effective_status_real_version_conflict_06,real_version_conflict_06,price_2023_10,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,1,1
+diag_project_name_real_version_conflict_06,real_version_conflict_06,price_2023_10,project_name,"""Ocean Park 2""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_lifecycle_status_real_version_conflict_07,real_version_conflict_07,price_2024_01,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_effective_status_real_version_conflict_07,real_version_conflict_07,price_2024_01,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,1,1
+diag_project_name_real_version_conflict_07,real_version_conflict_07,price_2024_01,project_name,"""Royal Island""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_lifecycle_status_real_version_conflict_08,real_version_conflict_08,price_2023_05,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_effective_status_real_version_conflict_08,real_version_conflict_08,price_2023_05,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,1,1
+diag_project_name_real_version_conflict_08,real_version_conflict_08,price_2023_05,project_name,"""Smart City""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_lifecycle_status_real_version_conflict_09,real_version_conflict_09,price_2023_01,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_effective_status_real_version_conflict_09,real_version_conflict_09,price_2023_01,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,1,1
+diag_project_name_real_version_conflict_09,real_version_conflict_09,price_2023_01,project_name,"""Grand Park""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_lifecycle_status_real_version_conflict_10,real_version_conflict_10,price_2025_06,lifecycle_status,"""latest""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_effective_status_real_version_conflict_10,real_version_conflict_10,price_2025_06,effective_status,"""current""",current_latest_equivalence,True,0,100.0,1,0,False,1,1
+diag_project_name_real_version_conflict_10,real_version_conflict_10,price_2025_06,project_name,"""Green City""",frozen_condition,True,0,100.0,1,0,False,1,1
+diag_year_real_version_conflict_21,real_version_conflict_21,price_2026_07,year,2026,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_version_conflict_21,real_version_conflict_21,price_2026_07,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_project_name_real_version_conflict_21,real_version_conflict_21,price_2026_07,project_name,"""Global Gate Hạ Long""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_version_conflict_22,real_version_conflict_22,price_2024_05,year,2024,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_version_conflict_22,real_version_conflict_22,price_2024_05,data_period,"""2024""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_project_name_real_version_conflict_22,real_version_conflict_22,price_2024_05,project_name,"""Global Gate""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_version_conflict_23,real_version_conflict_23,price_2023_01,year,2023,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_version_conflict_23,real_version_conflict_23,price_2023_01,data_period,"""2023""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_project_name_real_version_conflict_23,real_version_conflict_23,price_2023_01,project_name,"""Grand Park""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_version_conflict_24,real_version_conflict_24,price_2026_20,year,2026,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_version_conflict_24,real_version_conflict_24,price_2026_20,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_project_name_real_version_conflict_24,real_version_conflict_24,price_2026_20,project_name,"""Grand Park""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_version_conflict_25,real_version_conflict_25,price_2025_06,year,2025,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_version_conflict_25,real_version_conflict_25,price_2025_06,data_period,"""2025""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_project_name_real_version_conflict_25,real_version_conflict_25,price_2025_06,project_name,"""Green City""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_version_conflict_26,real_version_conflict_26,price_2026_14,year,2026,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_version_conflict_26,real_version_conflict_26,price_2026_14,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_project_name_real_version_conflict_26,real_version_conflict_26,price_2026_14,project_name,"""Green City""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_version_conflict_27,real_version_conflict_27,price_2026_11,year,2026,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_version_conflict_27,real_version_conflict_27,price_2026_11,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_project_name_real_version_conflict_27,real_version_conflict_27,price_2026_11,project_name,"""Green Paradise""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_version_conflict_28,real_version_conflict_28,price_2026_04,year,2026,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_version_conflict_28,real_version_conflict_28,price_2026_04,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_project_name_real_version_conflict_28,real_version_conflict_28,price_2026_04,project_name,"""Hải Vân Bay""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_version_conflict_29,real_version_conflict_29,price_2023_10,year,2023,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_version_conflict_29,real_version_conflict_29,price_2023_10,data_period,"""2023""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_project_name_real_version_conflict_29,real_version_conflict_29,price_2023_10,project_name,"""Ocean Park 2""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_year_real_version_conflict_30,real_version_conflict_30,price_2026_18,year,2026,frozen_condition,True,13,95.307,1,1,True,0,0
+diag_data_period_real_version_conflict_30,real_version_conflict_30,price_2026_18,data_period,"""2026""",annual_period_equivalence,True,0,100.0,1,0,False,0,0
+diag_project_name_real_version_conflict_30,real_version_conflict_30,price_2026_18,project_name,"""Ocean Park 3""",frozen_condition,True,0,100.0,1,0,False,0,0
+diag_project_code_real_section_localization_01,real_section_localization_01,utility_p02,project_code,"""P02""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_section_title_real_section_localization_01,real_section_localization_01,utility_p02,section_title,"""P02 • Happy Home Tràng Cát""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_project_code_real_section_localization_02,real_section_localization_02,utility_p04,project_code,"""P04""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_section_title_real_section_localization_02,real_section_localization_02,utility_p04,section_title,"""P04 • Vinhomes Global Gate Hạ Long""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_project_code_real_section_localization_03,real_section_localization_03,utility_p07,project_code,"""P07""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_section_title_real_section_localization_03,real_section_localization_03,utility_p07,section_title,"""P07 • Vinhomes Golden City""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_project_code_real_section_localization_04,real_section_localization_04,utility_p09,project_code,"""P09""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_section_title_real_section_localization_04,real_section_localization_04,utility_p09,section_title,"""P09 • Vinhomes Wonder City""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_project_code_real_section_localization_05,real_section_localization_05,utility_p11,project_code,"""P11""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_project_code_real_section_localization_06,real_section_localization_06,utility_p12,project_code,"""P12""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_section_title_real_section_localization_06,real_section_localization_06,utility_p12,section_title,"""P12 • Vinhomes Star City""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_project_code_real_section_localization_07,real_section_localization_07,utility_p13,project_code,"""P13""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_section_title_real_section_localization_07,real_section_localization_07,utility_p13,section_title,"""P13 • Vinhomes Royal Island""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_project_code_real_section_localization_08,real_section_localization_08,utility_p14,project_code,"""P14""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_section_title_real_section_localization_08,real_section_localization_08,utility_p14,section_title,"""P14 • Vinhomes Ocean Park 3""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_project_code_real_section_localization_09,real_section_localization_09,utility_p15,project_code,"""P15""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_section_title_real_section_localization_09,real_section_localization_09,utility_p15,section_title,"""P15 • Vinhomes Ocean Park 2""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_project_code_real_section_localization_10,real_section_localization_10,utility_p16,project_code,"""P16""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_section_title_real_section_localization_10,real_section_localization_10,utility_p16,section_title,"""P16 • Vinhomes Smart City""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_project_code_real_section_localization_11,real_section_localization_11,utility_p18,project_code,"""P18""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_project_code_real_section_localization_12,real_section_localization_12,utility_p03,project_code,"""P03""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_section_title_real_section_localization_12,real_section_localization_12,utility_p03,section_title,"""P03 • Vinhomes Pearl Bay""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_project_code_real_section_localization_13,real_section_localization_13,utility_p05,project_code,"""P05""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_section_title_real_section_localization_13,real_section_localization_13,utility_p05,section_title,"""P05 • Vinhomes Hải Vân Bay""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_project_code_real_section_localization_14,real_section_localization_14,utility_p10,project_code,"""P10""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_section_title_real_section_localization_14,real_section_localization_14,utility_p10,section_title,"""P10 • Vincom Shophouse Royal Park""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_project_code_real_section_localization_15,real_section_localization_15,utility_p01,project_code,"""P01""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_section_title_real_section_localization_15,real_section_localization_15,utility_p01,section_title,"""P01 • Vinhomes Sài Gòn Park""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_project_code_real_section_localization_16,real_section_localization_16,utility_p06,project_code,"""P06""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_section_title_real_section_localization_16,real_section_localization_16,utility_p06,section_title,"""P06 • Vinhomes Green Paradise""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_project_code_real_section_localization_17,real_section_localization_17,utility_p08,project_code,"""P08""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_project_code_real_section_localization_18,real_section_localization_18,utility_p17,project_code,"""P17""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_section_title_real_section_localization_18,real_section_localization_18,utility_p17,section_title,"""P17 • Vinhomes Grand Park""",query_literal_value,True,2,99.278,1,1,True,0,0
+diag_region_real_section_localization_19,real_section_localization_19,cluster_01,region,"""Vùng Thủ đô""",query_literal_value,True,0,100.0,1,0,False,0,0
+diag_section_title_real_section_localization_19,real_section_localization_19,cluster_01,section_title,"""Vùng Thủ đô""",query_literal_value,True,1,99.639,1,1,True,0,0
+diag_region_real_section_localization_20,real_section_localization_20,cluster_02,region,"""Hải Phòng–Quảng Ninh""",query_literal_value,True,0,100.0,1,0,False,0,0
+diag_section_title_real_section_localization_20,real_section_localization_20,cluster_02,section_title,"""Hải Phòng–Quảng Ninh""",query_literal_value,True,1,99.639,1,1,True,0,0
+diag_region_real_section_localization_21,real_section_localization_21,cluster_03,region,"""Duyên hải miền Trung""",query_literal_value,True,0,100.0,1,0,False,0,0
+diag_section_title_real_section_localization_21,real_section_localization_21,cluster_03,section_title,"""Duyên hải miền Trung""",query_literal_value,True,1,99.639,1,1,True,0,0
+diag_region_real_section_localization_22,real_section_localization_22,cluster_04,region,"""TP.HCM và vùng phụ cận""",query_literal_value,True,0,100.0,1,0,False,0,0
+diag_section_title_real_section_localization_22,real_section_localization_22,cluster_04,section_title,"""TP.HCM và vùng phụ cận""",query_literal_value,True,1,99.639,1,1,True,0,0
+diag_section_title_real_section_localization_23,real_section_localization_23,summary_2023_01,section_title,"""1. Tóm tắt điều hành""",query_literal_value,True,10,96.39,1,1,True,0,0
+diag_section_title_real_section_localization_24,real_section_localization_24,checklist_2023,section_title,"""5. Checklist xác minh trước giao dịch""",query_literal_value,True,4,98.556,1,1,True,0,0
+diag_section_title_real_section_localization_25,real_section_localization_25,summary_2024_01,section_title,"""1. Tóm tắt điều hành""",query_literal_value,True,10,96.39,1,1,True,0,0
+diag_section_title_real_section_localization_26,real_section_localization_26,checklist_2024,section_title,"""5. Checklist xác minh trước giao dịch""",query_literal_value,True,4,98.556,1,1,True,0,0
+diag_section_title_real_section_localization_27,real_section_localization_27,summary_2025_01,section_title,"""1. Tóm tắt điều hành""",query_literal_value,True,10,96.39,1,1,True,0,0
+diag_section_title_real_section_localization_28,real_section_localization_28,checklist_2025,section_title,"""5. Checklist xác minh trước giao dịch""",query_literal_value,True,4,98.556,1,1,True,0,0
+diag_section_title_real_section_localization_29,real_section_localization_29,summary_2026_01,section_title,"""1. Tóm tắt điều hành""",query_literal_value,True,10,96.39,1,1,True,0,0
+diag_section_title_real_section_localization_30,real_section_localization_30,checklist_2026,section_title,"""5. Checklist xác minh trước giao dịch""",query_literal_value,True,4,98.556,1,1,True,0,0
+diag_content_kind_real_table_structured_01,real_table_structured_01,utility_p02,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_02,real_table_structured_02,utility_p04,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_03,real_table_structured_03,utility_p07,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_04,real_table_structured_04,utility_p09,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_05,real_table_structured_05,utility_p11,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_06,real_table_structured_06,utility_p12,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_07,real_table_structured_07,utility_p13,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_08,real_table_structured_08,utility_p14,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_09,real_table_structured_09,utility_p15,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_10,real_table_structured_10,utility_p16,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_11,real_table_structured_11,utility_p18,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_12,real_table_structured_12,utility_p03,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_13,real_table_structured_13,utility_p05,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_14,real_table_structured_14,utility_p10,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_15,real_table_structured_15,utility_p01,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_16,real_table_structured_16,utility_p06,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_17,real_table_structured_17,utility_p08,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_18,real_table_structured_18,utility_p17,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_19,real_table_structured_19,price_2023_01,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_20,real_table_structured_20,price_2024_01,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_21,real_table_structured_21,price_2025_01,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_22,real_table_structured_22,price_2026_01,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_23,real_table_structured_23,summary_2023_01,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_24,real_table_structured_24,summary_2024_01,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_25,real_table_structured_25,summary_2025_01,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_26,real_table_structured_26,summary_2026_01,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_27,real_table_structured_27,plan_evidence_06_status_table,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_28,real_table_structured_28,plan_evidence_08_milestone_table,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_29,real_table_structured_29,plan_evidence_13_tourism_table,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_content_kind_real_table_structured_30,real_table_structured_30,plan_evidence_14_monitoring_matrix,content_kind,"""table""",deterministic_query_intent,True,60,78.339,1,1,True,0,0
+diag_year_real_null_insufficient_01,real_null_insufficient_01,null_2022_01,year,2022,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_01,real_null_insufficient_01,null_2022_01,data_period,"""2022""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_01,real_null_insufficient_01,null_2022_01,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_01,real_null_insufficient_01,null_2022_01,project_name,"""Grand Park""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_02,real_null_insufficient_02,null_2022_02,year,2022,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_02,real_null_insufficient_02,null_2022_02,data_period,"""2022""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_02,real_null_insufficient_02,null_2022_02,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_02,real_null_insufficient_02,null_2022_02,project_name,"""Smart City""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_03,real_null_insufficient_03,null_2022_03,year,2022,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_03,real_null_insufficient_03,null_2022_03,data_period,"""2022""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_03,real_null_insufficient_03,null_2022_03,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_03,real_null_insufficient_03,null_2022_03,project_name,"""Ocean Park""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_04,real_null_insufficient_04,null_2022_04,year,2022,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_04,real_null_insufficient_04,null_2022_04,data_period,"""2022""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_04,real_null_insufficient_04,null_2022_04,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_04,real_null_insufficient_04,null_2022_04,project_name,"""Ocean Park 2""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_05,real_null_insufficient_05,null_2022_05,year,2022,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_05,real_null_insufficient_05,null_2022_05,data_period,"""2022""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_05,real_null_insufficient_05,null_2022_05,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_05,real_null_insufficient_05,null_2022_05,project_name,"""Royal Island""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_06,real_null_insufficient_06,null_2022_06,year,2022,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_06,real_null_insufficient_06,null_2022_06,data_period,"""2022""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_06,real_null_insufficient_06,null_2022_06,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_06,real_null_insufficient_06,null_2022_06,project_name,"""Global Gate""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_07,real_null_insufficient_07,null_2022_07,year,2022,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_07,real_null_insufficient_07,null_2022_07,data_period,"""2022""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_07,real_null_insufficient_07,null_2022_07,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_07,real_null_insufficient_07,null_2022_07,project_name,"""Đại đô thị Hà Nội""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_08,real_null_insufficient_08,null_2022_08,year,2022,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_08,real_null_insufficient_08,null_2022_08,data_period,"""2022""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_08,real_null_insufficient_08,null_2022_08,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_08,real_null_insufficient_08,null_2022_08,project_name,"""Wonder City""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_09,real_null_insufficient_09,null_2022_09,year,2022,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_09,real_null_insufficient_09,null_2022_09,data_period,"""2022""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_09,real_null_insufficient_09,null_2022_09,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_09,real_null_insufficient_09,null_2022_09,project_name,"""Golden City""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_10,real_null_insufficient_10,null_2022_10,year,2022,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_10,real_null_insufficient_10,null_2022_10,data_period,"""2022""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_10,real_null_insufficient_10,null_2022_10,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_10,real_null_insufficient_10,null_2022_10,project_name,"""Green City""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_11,real_null_insufficient_11,null_2022_11,year,2022,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_11,real_null_insufficient_11,null_2022_11,data_period,"""2022""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_11,real_null_insufficient_11,null_2022_11,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_11,real_null_insufficient_11,null_2022_11,project_name,"""Green Paradise""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_12,real_null_insufficient_12,null_2022_12,year,2022,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_12,real_null_insufficient_12,null_2022_12,data_period,"""2022""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_12,real_null_insufficient_12,null_2022_12,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_12,real_null_insufficient_12,null_2022_12,project_name,"""Sài Gòn Park""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_13,real_null_insufficient_13,null_2022_13,year,2022,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_13,real_null_insufficient_13,null_2022_13,data_period,"""2022""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_13,real_null_insufficient_13,null_2022_13,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_13,real_null_insufficient_13,null_2022_13,project_name,"""Hải Vân Bay""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_14,real_null_insufficient_14,null_2022_14,year,2022,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_14,real_null_insufficient_14,null_2022_14,data_period,"""2022""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_14,real_null_insufficient_14,null_2022_14,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_14,real_null_insufficient_14,null_2022_14,project_name,"""Pearl Bay""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_15,real_null_insufficient_15,null_2022_15,year,2022,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_15,real_null_insufficient_15,null_2022_15,data_period,"""2022""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_15,real_null_insufficient_15,null_2022_15,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_15,real_null_insufficient_15,null_2022_15,project_name,"""Global Gate Hạ Long""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_16,real_null_insufficient_16,null_2027_16,year,2027,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_16,real_null_insufficient_16,null_2027_16,data_period,"""2027""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_16,real_null_insufficient_16,null_2027_16,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_16,real_null_insufficient_16,null_2027_16,project_name,"""Ocean Park 3""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_17,real_null_insufficient_17,null_2027_17,year,2027,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_17,real_null_insufficient_17,null_2027_17,data_period,"""2027""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_17,real_null_insufficient_17,null_2027_17,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_17,real_null_insufficient_17,null_2027_17,project_name,"""Grand Park""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_18,real_null_insufficient_18,null_2027_18,year,2027,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_18,real_null_insufficient_18,null_2027_18,data_period,"""2027""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_18,real_null_insufficient_18,null_2027_18,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_18,real_null_insufficient_18,null_2027_18,project_name,"""Smart City""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_19,real_null_insufficient_19,null_2027_19,year,2027,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_19,real_null_insufficient_19,null_2027_19,data_period,"""2027""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_19,real_null_insufficient_19,null_2027_19,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_19,real_null_insufficient_19,null_2027_19,project_name,"""Ocean Park""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_20,real_null_insufficient_20,null_2027_20,year,2027,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_20,real_null_insufficient_20,null_2027_20,data_period,"""2027""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_20,real_null_insufficient_20,null_2027_20,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_20,real_null_insufficient_20,null_2027_20,project_name,"""Ocean Park 2""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_21,real_null_insufficient_21,null_2027_21,year,2027,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_21,real_null_insufficient_21,null_2027_21,data_period,"""2027""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_21,real_null_insufficient_21,null_2027_21,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_21,real_null_insufficient_21,null_2027_21,project_name,"""Royal Island""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_22,real_null_insufficient_22,null_2027_22,year,2027,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_22,real_null_insufficient_22,null_2027_22,data_period,"""2027""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_22,real_null_insufficient_22,null_2027_22,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_22,real_null_insufficient_22,null_2027_22,project_name,"""Global Gate""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_23,real_null_insufficient_23,null_2027_23,year,2027,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_23,real_null_insufficient_23,null_2027_23,data_period,"""2027""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_23,real_null_insufficient_23,null_2027_23,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_23,real_null_insufficient_23,null_2027_23,project_name,"""Đại đô thị Hà Nội""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_24,real_null_insufficient_24,null_2027_24,year,2027,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_24,real_null_insufficient_24,null_2027_24,data_period,"""2027""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_24,real_null_insufficient_24,null_2027_24,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_24,real_null_insufficient_24,null_2027_24,project_name,"""Wonder City""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_25,real_null_insufficient_25,null_2027_25,year,2027,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_25,real_null_insufficient_25,null_2027_25,data_period,"""2027""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_25,real_null_insufficient_25,null_2027_25,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_25,real_null_insufficient_25,null_2027_25,project_name,"""Golden City""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_26,real_null_insufficient_26,null_2027_26,year,2027,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_26,real_null_insufficient_26,null_2027_26,data_period,"""2027""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_26,real_null_insufficient_26,null_2027_26,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_26,real_null_insufficient_26,null_2027_26,project_name,"""Green City""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_27,real_null_insufficient_27,null_2027_27,year,2027,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_27,real_null_insufficient_27,null_2027_27,data_period,"""2027""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_27,real_null_insufficient_27,null_2027_27,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_27,real_null_insufficient_27,null_2027_27,project_name,"""Green Paradise""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_28,real_null_insufficient_28,null_2027_28,year,2027,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_28,real_null_insufficient_28,null_2027_28,data_period,"""2027""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_28,real_null_insufficient_28,null_2027_28,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_28,real_null_insufficient_28,null_2027_28,project_name,"""Sài Gòn Park""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_29,real_null_insufficient_29,null_2027_29,year,2027,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_29,real_null_insufficient_29,null_2027_29,data_period,"""2027""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_29,real_null_insufficient_29,null_2027_29,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_29,real_null_insufficient_29,null_2027_29,project_name,"""Hải Vân Bay""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_year_real_null_insufficient_30,real_null_insufficient_30,null_2027_30,year,2027,frozen_condition,False,0,100.0,0,0,,0,0
+diag_data_period_real_null_insufficient_30,real_null_insufficient_30,null_2027_30,data_period,"""2027""",annual_period_equivalence,False,0,100.0,0,0,,0,0
+diag_document_type_real_null_insufficient_30,real_null_insufficient_30,null_2027_30,document_type,"""market_report""",frozen_condition,False,0,100.0,0,0,,0,0
+diag_project_name_real_null_insufficient_30,real_null_insufficient_30,null_2027_30,project_name,"""Pearl Bay""",frozen_condition,False,0,100.0,0,0,,0,0

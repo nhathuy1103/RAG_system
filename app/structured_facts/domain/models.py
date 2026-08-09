@@ -1,0 +1,1081 @@
+"""Framework-independent contracts for structured business facts.
+
+The generic knowledge-quality subsystem works at document and text-claim level.
+These value objects deliberately model the finer-grained identity required for
+business tables without coupling extraction to persistence or retrieval.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import math
+import re
+import unicodedata
+from collections.abc import Mapping
+from dataclasses import dataclass, field
+from datetime import UTC, date, datetime, time
+from decimal import Decimal
+from enum import StrEnum
+
+type ScalarValue = str | int | float | bool | Decimal | date | datetime
+type ConstraintValue = ScalarValue | tuple[ScalarValue, ...]
+type TemporalPoint = date | datetime
+
+
+class ScopeRelation(StrEnum):
+    """Directional set relation between two business scopes."""
+
+    SAME = "same"
+    LEFT_CONTAINS_RIGHT = "left_contains_right"
+    RIGHT_CONTAINS_LEFT = "right_contains_left"
+    OVERLAPS = "overlaps"
+    DISJOINT = "disjoint"
+    UNKNOWN = "unknown"
+
+
+class QualifierCompatibility(StrEnum):
+    """Whether two sets of claim qualifiers allow value comparison."""
+
+    EQUAL = "equal"
+    COMPATIBLE = "compatible"
+    DISJOINT = "disjoint"
+    UNKNOWN = "unknown"
+
+
+class TemporalRelation(StrEnum):
+    """Directional relation between two effective-time intervals."""
+
+    SAME = "same"
+    LEFT_CONTAINS_RIGHT = "left_contains_right"
+    RIGHT_CONTAINS_LEFT = "right_contains_left"
+    OVERLAPS = "overlaps"
+    BEFORE = "before"
+    AFTER = "after"
+    UNKNOWN = "unknown"
+
+
+class ClaimRelationType(StrEnum):
+    """Row/claim-level outcomes; document relations remain only summaries."""
+
+    UNCHANGED = "unchanged"
+    UPDATED = "updated"
+    ADDED = "added"
+    REMOVED = "removed"
+    CONFLICT_CANDIDATE = "conflict_candidate"
+    CONDITIONAL_VARIANT = "conditional_variant"
+    UNCERTAIN = "uncertain"
+
+
+@dataclass(frozen=True, slots=True)
+class LocationScope:
+    """Hierarchical location constraints, from broadest to narrowest."""
+
+    developer: ConstraintValue | None = None
+    project: ConstraintValue | None = None
+    phase: ConstraintValue | None = None
+    subdivision: ConstraintValue | None = None
+    building: ConstraintValue | None = None
+    unit: ConstraintValue | None = None
+
+    def to_payload(self) -> dict[str, object]:
+        return _dataclass_constraints_payload(self)
+
+    @classmethod
+    def from_payload(cls, value: object) -> LocationScope:
+        payload = _require_mapping(value, field_name="location")
+        return cls(
+            developer=_payload_optional_constraint(payload.get("developer"), "developer"),
+            project=_payload_optional_constraint(payload.get("project"), "project"),
+            phase=_payload_optional_constraint(payload.get("phase"), "phase"),
+            subdivision=_payload_optional_constraint(payload.get("subdivision"), "subdivision"),
+            building=_payload_optional_constraint(payload.get("building"), "building"),
+            unit=_payload_optional_constraint(payload.get("unit"), "unit"),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ProductScope:
+    """Product constraints orthogonal to physical location."""
+
+    property_type: ConstraintValue | None = None
+    bedrooms: ConstraintValue | None = None
+    area_type: ConstraintValue | None = None
+    product_variant: ConstraintValue | None = None
+
+    def to_payload(self) -> dict[str, object]:
+        return _dataclass_constraints_payload(self)
+
+    @classmethod
+    def from_payload(cls, value: object) -> ProductScope:
+        payload = _require_mapping(value, field_name="product")
+        return cls(
+            property_type=_payload_optional_constraint(
+                payload.get("property_type"), "property_type"
+            ),
+            bedrooms=_payload_optional_constraint(payload.get("bedrooms"), "bedrooms"),
+            area_type=_payload_optional_constraint(payload.get("area_type"), "area_type"),
+            product_variant=_payload_optional_constraint(
+                payload.get("product_variant"), "product_variant"
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class CommercialScope:
+    """Commercial applicability constraints for one fact."""
+
+    price_type: ConstraintValue | None = None
+    price_basis: ConstraintValue | None = None
+    payment_plan: ConstraintValue | None = None
+    discount_program: ConstraintValue | None = None
+    vat_included: ConstraintValue | None = None
+    maintenance_fee_included: ConstraintValue | None = None
+
+    def to_payload(self) -> dict[str, object]:
+        return _dataclass_constraints_payload(self)
+
+    @classmethod
+    def from_payload(cls, value: object) -> CommercialScope:
+        payload = _require_mapping(value, field_name="commercial")
+        return cls(
+            price_type=_payload_optional_constraint(payload.get("price_type"), "price_type"),
+            price_basis=_payload_optional_constraint(payload.get("price_basis"), "price_basis"),
+            payment_plan=_payload_optional_constraint(payload.get("payment_plan"), "payment_plan"),
+            discount_program=_payload_optional_constraint(
+                payload.get("discount_program"), "discount_program"
+            ),
+            vat_included=_payload_optional_constraint(payload.get("vat_included"), "vat_included"),
+            maintenance_fee_included=_payload_optional_constraint(
+                payload.get("maintenance_fee_included"), "maintenance_fee_included"
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class BusinessScope:
+    """Facet-based business scope.
+
+    ``document_type`` is intentionally routing-only metadata. It is serialized
+    for analyzer selection and diagnostics, but is excluded from both scope
+    comparison and the stable business-scope identity.
+    """
+
+    location: LocationScope = field(default_factory=LocationScope)
+    product: ProductScope = field(default_factory=ProductScope)
+    commercial: CommercialScope = field(default_factory=CommercialScope)
+    document_type: str | None = None
+
+    def stable_identity(self) -> tuple[tuple[str, tuple[str, ...]], ...]:
+        return tuple(
+            (name, _constraint_atoms(value))
+            for name, value in _business_scope_items(self)
+            if value is not None
+        )
+
+    @property
+    def scope_identity_hash(self) -> str:
+        return _stable_hash(self.stable_identity())
+
+    def to_payload(self) -> dict[str, object]:
+        return {
+            "location": self.location.to_payload(),
+            "product": self.product.to_payload(),
+            "commercial": self.commercial.to_payload(),
+            "document_type": self.document_type,
+            "scope_identity_hash": self.scope_identity_hash,
+        }
+
+    @classmethod
+    def from_payload(cls, value: object) -> BusinessScope:
+        payload = _require_mapping(value, field_name="scope")
+        return cls(
+            location=LocationScope.from_payload(payload.get("location", {})),
+            product=ProductScope.from_payload(payload.get("product", {})),
+            commercial=CommercialScope.from_payload(payload.get("commercial", {})),
+            document_type=_payload_optional_text(payload.get("document_type"), "document_type"),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ClaimQualifiers:
+    """Normalized qualifiers split by candidate-identity significance.
+
+    Stable qualifiers participate in the indexed candidate key. Optional
+    qualifiers never change that key, but are still compared field-by-field
+    before values may be declared conflicting.
+
+    A tuple value means an explicit set of allowed alternatives, not an ordered
+    list. This lets compatibility distinguish overlapping constraints from
+    missing/unknown information.
+    """
+
+    stable: tuple[tuple[str, ConstraintValue], ...] = ()
+    optional: tuple[tuple[str, ConstraintValue], ...] = ()
+
+    def __post_init__(self) -> None:
+        normalized_stable = _normalize_named_constraints(self.stable)
+        normalized_optional = _normalize_named_constraints(self.optional)
+        overlap = {key for key, _ in normalized_stable} & {key for key, _ in normalized_optional}
+        if overlap:
+            joined = ", ".join(sorted(overlap))
+            raise ValueError(f"qualifier keys cannot be both stable and optional: {joined}")
+        object.__setattr__(self, "stable", normalized_stable)
+        object.__setattr__(self, "optional", normalized_optional)
+
+    @classmethod
+    def from_mappings(
+        cls,
+        *,
+        stable: Mapping[str, ConstraintValue | None] | None = None,
+        optional: Mapping[str, ConstraintValue | None] | None = None,
+    ) -> ClaimQualifiers:
+        return cls(
+            stable=tuple(
+                (key, value) for key, value in (stable or {}).items() if value is not None
+            ),
+            optional=tuple(
+                (key, value) for key, value in (optional or {}).items() if value is not None
+            ),
+        )
+
+    def stable_identity(self) -> tuple[tuple[str, tuple[str, ...]], ...]:
+        return tuple((key, _constraint_atoms(value)) for key, value in self.stable)
+
+    @property
+    def stable_identity_hash(self) -> str:
+        return _stable_hash(self.stable_identity())
+
+    def to_payload(self) -> dict[str, object]:
+        return {
+            "stable": {key: _constraint_payload(value) for key, value in self.stable},
+            "optional": {key: _constraint_payload(value) for key, value in self.optional},
+            "stable_identity_hash": self.stable_identity_hash,
+        }
+
+    @classmethod
+    def from_payload(cls, value: object) -> ClaimQualifiers:
+        payload = _require_mapping(value, field_name="qualifiers")
+        stable = _payload_constraint_mapping(payload.get("stable", {}), "qualifiers.stable")
+        optional = _payload_constraint_mapping(payload.get("optional", {}), "qualifiers.optional")
+        return cls.from_mappings(stable=stable, optional=optional)
+
+
+@dataclass(frozen=True, slots=True)
+class TemporalContext:
+    """Distinct source, validity, observation, and ingestion timestamps."""
+
+    publication_time: TemporalPoint | None = None
+    effective_from: TemporalPoint | None = None
+    effective_to: TemporalPoint | None = None
+    observed_at: TemporalPoint | None = None
+    ingested_at: TemporalPoint | None = None
+
+    def __post_init__(self) -> None:
+        if (
+            self.effective_from is not None
+            and self.effective_to is not None
+            and _temporal_sort_key(self.effective_from) > _temporal_sort_key(self.effective_to)
+        ):
+            raise ValueError("effective_from cannot be after effective_to")
+
+    @property
+    def has_effective_interval(self) -> bool:
+        return self.effective_from is not None or self.effective_to is not None
+
+    def to_payload(self) -> dict[str, object]:
+        return {
+            "publication_time": _temporal_payload(self.publication_time),
+            "effective_from": _temporal_payload(self.effective_from),
+            "effective_to": _temporal_payload(self.effective_to),
+            "observed_at": _temporal_payload(self.observed_at),
+            "ingested_at": _temporal_payload(self.ingested_at),
+        }
+
+    @classmethod
+    def from_payload(cls, value: object) -> TemporalContext:
+        payload = _require_mapping(value, field_name="temporal")
+        return cls(
+            publication_time=_payload_temporal(payload.get("publication_time"), "publication_time"),
+            effective_from=_payload_temporal(payload.get("effective_from"), "effective_from"),
+            effective_to=_payload_temporal(payload.get("effective_to"), "effective_to"),
+            observed_at=_payload_temporal(payload.get("observed_at"), "observed_at"),
+            ingested_at=_payload_temporal(payload.get("ingested_at"), "ingested_at"),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class NormalizedValue:
+    """A normalized fact value while preserving its source representation."""
+
+    value: ScalarValue
+    unit: str | None = None
+    currency: str | None = None
+    basis: str | None = None
+    raw_value: str | None = None
+
+    def __post_init__(self) -> None:
+        _validate_scalar(self.value)
+
+    def stable_identity(self) -> tuple[object, ...]:
+        return (
+            _canonical_atom(self.value),
+            _normalize_optional_text(self.unit),
+            _normalize_optional_text(self.currency),
+            _normalize_optional_text(self.basis),
+        )
+
+    def to_payload(self) -> dict[str, object]:
+        return {
+            "value": _scalar_payload(self.value),
+            "value_type": _scalar_type(self.value),
+            "unit": self.unit,
+            "currency": self.currency,
+            "basis": self.basis,
+            "raw_value": self.raw_value,
+        }
+
+    @classmethod
+    def from_payload(cls, value: object) -> NormalizedValue:
+        payload = _require_mapping(value, field_name="value")
+        if "value" not in payload:
+            raise ValueError("value.value is required")
+        return cls(
+            value=_payload_typed_scalar(payload.get("value"), payload.get("value_type")),
+            unit=_payload_optional_text(payload.get("unit"), "value.unit"),
+            currency=_payload_optional_text(payload.get("currency"), "value.currency"),
+            basis=_payload_optional_text(payload.get("basis"), "value.basis"),
+            raw_value=_payload_optional_text(payload.get("raw_value"), "value.raw_value"),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ClaimProvenance:
+    """Cell-level lineage back to the original extracted artifact."""
+
+    document_id: str
+    table_id: str | None = None
+    row_index: int | None = None
+    data_row_ordinal: int | None = None
+    column_name: str | None = None
+    cell_id: str | None = None
+    page_number: int | None = None
+    source_span: tuple[int, int] | None = None
+    sheet_name: str | None = None
+    block_id: str | None = None
+    chunk_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if not self.document_id.strip():
+            raise ValueError("provenance document_id cannot be blank")
+        if self.row_index is not None and self.row_index < 0:
+            raise ValueError("row_index cannot be negative")
+        if self.data_row_ordinal is not None and self.data_row_ordinal < 0:
+            raise ValueError("data_row_ordinal cannot be negative")
+        if self.page_number is not None and self.page_number < 1:
+            raise ValueError("page_number must be positive")
+        if self.source_span is not None:
+            start, end = self.source_span
+            if start < 0 or end < start:
+                raise ValueError("source_span must be an ordered non-negative range")
+
+    def to_payload(self) -> dict[str, object]:
+        return {
+            "document_id": self.document_id,
+            "table_id": self.table_id,
+            "row_index": self.row_index,
+            "data_row_ordinal": self.data_row_ordinal,
+            "column_name": self.column_name,
+            "cell_id": self.cell_id,
+            "page_number": self.page_number,
+            "source_span": (
+                {"start": self.source_span[0], "end": self.source_span[1]}
+                if self.source_span is not None
+                else None
+            ),
+            "sheet_name": self.sheet_name,
+            "block_id": self.block_id,
+            "chunk_id": self.chunk_id,
+        }
+
+    @classmethod
+    def from_payload(cls, value: object) -> ClaimProvenance:
+        payload = _require_mapping(value, field_name="provenance")
+        return cls(
+            document_id=_payload_required_text(
+                payload.get("document_id"), "provenance.document_id"
+            ),
+            table_id=_payload_optional_text(payload.get("table_id"), "provenance.table_id"),
+            row_index=_payload_optional_int(payload.get("row_index"), "provenance.row_index"),
+            data_row_ordinal=_payload_optional_int(
+                payload.get("data_row_ordinal"), "provenance.data_row_ordinal"
+            ),
+            column_name=_payload_optional_text(
+                payload.get("column_name"), "provenance.column_name"
+            ),
+            cell_id=_payload_optional_text(payload.get("cell_id"), "provenance.cell_id"),
+            page_number=_payload_optional_int(payload.get("page_number"), "provenance.page_number"),
+            source_span=_payload_source_span(payload.get("source_span")),
+            sheet_name=_payload_optional_text(payload.get("sheet_name"), "provenance.sheet_name"),
+            block_id=_payload_optional_text(payload.get("block_id"), "provenance.block_id"),
+            chunk_id=_payload_optional_text(payload.get("chunk_id"), "provenance.chunk_id"),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class ClaimDerivation:
+    """Auditable computation metadata for a value derived from other claims."""
+
+    formula: str
+    input_claim_ids: tuple[str, ...] = ()
+    absolute_tolerance: Decimal | None = None
+    relative_tolerance: Decimal | None = None
+
+    def __post_init__(self) -> None:
+        if not self.formula.strip():
+            raise ValueError("derivation formula cannot be blank")
+        if self.absolute_tolerance is not None and self.absolute_tolerance < 0:
+            raise ValueError("absolute_tolerance cannot be negative")
+        if self.relative_tolerance is not None and self.relative_tolerance < 0:
+            raise ValueError("relative_tolerance cannot be negative")
+
+    def to_payload(self) -> dict[str, object]:
+        return {
+            "formula": self.formula,
+            "input_claim_ids": list(self.input_claim_ids),
+            "absolute_tolerance": _decimal_payload(self.absolute_tolerance),
+            "relative_tolerance": _decimal_payload(self.relative_tolerance),
+        }
+
+    @classmethod
+    def from_payload(cls, value: object) -> ClaimDerivation:
+        payload = _require_mapping(value, field_name="derivation")
+        raw_inputs = payload.get("input_claim_ids", [])
+        if not isinstance(raw_inputs, list | tuple):
+            raise ValueError("derivation.input_claim_ids must be a list")
+        input_claim_ids = tuple(
+            _payload_required_text(item, "derivation.input_claim_ids") for item in raw_inputs
+        )
+        return cls(
+            formula=_payload_required_text(payload.get("formula"), "derivation.formula"),
+            input_claim_ids=input_claim_ids,
+            absolute_tolerance=_payload_optional_decimal(
+                payload.get("absolute_tolerance"), "derivation.absolute_tolerance"
+            ),
+            relative_tolerance=_payload_optional_decimal(
+                payload.get("relative_tolerance"), "derivation.relative_tolerance"
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class SourceAuthority:
+    """Source-ranking evidence applied only after claims are comparable.
+
+    Authority is deliberately descriptive rather than a hard-coded winner
+    policy. A repository can retain publisher-specific metadata while ranking
+    remains configurable at query/review time.
+    """
+
+    source_type: str | None = None
+    publisher: str | None = None
+    approval_status: str | None = None
+    officiality: str | bool | None = None
+    authority_level: int | None = None
+    metadata: tuple[tuple[str, ScalarValue], ...] = ()
+
+    def __post_init__(self) -> None:
+        if self.authority_level is not None and not 0 <= self.authority_level <= 100:
+            raise ValueError("authority_level must be between 0 and 100")
+        normalized_metadata: dict[str, ScalarValue] = {}
+        for raw_key, raw_value in self.metadata:
+            key = _normalize_key(raw_key)
+            if not key:
+                raise ValueError("authority metadata key cannot be blank")
+            if key in normalized_metadata:
+                raise ValueError(f"duplicate authority metadata key: {key}")
+            _validate_scalar(raw_value)
+            normalized_metadata[key] = _normalized_scalar(raw_value)
+        object.__setattr__(self, "metadata", tuple(sorted(normalized_metadata.items())))
+
+    @classmethod
+    def from_mapping(
+        cls,
+        *,
+        source_type: str | None = None,
+        publisher: str | None = None,
+        approval_status: str | None = None,
+        officiality: str | bool | None = None,
+        authority_level: int | None = None,
+        metadata: Mapping[str, ScalarValue | None] | None = None,
+    ) -> SourceAuthority:
+        return cls(
+            source_type=source_type,
+            publisher=publisher,
+            approval_status=approval_status,
+            officiality=officiality,
+            authority_level=authority_level,
+            metadata=tuple(
+                (key, value) for key, value in (metadata or {}).items() if value is not None
+            ),
+        )
+
+    def to_payload(self) -> dict[str, object]:
+        return {
+            "source_type": self.source_type,
+            "publisher": self.publisher,
+            "approval_status": self.approval_status,
+            "officiality": self.officiality,
+            "authority_level": self.authority_level,
+            "metadata": {key: _scalar_payload(value) for key, value in self.metadata},
+        }
+
+    @classmethod
+    def from_payload(cls, value: object) -> SourceAuthority:
+        payload = _require_mapping(value, field_name="authority")
+        raw_officiality = payload.get("officiality")
+        if raw_officiality is not None and not isinstance(raw_officiality, str | bool):
+            raise ValueError("authority.officiality must be text, boolean, or null")
+        raw_metadata = _require_mapping(
+            payload.get("metadata", {}), field_name="authority.metadata"
+        )
+        metadata: dict[str, ScalarValue | None] = {}
+        for raw_key, raw_value in raw_metadata.items():
+            if not isinstance(raw_key, str):
+                raise ValueError("authority.metadata keys must be text")
+            metadata[raw_key] = _payload_scalar(raw_value, f"authority.metadata.{raw_key}")
+        return cls.from_mapping(
+            source_type=_payload_optional_text(payload.get("source_type"), "authority.source_type"),
+            publisher=_payload_optional_text(payload.get("publisher"), "authority.publisher"),
+            approval_status=_payload_optional_text(
+                payload.get("approval_status"), "authority.approval_status"
+            ),
+            officiality=raw_officiality,
+            authority_level=_payload_optional_int(
+                payload.get("authority_level"), "authority.authority_level"
+            ),
+            metadata=metadata,
+        )
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class StructuredClaim:
+    """One comparable business fact with stable identity and full provenance."""
+
+    document_id: str
+    subject_key: str
+    predicate: str
+    value: NormalizedValue
+    provenance: ClaimProvenance
+    extractor_version: str
+    id: str | None = None
+    owner_id: str | None = None
+    notebook_id: str | None = None
+    scope: BusinessScope = field(default_factory=BusinessScope)
+    qualifiers: ClaimQualifiers = field(default_factory=ClaimQualifiers)
+    temporal: TemporalContext = field(default_factory=TemporalContext)
+    extraction_confidence: float = 1.0
+    derivation: ClaimDerivation | None = None
+    authority: SourceAuthority = field(default_factory=SourceAuthority)
+
+    def __post_init__(self) -> None:
+        for field_name, value in (
+            ("document_id", self.document_id),
+            ("subject_key", self.subject_key),
+            ("predicate", self.predicate),
+            ("extractor_version", self.extractor_version),
+        ):
+            if not value.strip():
+                raise ValueError(f"{field_name} cannot be blank")
+        if self.provenance.document_id != self.document_id:
+            raise ValueError("claim and provenance document_id must match")
+        _validate_confidence(self.extraction_confidence, field_name="extraction_confidence")
+
+    def candidate_identity(self) -> tuple[object, ...]:
+        """Identity used for candidate lookup; optional qualifiers are excluded."""
+        return (
+            _normalize_text(self.subject_key),
+            _normalize_text(self.predicate),
+            self.qualifiers.stable_identity(),
+        )
+
+    @property
+    def candidate_identity_hash(self) -> str:
+        return _stable_hash(self.candidate_identity())
+
+    @property
+    def claim_identity_hash(self) -> str:
+        """Idempotency fingerprint for one extracted claim occurrence."""
+        return _stable_hash(
+            {
+                "document_id": self.document_id,
+                "candidate_identity_hash": self.candidate_identity_hash,
+                "value": self.value.stable_identity(),
+                "scope_identity_hash": self.scope.scope_identity_hash,
+                "qualifiers": self.qualifiers.to_payload(),
+                "temporal": self.temporal.to_payload(),
+                "provenance": self.provenance.to_payload(),
+                "derivation": self.derivation.to_payload() if self.derivation else None,
+                "extractor_version": self.extractor_version,
+            }
+        )
+
+    def to_payload(self) -> dict[str, object]:
+        return {
+            "id": self.id,
+            "owner_id": self.owner_id,
+            "notebook_id": self.notebook_id,
+            "document_id": self.document_id,
+            "subject_key": self.subject_key,
+            "predicate": self.predicate,
+            "value": self.value.to_payload(),
+            "scope": self.scope.to_payload(),
+            "qualifiers": self.qualifiers.to_payload(),
+            "temporal": self.temporal.to_payload(),
+            "provenance": self.provenance.to_payload(),
+            "extraction_confidence": self.extraction_confidence,
+            "extractor_version": self.extractor_version,
+            "derivation": self.derivation.to_payload() if self.derivation else None,
+            "authority": self.authority.to_payload(),
+            "candidate_identity_hash": self.candidate_identity_hash,
+            "claim_identity_hash": self.claim_identity_hash,
+        }
+
+    @classmethod
+    def from_payload(cls, value: object) -> StructuredClaim:
+        """Rehydrate a persisted claim while rejecting incomplete evidence."""
+        payload = _require_mapping(value, field_name="claim")
+        derivation_payload = payload.get("derivation")
+        scope_payload = payload.get("scope")
+        qualifiers_payload = payload.get("qualifiers")
+        temporal_payload = payload.get("temporal")
+        authority_payload = payload.get("authority")
+        return cls(
+            id=_payload_optional_text(payload.get("id"), "claim.id"),
+            owner_id=_payload_optional_text(payload.get("owner_id"), "claim.owner_id"),
+            notebook_id=_payload_optional_text(payload.get("notebook_id"), "claim.notebook_id"),
+            document_id=_payload_required_text(payload.get("document_id"), "claim.document_id"),
+            subject_key=_payload_required_text(payload.get("subject_key"), "claim.subject_key"),
+            predicate=_payload_required_text(payload.get("predicate"), "claim.predicate"),
+            value=NormalizedValue.from_payload(payload.get("value")),
+            scope=(
+                BusinessScope.from_payload(scope_payload)
+                if scope_payload is not None
+                else BusinessScope()
+            ),
+            qualifiers=(
+                ClaimQualifiers.from_payload(qualifiers_payload)
+                if qualifiers_payload is not None
+                else ClaimQualifiers()
+            ),
+            temporal=(
+                TemporalContext.from_payload(temporal_payload)
+                if temporal_payload is not None
+                else TemporalContext()
+            ),
+            provenance=ClaimProvenance.from_payload(payload.get("provenance")),
+            extraction_confidence=_payload_required_float(
+                payload.get("extraction_confidence"), "claim.extraction_confidence"
+            ),
+            extractor_version=_payload_required_text(
+                payload.get("extractor_version"), "claim.extractor_version"
+            ),
+            derivation=(
+                ClaimDerivation.from_payload(derivation_payload)
+                if derivation_payload is not None
+                else None
+            ),
+            authority=(
+                SourceAuthority.from_payload(authority_payload)
+                if authority_payload is not None
+                else SourceAuthority()
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ClaimRelation:
+    """One explainable comparison result between structured claims."""
+
+    relation_type: ClaimRelationType
+    source_claim_id: str | None
+    target_claim_id: str | None
+    subject_key: str
+    predicate: str
+    confidence: float
+    reason_codes: tuple[str, ...] = ()
+    scope_relation: ScopeRelation | None = None
+    qualifier_compatibility: QualifierCompatibility | None = None
+    temporal_relation: TemporalRelation | None = None
+
+    def __post_init__(self) -> None:
+        _validate_confidence(self.confidence, field_name="confidence")
+
+    def to_payload(self) -> dict[str, object]:
+        return {
+            "relation_type": self.relation_type.value,
+            "source_claim_id": self.source_claim_id,
+            "target_claim_id": self.target_claim_id,
+            "subject_key": self.subject_key,
+            "predicate": self.predicate,
+            "confidence": self.confidence,
+            "reason_codes": list(self.reason_codes),
+            "scope_relation": self.scope_relation.value if self.scope_relation else None,
+            "qualifier_compatibility": (
+                self.qualifier_compatibility.value if self.qualifier_compatibility else None
+            ),
+            "temporal_relation": self.temporal_relation.value if self.temporal_relation else None,
+        }
+
+
+def _business_scope_items(scope: BusinessScope) -> tuple[tuple[str, ConstraintValue | None], ...]:
+    return (
+        ("location.developer", scope.location.developer),
+        ("location.project", scope.location.project),
+        ("location.phase", scope.location.phase),
+        ("location.subdivision", scope.location.subdivision),
+        ("location.building", scope.location.building),
+        ("location.unit", scope.location.unit),
+        ("product.property_type", scope.product.property_type),
+        ("product.bedrooms", scope.product.bedrooms),
+        ("product.area_type", scope.product.area_type),
+        ("product.product_variant", scope.product.product_variant),
+        ("commercial.price_type", scope.commercial.price_type),
+        ("commercial.price_basis", scope.commercial.price_basis),
+        ("commercial.payment_plan", scope.commercial.payment_plan),
+        ("commercial.discount_program", scope.commercial.discount_program),
+        ("commercial.vat_included", scope.commercial.vat_included),
+        ("commercial.maintenance_fee_included", scope.commercial.maintenance_fee_included),
+    )
+
+
+def _normalize_named_constraints(
+    values: tuple[tuple[str, ConstraintValue], ...],
+) -> tuple[tuple[str, ConstraintValue], ...]:
+    normalized: dict[str, ConstraintValue] = {}
+    for raw_key, raw_value in values:
+        key = _normalize_key(raw_key)
+        if not key:
+            raise ValueError("qualifier key cannot be blank")
+        if key in normalized:
+            raise ValueError(f"duplicate qualifier key: {key}")
+        normalized[key] = _normalized_constraint(raw_value)
+    return tuple(sorted(normalized.items()))
+
+
+def _normalized_constraint(value: ConstraintValue) -> ConstraintValue:
+    raw_values = value if isinstance(value, tuple) else (value,)
+    if not raw_values:
+        raise ValueError("constraint alternatives cannot be empty")
+    normalized_by_key: dict[str, ScalarValue] = {}
+    for item in raw_values:
+        _validate_scalar(item)
+        canonical = _canonical_atom(item)
+        normalized_by_key[canonical] = _normalized_scalar(item)
+    ordered = tuple(normalized_by_key[key] for key in sorted(normalized_by_key))
+    return ordered[0] if len(ordered) == 1 else ordered
+
+
+def _constraint_atoms(value: ConstraintValue) -> tuple[str, ...]:
+    raw_values = value if isinstance(value, tuple) else (value,)
+    return tuple(sorted({_canonical_atom(item) for item in raw_values}))
+
+
+def _constraint_payload(value: ConstraintValue) -> object:
+    raw_values = value if isinstance(value, tuple) else (value,)
+    ordered = sorted(raw_values, key=_canonical_atom)
+    serialized = [_scalar_payload(item) for item in ordered]
+    return serialized[0] if len(serialized) == 1 else serialized
+
+
+def _dataclass_constraints_payload(value: object) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for name in value.__dataclass_fields__:  # type: ignore[attr-defined]
+        constraint = getattr(value, name)
+        result[name] = _constraint_payload(constraint) if constraint is not None else None
+    return result
+
+
+def _require_mapping(value: object, *, field_name: str) -> dict[str, object]:
+    if not isinstance(value, Mapping):
+        raise ValueError(f"{field_name} must be an object")
+    result: dict[str, object] = {}
+    for raw_key, raw_value in value.items():
+        if not isinstance(raw_key, str):
+            raise ValueError(f"{field_name} keys must be text")
+        result[raw_key] = raw_value
+    return result
+
+
+def _payload_constraint_mapping(
+    value: object,
+    field_name: str,
+) -> dict[str, ConstraintValue | None]:
+    payload = _require_mapping(value, field_name=field_name)
+    return {
+        key: _payload_optional_constraint(raw_value, f"{field_name}.{key}")
+        for key, raw_value in payload.items()
+    }
+
+
+def _payload_optional_constraint(value: object, field_name: str) -> ConstraintValue | None:
+    if value is None:
+        return None
+    if isinstance(value, list | tuple):
+        if not value:
+            raise ValueError(f"{field_name} alternatives cannot be empty")
+        return tuple(_payload_scalar(item, field_name) for item in value)
+    return _payload_scalar(value, field_name)
+
+
+def _payload_scalar(value: object, field_name: str) -> ScalarValue:
+    if isinstance(value, str | int | float | bool | Decimal | date | datetime):
+        _validate_scalar(value)
+        return value
+    raise ValueError(f"{field_name} must be a scalar value")
+
+
+def _payload_typed_scalar(value: object, value_type: object) -> ScalarValue:
+    if value_type is None:
+        return _payload_scalar(value, "value.value")
+    kind = _payload_required_text(value_type, "value.value_type")
+    try:
+        if kind == "decimal":
+            if isinstance(value, bool) or not isinstance(value, str | int | float | Decimal):
+                raise ValueError
+            return Decimal(str(value))
+        if kind == "date":
+            if not isinstance(value, str):
+                raise ValueError
+            return date.fromisoformat(value)
+        if kind == "datetime":
+            if not isinstance(value, str):
+                raise ValueError
+            return datetime.fromisoformat(value)
+        if kind == "bool":
+            if not isinstance(value, bool):
+                raise ValueError
+            return value
+        if kind == "int":
+            if isinstance(value, bool) or not isinstance(value, int):
+                raise ValueError
+            return value
+        if kind == "float":
+            if isinstance(value, bool) or not isinstance(value, int | float):
+                raise ValueError
+            parsed_float = float(value)
+            _validate_scalar(parsed_float)
+            return parsed_float
+        if kind == "text":
+            if not isinstance(value, str):
+                raise ValueError
+            return value
+    except (ArithmeticError, ValueError) as exc:
+        raise ValueError(f"value.value is not a valid {kind}") from exc
+    raise ValueError(f"unsupported value.value_type: {kind}")
+
+
+def _payload_required_text(value: object, field_name: str) -> str:
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"{field_name} must be non-blank text")
+    return value.strip()
+
+
+def _payload_optional_text(value: object, field_name: str) -> str | None:
+    if value is None:
+        return None
+    if not isinstance(value, str):
+        raise ValueError(f"{field_name} must be text or null")
+    return value.strip() or None
+
+
+def _payload_optional_int(value: object, field_name: str) -> int | None:
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"{field_name} must be an integer or null")
+    return value
+
+
+def _payload_required_float(value: object, field_name: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, int | float):
+        raise ValueError(f"{field_name} must be numeric")
+    parsed = float(value)
+    if not math.isfinite(parsed):
+        raise ValueError(f"{field_name} must be finite")
+    return parsed
+
+
+def _payload_optional_decimal(value: object, field_name: str) -> Decimal | None:
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, str | int | float | Decimal):
+        raise ValueError(f"{field_name} must be numeric or null")
+    try:
+        parsed = Decimal(str(value))
+    except ArithmeticError as exc:
+        raise ValueError(f"{field_name} must be numeric or null") from exc
+    if not parsed.is_finite():
+        raise ValueError(f"{field_name} must be finite")
+    return parsed
+
+
+def _payload_source_span(value: object) -> tuple[int, int] | None:
+    if value is None:
+        return None
+    if isinstance(value, Mapping):
+        payload = _require_mapping(value, field_name="provenance.source_span")
+        start = _payload_optional_int(payload.get("start"), "provenance.source_span.start")
+        end = _payload_optional_int(payload.get("end"), "provenance.source_span.end")
+    elif isinstance(value, list | tuple) and len(value) == 2:
+        start = _payload_optional_int(value[0], "provenance.source_span.start")
+        end = _payload_optional_int(value[1], "provenance.source_span.end")
+    else:
+        raise ValueError("provenance.source_span must be a start/end object")
+    if start is None or end is None:
+        raise ValueError("provenance.source_span requires start and end")
+    return (start, end)
+
+
+def _payload_temporal(value: object, field_name: str) -> TemporalPoint | None:
+    if value is None:
+        return None
+    if isinstance(value, datetime | date):
+        return value
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError(f"temporal.{field_name} must be an ISO date/datetime or null")
+    normalized = value.strip()
+    try:
+        if "T" in normalized or " " in normalized:
+            return datetime.fromisoformat(normalized)
+        return date.fromisoformat(normalized)
+    except ValueError as exc:
+        raise ValueError(f"temporal.{field_name} must be an ISO date/datetime or null") from exc
+
+
+def _normalize_key(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", _normalize_text(value)).strip("_")
+
+
+def _normalize_text(value: str) -> str:
+    normalized = unicodedata.normalize("NFKC", value).casefold().strip()
+    return " ".join(normalized.split())
+
+
+def _normalize_optional_text(value: str | None) -> str | None:
+    return _normalize_text(value) if value is not None else None
+
+
+def _normalized_scalar(value: ScalarValue) -> ScalarValue:
+    if isinstance(value, str):
+        return _normalize_text(value)
+    return value
+
+
+def _canonical_atom(value: ScalarValue) -> str:
+    _validate_scalar(value)
+    if isinstance(value, bool):
+        return f"bool:{str(value).lower()}"
+    if isinstance(value, datetime):
+        return f"datetime:{_temporal_sort_key(value).isoformat()}"
+    if isinstance(value, date):
+        return f"date:{value.isoformat()}"
+    if isinstance(value, Decimal):
+        return f"number:{_decimal_text(value)}"
+    if isinstance(value, int):
+        return f"number:{value}"
+    if isinstance(value, float):
+        return f"number:{_decimal_text(Decimal(str(value)))}"
+    return f"text:{_normalize_text(value)}"
+
+
+def _validate_scalar(value: ScalarValue) -> None:
+    if isinstance(value, float) and not math.isfinite(value):
+        raise ValueError("scalar floats must be finite")
+    if isinstance(value, Decimal) and not value.is_finite():
+        raise ValueError("scalar decimals must be finite")
+
+
+def _scalar_payload(value: ScalarValue) -> object:
+    if isinstance(value, Decimal):
+        return _decimal_text(value)
+    if isinstance(value, datetime | date):
+        return value.isoformat()
+    return value
+
+
+def _scalar_type(value: ScalarValue) -> str:
+    if isinstance(value, bool):
+        return "bool"
+    if isinstance(value, datetime):
+        return "datetime"
+    if isinstance(value, date):
+        return "date"
+    if isinstance(value, Decimal):
+        return "decimal"
+    if isinstance(value, int):
+        return "int"
+    if isinstance(value, float):
+        return "float"
+    return "text"
+
+
+def _decimal_text(value: Decimal) -> str:
+    if value == 0:
+        return "0"
+    return format(value.normalize(), "f")
+
+
+def _decimal_payload(value: Decimal | None) -> str | None:
+    return _decimal_text(value) if value is not None else None
+
+
+def _temporal_payload(value: TemporalPoint | None) -> str | None:
+    return value.isoformat() if value is not None else None
+
+
+def _temporal_sort_key(value: TemporalPoint) -> datetime:
+    if isinstance(value, datetime):
+        if value.tzinfo is not None:
+            return value.astimezone(UTC).replace(tzinfo=None)
+        return value
+    return datetime.combine(value, time.min)
+
+
+def _stable_hash(value: object) -> str:
+    canonical = json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+        default=str,
+    )
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _validate_confidence(value: float, *, field_name: str) -> None:
+    if not math.isfinite(value) or not 0.0 <= value <= 1.0:
+        raise ValueError(f"{field_name} must be between 0 and 1")
+
+
+__all__ = [
+    "BusinessScope",
+    "ClaimDerivation",
+    "ClaimProvenance",
+    "ClaimQualifiers",
+    "ClaimRelation",
+    "ClaimRelationType",
+    "CommercialScope",
+    "ConstraintValue",
+    "LocationScope",
+    "NormalizedValue",
+    "ProductScope",
+    "QualifierCompatibility",
+    "ScalarValue",
+    "ScopeRelation",
+    "SourceAuthority",
+    "StructuredClaim",
+    "TemporalContext",
+    "TemporalPoint",
+    "TemporalRelation",
+]

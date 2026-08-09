@@ -1,0 +1,2017 @@
+{
+  "schema_version": "3.0",
+  "benchmark_kind": "real_document_metadata_benchmark",
+  "annotation_policy": "Evidence is source-anchored, validated, and approved by the benchmark owner. Any content or source-hash change requires a new human review.",
+  "documents": {
+    "Vinhomes_TayMo.pdf": {
+      "document_metadata": {
+        "title": "Vinhomes_TayMo.pdf",
+        "document_type": "contract",
+        "domain": "real_estate_contract",
+        "source_kind": "pdf",
+        "keyword_aliases": [
+          "Hợp đồng mua bán diện tích thương mại",
+          "Khu đô thị Tây Mỗ - Đại Mỗ",
+          "Vinhomes Park"
+        ]
+      },
+      "rules": [
+        {
+          "pages": [
+            1
+          ],
+          "metadata": {
+            "section_title": "Hợp đồng mua bán diện tích thương mại",
+            "section_path": [
+              "Hợp đồng mua bán diện tích thương mại"
+            ],
+            "clause_type": "document_identity",
+            "contextual_search_terms": [
+              "Hợp đồng mua bán",
+              "Diện Tích Thương Mại"
+            ]
+          }
+        },
+        {
+          "pages": [
+            4
+          ],
+          "metadata": {
+            "section_title": "Dự Án",
+            "section_path": [
+              "Định nghĩa",
+              "Dự Án"
+            ],
+            "clause_type": "project_identity",
+            "contextual_search_terms": [
+              "Tây Mỗ",
+              "Đại Mỗ",
+              "Vinhomes Park",
+              "địa điểm dự án"
+            ]
+          }
+        },
+        {
+          "pages": [
+            7,
+            8
+          ],
+          "metadata": {
+            "section_title": "Giá Bán Diện Tích Thương Mại",
+            "section_path": [
+              "Giá bán và thanh toán",
+              "Giá Bán Diện Tích Thương Mại"
+            ],
+            "clause_type": "price_and_payment",
+            "contextual_search_terms": [
+              "thuế giá trị gia tăng",
+              "Kinh Phí Bảo Trì",
+              "lệ phí trước bạ",
+              "diện tích chênh lệch"
+            ]
+          }
+        },
+        {
+          "pages": [
+            12
+          ],
+          "metadata": {
+            "section_title": "Quyền và nghĩa vụ của Bên Mua",
+            "section_path": [
+              "Quyền và nghĩa vụ các bên",
+              "Bên Mua"
+            ],
+            "clause_type": "buyer_rights_obligations",
+            "contextual_search_terms": [
+              "hoàn trả giá bán",
+              "lãi suất",
+              "10%/năm"
+            ]
+          }
+        },
+        {
+          "pages": [
+            16
+          ],
+          "metadata": {
+            "section_title": "Giao nhận Diện Tích Thương Mại",
+            "section_path": [
+              "Bàn giao",
+              "Giao nhận Diện Tích Thương Mại"
+            ],
+            "clause_type": "handover",
+            "contextual_search_terms": [
+              "Thông Báo Bàn Giao",
+              "không đến nhận bàn giao",
+              "05 ngày"
+            ]
+          }
+        },
+        {
+          "pages": [
+            18
+          ],
+          "metadata": {
+            "section_title": "Điều 9. Bảo hành",
+            "section_path": [
+              "Điều 9",
+              "Bảo hành"
+            ],
+            "clause_type": "warranty",
+            "contextual_search_terms": [
+              "bảo hành",
+              "Diện Tích Thương Mại"
+            ]
+          }
+        },
+        {
+          "pages": [
+            23
+          ],
+          "metadata": {
+            "section_title": "Điều 14. Sự kiện bất khả kháng",
+            "section_path": [
+              "Điều 14",
+              "Sự kiện bất khả kháng"
+            ],
+            "clause_type": "force_majeure",
+            "contextual_search_terms": [
+              "bất khả kháng",
+              "chiến tranh",
+              "thiên tai"
+            ]
+          }
+        },
+        {
+          "pages": [
+            27
+          ],
+          "metadata": {
+            "section_title": "Điều 18. Giải quyết tranh chấp",
+            "section_path": [
+              "Điều 18",
+              "Giải quyết tranh chấp"
+            ],
+            "clause_type": "dispute_resolution",
+            "contextual_search_terms": [
+              "tranh chấp",
+              "thương lượng",
+              "60 ngày"
+            ]
+          }
+        },
+        {
+          "pages": [
+            37
+          ],
+          "metadata": {
+            "section_title": "Quyền và trách nhiệm của Cư Dân",
+            "section_path": [
+              "Nội quy Khu Thương Mại",
+              "Quyền và trách nhiệm của Cư Dân"
+            ],
+            "clause_type": "community_rules",
+            "contextual_search_terms": [
+              "Khu TM",
+              "đỗ xe",
+              "cản trở lưu thông"
+            ]
+          }
+        },
+        {
+          "pages": [
+            47
+          ],
+          "metadata": {
+            "section_title": "Quỹ Bảo Trì Khu Thương Mại",
+            "section_path": [
+              "Phụ lục 4",
+              "Quỹ Bảo Trì Khu Thương Mại"
+            ],
+            "clause_type": "maintenance_fund",
+            "contextual_search_terms": [
+              "PHỤ LỤC 4",
+              "quỹ bảo trì",
+              "Khu Thương Mại"
+            ]
+          }
+        }
+      ]
+    },
+    "Vinhomes_HaiVan.pdf": {
+      "document_metadata": {
+        "title": "Vinhomes_HaiVan.pdf",
+        "document_type": "contract",
+        "domain": "real_estate_contract",
+        "source_kind": "pdf",
+        "keyword_aliases": [
+          "Hợp đồng mua bán Nhà Ở",
+          "VHHVB/HĐMBNO",
+          "Làng Vân",
+          "Hải Vân"
+        ]
+      },
+      "rules": [
+        {
+          "pages": [
+            1
+          ],
+          "metadata": {
+            "section_title": "Hợp đồng mua bán nhà ở",
+            "section_path": [
+              "Hợp đồng mua bán nhà ở"
+            ],
+            "clause_type": "document_identity",
+            "contextual_search_terms": [
+              "Hợp đồng mua bán Nhà Ở",
+              "VHHVB/HĐMBNO"
+            ]
+          }
+        },
+        {
+          "pages": [
+            2
+          ],
+          "metadata": {
+            "section_title": "Các thông tin về Nhà Ở",
+            "section_path": [
+              "Định nghĩa",
+              "Các thông tin về Nhà Ở"
+            ],
+            "clause_type": "project_identity",
+            "contextual_search_terms": [
+              "Làng Vân",
+              "Hòa Hiệp Bắc",
+              "Hải Vân",
+              "Đà Nẵng"
+            ]
+          }
+        },
+        {
+          "pages": [
+            3
+          ],
+          "metadata": {
+            "section_title": "Giá Bán Nhà Ở",
+            "section_path": [
+              "Giá bán và thanh toán",
+              "Giá Bán Nhà Ở"
+            ],
+            "clause_type": "price_and_payment",
+            "contextual_search_terms": [
+              "quyền sử dụng đất",
+              "thuế giá trị gia tăng",
+              "Kinh Phí Bảo Trì",
+              "lệ phí trước bạ",
+              "kinh phí quản lý vận hành"
+            ]
+          }
+        },
+        {
+          "pages": [
+            5,
+            6
+          ],
+          "metadata": {
+            "section_title": "Giao nhận Nhà Ở",
+            "section_path": [
+              "Bàn giao",
+              "Giao nhận Nhà Ở"
+            ],
+            "clause_type": "handover",
+            "contextual_search_terms": [
+              "Thông Báo Bàn Giao",
+              "05 ngày",
+              "không đến nhận bàn giao"
+            ]
+          }
+        },
+        {
+          "pages": [
+            7
+          ],
+          "metadata": {
+            "section_title": "Bảo hành",
+            "section_path": [
+              "Bảo hành Nhà Ở",
+              "Nội dung bảo hành"
+            ],
+            "clause_type": "warranty",
+            "contextual_search_terms": [
+              "khung",
+              "cột",
+              "dầm",
+              "sàn",
+              "tường"
+            ]
+          }
+        },
+        {
+          "pages": [
+            8
+          ],
+          "metadata": {
+            "section_title": "Chuyển giao quyền và nghĩa vụ",
+            "section_path": [
+              "Hợp đồng",
+              "Chuyển giao quyền và nghĩa vụ"
+            ],
+            "clause_type": "contract_transfer",
+            "contextual_search_terms": [
+              "chuyển nhượng",
+              "chuyển giao Hợp Đồng",
+              "nghĩa vụ đến hạn"
+            ]
+          }
+        },
+        {
+          "pages": [
+            12
+          ],
+          "metadata": {
+            "section_title": "Quyền và nghĩa vụ của Bên Mua",
+            "section_path": [
+              "Quyền và nghĩa vụ các bên",
+              "Bên Mua"
+            ],
+            "clause_type": "buyer_rights_obligations",
+            "contextual_search_terms": [
+              "Nộp bổ sung Kinh Phí Bảo Trì",
+              "quỹ bảo trì không đủ"
+            ]
+          }
+        },
+        {
+          "pages": [
+            16
+          ],
+          "metadata": {
+            "section_title": "Điều 13. Sự kiện bất khả kháng",
+            "section_path": [
+              "Điều 13",
+              "Sự kiện bất khả kháng"
+            ],
+            "clause_type": "force_majeure",
+            "contextual_search_terms": [
+              "bất khả kháng",
+              "chiến tranh",
+              "thiên tai"
+            ]
+          }
+        },
+        {
+          "pages": [
+            19
+          ],
+          "metadata": {
+            "section_title": "Điều 17. Giải quyết tranh chấp",
+            "section_path": [
+              "Điều 17",
+              "Giải quyết tranh chấp"
+            ],
+            "clause_type": "dispute_resolution",
+            "contextual_search_terms": [
+              "tranh chấp",
+              "thương lượng",
+              "60 ngày"
+            ]
+          }
+        },
+        {
+          "pages": [
+            42
+          ],
+          "metadata": {
+            "section_title": "Quỹ Bảo Trì Khu Biệt Thự/Khu Nhà Ở",
+            "section_path": [
+              "Phụ lục 4",
+              "Quỹ Bảo Trì Khu Biệt Thự/Khu Nhà Ở"
+            ],
+            "clause_type": "maintenance_fund",
+            "contextual_search_terms": [
+              "PHỤ LỤC 4",
+              "quỹ bảo trì",
+              "Khu Biệt Thự",
+              "Khu Nhà Ở"
+            ]
+          }
+        }
+      ]
+    },
+    "demo_kb_chinh_sach_doi_tra_cskh - Copy.docx": {
+      "document_metadata": {
+        "title": "demo_kb_chinh_sach_doi_tra_cskh - Copy.docx",
+        "document_type": "policy",
+        "domain": "customer_support_policy",
+        "source_kind": "docx",
+        "keyword_aliases": [
+          "chính sách đổi trả",
+          "CSKH",
+          "CSKH-RET-01"
+        ]
+      },
+      "rules": [
+        {
+          "contains_any": [
+            "CSKH-RET-01",
+            "Đơn vị ban hành",
+            "Ngày ban hành"
+          ],
+          "metadata": {
+            "section_title": "Thông tin tài liệu",
+            "section_path": [
+              "Chính sách đổi trả hàng",
+              "Thông tin tài liệu"
+            ],
+            "content_kind": "table",
+            "table_header": "Mã tài liệu | Giá trị",
+            "policy_field": "document_metadata",
+            "contextual_search_terms": [
+              "Mã tài liệu",
+              "Ngày ban hành",
+              "Phạm vi",
+              "Trạng thái"
+            ]
+          }
+        },
+        {
+          "contains_any": [
+            "Thời hạn đổi trả",
+            "Tình trạng sản phẩm",
+            "Hàng khuyến mại",
+            "Giá sản phẩm"
+          ],
+          "metadata": {
+            "section_title": "Chính sách áp dụng",
+            "section_path": [
+              "Chính sách đổi trả hàng",
+              "Chính sách áp dụng"
+            ],
+            "content_kind": "table",
+            "table_header": "Nội dung | Quy định",
+            "policy_field": "return_policy",
+            "contextual_search_terms": [
+              "đổi trả",
+              "phí vận chuyển",
+              "hoàn tiền",
+              "tình trạng sản phẩm"
+            ]
+          }
+        },
+        {
+          "contains_any": [
+            "Khách hàng liên hệ tổng đài",
+            "CSKH xác nhận điều kiện",
+            "Kho kiểm tra sản phẩm"
+          ],
+          "metadata": {
+            "section_title": "Quy trình xử lý",
+            "section_path": [
+              "Chính sách đổi trả hàng",
+              "Quy trình xử lý"
+            ],
+            "clause_type": "process",
+            "contextual_search_terms": [
+              "mã đơn hàng",
+              "mã yêu cầu",
+              "gửi sản phẩm về kho",
+              "thông báo kết quả"
+            ]
+          }
+        },
+        {
+          "contains_any": [
+            "không nêu rõ quan hệ ưu tiên"
+          ],
+          "metadata": {
+            "section_title": "Lưu ý",
+            "section_path": [
+              "Chính sách đổi trả hàng",
+              "Lưu ý"
+            ],
+            "clause_type": "policy_precedence_note",
+            "contextual_search_terms": [
+              "quan hệ ưu tiên",
+              "quy định bộ phận khác"
+            ]
+          }
+        }
+      ]
+    },
+    "Vinhomes_Gia_Nha_2023.docx": {
+      "current_document_metadata": {
+        "title": "Vinhomes_Gia_Nha_2023.docx",
+        "document_type": "market_report",
+        "source_kind": "docx",
+        "language": "vi"
+      },
+      "document_metadata": {
+        "title": "Vinhomes_Gia_Nha_2023.docx",
+        "document_type": "market_report",
+        "source_kind": "docx",
+        "language": "vi",
+        "domain": "real_estate_market",
+        "source": "Vinhomes Market và nguồn công khai",
+        "year": 2023,
+        "data_period": "2023",
+        "document_version": 1,
+        "effective_status": "historical",
+        "lifecycle_status": "historical",
+        "as_of_date": "2026-08-04",
+        "keyword_aliases": [
+          "Giá nhà Vinhomes 2023",
+          "hồ sơ giá nhà",
+          "bảng giá"
+        ]
+      },
+      "rules": [
+        {
+          "section_titles": [
+            "1. Tóm tắt điều hành"
+          ],
+          "metadata": {
+            "clause_type": "executive_summary",
+            "contextual_summary": "Tóm tắt các chỉ báo giá Vinhomes năm 2023.",
+            "contextual_search_terms": [
+              "giá nhà 2023",
+              "chỉ báo giá"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "1. Tóm tắt điều hành"
+          ],
+          "contains_any": [
+            "| Chỉ báo | Mức ghi nhận | Cách đọc |"
+          ],
+          "metadata": {
+            "table_header": "Chỉ báo | Mức ghi nhận | Cách đọc"
+          }
+        },
+        {
+          "section_titles": [
+            "2. Phạm vi và phương pháp"
+          ],
+          "metadata": {
+            "clause_type": "methodology",
+            "contextual_summary": "Phạm vi nguồn, độ tin cậy và cách diễn giải dữ liệu giá năm 2023.",
+            "contextual_search_terms": [
+              "hạng A",
+              "hạng B",
+              "hạng C"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "2. Phạm vi và phương pháp"
+          ],
+          "contains_any": [
+            "| Hạng | Định nghĩa | Cách sử dụng |"
+          ],
+          "metadata": {
+            "table_header": "Hạng | Định nghĩa | Cách sử dụng"
+          }
+        },
+        {
+          "section_titles": [
+            "3. Bảng dữ liệu giá chi tiết"
+          ],
+          "contains_any": [
+            "| Dự án | Sản phẩm / phân khu | Mức giá ghi nhận |"
+          ],
+          "metadata": {
+            "clause_type": "price_observation_table",
+            "policy_field": "market_price",
+            "table_header": "Dự án | Sản phẩm / phân khu | Mức giá ghi nhận | Thời điểm / loại | Hạng | Nguồn",
+            "project_name": [
+              "Grand Park",
+              "Smart City",
+              "Ocean Park",
+              "Ocean Park 2"
+            ],
+            "market_type": [
+              "primary",
+              "survey",
+              "transfer"
+            ],
+            "reliability_grade": [
+              "C",
+              "B"
+            ],
+            "source_code": [
+              "[S01]",
+              "[S02]",
+              "[S03]",
+              "[S04]",
+              "[S05]",
+              "[S06]",
+              "[S07]",
+              "[S08]",
+              "[S09]"
+            ],
+            "contextual_summary": "Bảng dữ liệu giá chi tiết theo dự án và sản phẩm trong hồ sơ năm 2023.",
+            "contextual_search_terms": [
+              "Grand Park",
+              "Smart City",
+              "Ocean Park",
+              "Ocean Park 2",
+              "giá Vinhomes 2023"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "4. Nhận định và cách diễn giải"
+          ],
+          "metadata": {
+            "clause_type": "interpretation",
+            "contextual_summary": "Hướng dẫn diễn giải và so sánh dữ liệu giá năm 2023.",
+            "contextual_search_terms": [
+              "giá all-in",
+              "sơ cấp",
+              "chuyển nhượng"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "5. Checklist xác minh trước giao dịch"
+          ],
+          "metadata": {
+            "clause_type": "verification_checklist",
+            "contextual_summary": "Checklist xác minh giá, pháp lý và điều kiện giao dịch.",
+            "contextual_search_terms": [
+              "VAT",
+              "kinh phí bảo trì",
+              "lịch thanh toán"
+            ]
+          }
+        }
+      ]
+    },
+    "Vinhomes_Gia_Nha_2024.docx": {
+      "current_document_metadata": {
+        "title": "Vinhomes_Gia_Nha_2024.docx",
+        "document_type": "market_report",
+        "source_kind": "docx",
+        "language": "vi"
+      },
+      "document_metadata": {
+        "title": "Vinhomes_Gia_Nha_2024.docx",
+        "document_type": "market_report",
+        "source_kind": "docx",
+        "language": "vi",
+        "domain": "real_estate_market",
+        "source": "Vinhomes Market và nguồn công khai",
+        "year": 2024,
+        "data_period": "2024",
+        "document_version": 2,
+        "effective_status": "historical",
+        "lifecycle_status": "historical",
+        "as_of_date": "2026-08-04",
+        "keyword_aliases": [
+          "Giá nhà Vinhomes 2024",
+          "hồ sơ giá nhà",
+          "bảng giá"
+        ]
+      },
+      "rules": [
+        {
+          "section_titles": [
+            "1. Tóm tắt điều hành"
+          ],
+          "metadata": {
+            "clause_type": "executive_summary",
+            "contextual_summary": "Tóm tắt các chỉ báo giá Vinhomes năm 2024.",
+            "contextual_search_terms": [
+              "giá nhà 2024",
+              "chỉ báo giá"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "1. Tóm tắt điều hành"
+          ],
+          "contains_any": [
+            "| Chỉ báo | Mức ghi nhận | Cách đọc |"
+          ],
+          "metadata": {
+            "table_header": "Chỉ báo | Mức ghi nhận | Cách đọc"
+          }
+        },
+        {
+          "section_titles": [
+            "2. Phạm vi và phương pháp"
+          ],
+          "metadata": {
+            "clause_type": "methodology",
+            "contextual_summary": "Phạm vi nguồn, độ tin cậy và cách diễn giải dữ liệu giá năm 2024.",
+            "contextual_search_terms": [
+              "hạng A",
+              "hạng B",
+              "hạng C"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "2. Phạm vi và phương pháp"
+          ],
+          "contains_any": [
+            "| Hạng | Định nghĩa | Cách sử dụng |"
+          ],
+          "metadata": {
+            "table_header": "Hạng | Định nghĩa | Cách sử dụng"
+          }
+        },
+        {
+          "section_titles": [
+            "3. Bảng dữ liệu giá chi tiết"
+          ],
+          "contains_any": [
+            "| Dự án | Sản phẩm / phân khu | Mức giá ghi nhận |"
+          ],
+          "metadata": {
+            "clause_type": "price_observation_table",
+            "policy_field": "market_price",
+            "table_header": "Dự án | Sản phẩm / phân khu | Mức giá ghi nhận | Thời điểm / loại | Hạng | Nguồn",
+            "project_name": [
+              "Royal Island",
+              "Global Gate",
+              "Ocean Park",
+              "Smart City",
+              "Đại đô thị Hà Nội"
+            ],
+            "market_type": [
+              "primary",
+              "survey",
+              "transfer"
+            ],
+            "reliability_grade": [
+              "C"
+            ],
+            "source_code": [
+              "[S02]",
+              "[S03]",
+              "[S04]",
+              "[S05]",
+              "[S06]",
+              "[S07]"
+            ],
+            "contextual_summary": "Bảng dữ liệu giá chi tiết theo dự án và sản phẩm trong hồ sơ năm 2024.",
+            "contextual_search_terms": [
+              "Royal Island",
+              "Global Gate",
+              "Ocean Park",
+              "Smart City",
+              "Đại đô thị Hà Nội",
+              "giá Vinhomes 2024"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "4. Nhận định và cách diễn giải"
+          ],
+          "metadata": {
+            "clause_type": "interpretation",
+            "contextual_summary": "Hướng dẫn diễn giải và so sánh dữ liệu giá năm 2024.",
+            "contextual_search_terms": [
+              "giá all-in",
+              "sơ cấp",
+              "chuyển nhượng"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "5. Checklist xác minh trước giao dịch"
+          ],
+          "metadata": {
+            "clause_type": "verification_checklist",
+            "contextual_summary": "Checklist xác minh giá, pháp lý và điều kiện giao dịch.",
+            "contextual_search_terms": [
+              "VAT",
+              "kinh phí bảo trì",
+              "lịch thanh toán"
+            ]
+          }
+        }
+      ]
+    },
+    "Vinhomes_Gia_Nha_2025.docx": {
+      "current_document_metadata": {
+        "title": "Vinhomes_Gia_Nha_2025.docx",
+        "document_type": "market_report",
+        "source_kind": "docx",
+        "language": "vi"
+      },
+      "document_metadata": {
+        "title": "Vinhomes_Gia_Nha_2025.docx",
+        "document_type": "market_report",
+        "source_kind": "docx",
+        "language": "vi",
+        "domain": "real_estate_market",
+        "source": "Vinhomes Market và nguồn công khai",
+        "year": 2025,
+        "data_period": "2025",
+        "document_version": 3,
+        "effective_status": "historical",
+        "lifecycle_status": "historical",
+        "as_of_date": "2026-08-04",
+        "keyword_aliases": [
+          "Giá nhà Vinhomes 2025",
+          "hồ sơ giá nhà",
+          "bảng giá"
+        ]
+      },
+      "rules": [
+        {
+          "section_titles": [
+            "1. Tóm tắt điều hành"
+          ],
+          "metadata": {
+            "clause_type": "executive_summary",
+            "contextual_summary": "Tóm tắt các chỉ báo giá Vinhomes năm 2025.",
+            "contextual_search_terms": [
+              "giá nhà 2025",
+              "chỉ báo giá"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "1. Tóm tắt điều hành"
+          ],
+          "contains_any": [
+            "| Chỉ báo | Mức ghi nhận | Cách đọc |"
+          ],
+          "metadata": {
+            "table_header": "Chỉ báo | Mức ghi nhận | Cách đọc"
+          }
+        },
+        {
+          "section_titles": [
+            "2. Phạm vi và phương pháp"
+          ],
+          "metadata": {
+            "clause_type": "methodology",
+            "contextual_summary": "Phạm vi nguồn, độ tin cậy và cách diễn giải dữ liệu giá năm 2025.",
+            "contextual_search_terms": [
+              "hạng A",
+              "hạng B",
+              "hạng C"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "2. Phạm vi và phương pháp"
+          ],
+          "contains_any": [
+            "| Hạng | Định nghĩa | Cách sử dụng |"
+          ],
+          "metadata": {
+            "table_header": "Hạng | Định nghĩa | Cách sử dụng"
+          }
+        },
+        {
+          "section_titles": [
+            "3. Bảng dữ liệu giá chi tiết"
+          ],
+          "contains_any": [
+            "| Dự án | Sản phẩm / phân khu | Mức giá ghi nhận |"
+          ],
+          "metadata": {
+            "clause_type": "price_observation_table",
+            "policy_field": "market_price",
+            "table_header": "Dự án | Sản phẩm / phân khu | Mức giá ghi nhận | Thời điểm / loại | Hạng | Nguồn",
+            "project_name": [
+              "Wonder City",
+              "Golden City",
+              "Green City",
+              "Green Paradise",
+              "Global Gate",
+              "Grand Park",
+              "Ocean Park"
+            ],
+            "market_type": [
+              "primary",
+              "survey",
+              "transfer"
+            ],
+            "reliability_grade": [
+              "B",
+              "C"
+            ],
+            "source_code": [
+              "[S01]",
+              "[S02]",
+              "[S03]",
+              "[S04]",
+              "[S05]",
+              "[S06]",
+              "[S07]",
+              "[S08]"
+            ],
+            "contextual_summary": "Bảng dữ liệu giá chi tiết theo dự án và sản phẩm trong hồ sơ năm 2025.",
+            "contextual_search_terms": [
+              "Wonder City",
+              "Golden City",
+              "Green City",
+              "Green Paradise",
+              "Global Gate",
+              "Grand Park",
+              "Ocean Park",
+              "giá Vinhomes 2025"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "4. Nhận định và cách diễn giải"
+          ],
+          "metadata": {
+            "clause_type": "interpretation",
+            "contextual_summary": "Hướng dẫn diễn giải và so sánh dữ liệu giá năm 2025.",
+            "contextual_search_terms": [
+              "giá all-in",
+              "sơ cấp",
+              "chuyển nhượng"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "5. Checklist xác minh trước giao dịch"
+          ],
+          "metadata": {
+            "clause_type": "verification_checklist",
+            "contextual_summary": "Checklist xác minh giá, pháp lý và điều kiện giao dịch.",
+            "contextual_search_terms": [
+              "VAT",
+              "kinh phí bảo trì",
+              "lịch thanh toán"
+            ]
+          }
+        }
+      ]
+    },
+    "Vinhomes_Gia_Nha_2026.docx": {
+      "current_document_metadata": {
+        "title": "Vinhomes_Gia_Nha_2026.docx",
+        "document_type": "market_report",
+        "source_kind": "docx",
+        "language": "vi"
+      },
+      "document_metadata": {
+        "title": "Vinhomes_Gia_Nha_2026.docx",
+        "document_type": "market_report",
+        "source_kind": "docx",
+        "language": "vi",
+        "domain": "real_estate_market",
+        "source": "Vinhomes Market và nguồn công khai",
+        "year": 2026,
+        "data_period": "2026",
+        "document_version": 4,
+        "effective_status": "current",
+        "lifecycle_status": "latest",
+        "as_of_date": "2026-08-04",
+        "keyword_aliases": [
+          "Giá nhà Vinhomes 2026",
+          "hồ sơ giá nhà",
+          "bảng giá"
+        ]
+      },
+      "rules": [
+        {
+          "section_titles": [
+            "1. Tóm tắt điều hành"
+          ],
+          "metadata": {
+            "clause_type": "executive_summary",
+            "contextual_summary": "Tóm tắt các chỉ báo giá Vinhomes năm 2026.",
+            "contextual_search_terms": [
+              "giá nhà 2026",
+              "chỉ báo giá"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "1. Tóm tắt điều hành"
+          ],
+          "contains_any": [
+            "| Chỉ báo | Mức ghi nhận | Cách đọc |"
+          ],
+          "metadata": {
+            "table_header": "Chỉ báo | Mức ghi nhận | Cách đọc"
+          }
+        },
+        {
+          "section_titles": [
+            "2. Phạm vi và phương pháp"
+          ],
+          "metadata": {
+            "clause_type": "methodology",
+            "contextual_summary": "Phạm vi nguồn, độ tin cậy và cách diễn giải dữ liệu giá năm 2026.",
+            "contextual_search_terms": [
+              "hạng A",
+              "hạng B",
+              "hạng C"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "2. Phạm vi và phương pháp"
+          ],
+          "contains_any": [
+            "| Hạng | Định nghĩa | Cách sử dụng |"
+          ],
+          "metadata": {
+            "table_header": "Hạng | Định nghĩa | Cách sử dụng"
+          }
+        },
+        {
+          "section_titles": [
+            "3. Bảng dữ liệu giá chi tiết"
+          ],
+          "contains_any": [
+            "| Dự án | Sản phẩm / phân khu | Mức giá ghi nhận |"
+          ],
+          "metadata": {
+            "clause_type": "price_observation_table",
+            "policy_field": "market_price",
+            "table_header": "Dự án | Sản phẩm / phân khu | Mức giá ghi nhận | Thời điểm / loại | Hạng | Nguồn",
+            "project_name": [
+              "Sài Gòn Park",
+              "Hải Vân Bay",
+              "Pearl Bay",
+              "Global Gate Hạ Long",
+              "Green Paradise",
+              "Golden City",
+              "Green City",
+              "Royal Island",
+              "Ocean Park 2",
+              "Ocean Park 3",
+              "Grand Park",
+              "Ocean Park",
+              "Smart City"
+            ],
+            "market_type": [
+              "primary",
+              "survey",
+              "transfer"
+            ],
+            "reliability_grade": [
+              "B",
+              "A",
+              "C"
+            ],
+            "source_code": [
+              "[S01]",
+              "[S02]",
+              "[S03]",
+              "[S04]",
+              "[S05]",
+              "[S06]",
+              "[S07]",
+              "[S08]",
+              "[S09]",
+              "[S10]",
+              "[S11]",
+              "[S12]",
+              "[S13]",
+              "[S14]",
+              "[S15]",
+              "[S16]",
+              "[S17]",
+              "[S18]"
+            ],
+            "contextual_summary": "Bảng dữ liệu giá chi tiết theo dự án và sản phẩm trong hồ sơ năm 2026.",
+            "contextual_search_terms": [
+              "Sài Gòn Park",
+              "Hải Vân Bay",
+              "Pearl Bay",
+              "Global Gate Hạ Long",
+              "Green Paradise",
+              "Golden City",
+              "Green City",
+              "Royal Island",
+              "Ocean Park 2",
+              "Ocean Park 3",
+              "Grand Park",
+              "Ocean Park",
+              "Smart City",
+              "giá Vinhomes 2026"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "4. Nhận định và cách diễn giải"
+          ],
+          "metadata": {
+            "clause_type": "interpretation",
+            "contextual_summary": "Hướng dẫn diễn giải và so sánh dữ liệu giá năm 2026.",
+            "contextual_search_terms": [
+              "giá all-in",
+              "sơ cấp",
+              "chuyển nhượng"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "5. Checklist xác minh trước giao dịch"
+          ],
+          "metadata": {
+            "clause_type": "verification_checklist",
+            "contextual_summary": "Checklist xác minh giá, pháp lý và điều kiện giao dịch.",
+            "contextual_search_terms": [
+              "VAT",
+              "kinh phí bảo trì",
+              "lịch thanh toán"
+            ]
+          }
+        }
+      ]
+    },
+    "Vinhomes_Tien_Ich_Toan_Quoc.docx": {
+      "current_document_metadata": {
+        "title": "Vinhomes_Tien_Ich_Toan_Quoc.docx",
+        "document_type": "amenity_catalog",
+        "source_kind": "docx",
+        "language": "vi"
+      },
+      "document_metadata": {
+        "title": "Vinhomes_Tien_Ich_Toan_Quoc.docx",
+        "document_type": "amenity_catalog",
+        "source_kind": "docx",
+        "language": "vi",
+        "domain": "real_estate_projects",
+        "source": "Vinhomes Market và nguồn công khai",
+        "year": 2026,
+        "data_period": "2026",
+        "document_version": 1,
+        "effective_status": "current",
+        "lifecycle_status": "latest",
+        "as_of_date": "2026-08-04",
+        "keyword_aliases": [
+          "tiện ích Vinhomes",
+          "bản đồ tiện ích",
+          "18 dự án"
+        ]
+      },
+      "rules": [
+        {
+          "section_titles": [
+            "1. Toàn cảnh danh mục"
+          ],
+          "contains_any": [
+            "| Mã | Dự án | Địa bàn | Quy mô | Khởi công | Trạng thái |"
+          ],
+          "metadata": {
+            "clause_type": "project_catalog",
+            "table_header": "Mã | Dự án | Địa bàn | Quy mô | Khởi công | Trạng thái",
+            "project_name": [
+              "Happy Home Tràng Cát",
+              "Vinhomes Global Gate Hạ Long",
+              "Vinhomes Golden City",
+              "Vinhomes Wonder City",
+              "Vinhomes Global Gate",
+              "Vinhomes Star City",
+              "Vinhomes Royal Island",
+              "Vinhomes Ocean Park 3",
+              "Vinhomes Ocean Park 2",
+              "Vinhomes Smart City",
+              "Vinhomes Ocean Park",
+              "Vinhomes Pearl Bay",
+              "Vinhomes Hải Vân Bay",
+              "Vincom Shophouse Royal Park",
+              "Vinhomes Sài Gòn Park",
+              "Vinhomes Green Paradise",
+              "Vinhomes Green City",
+              "Vinhomes Grand Park"
+            ],
+            "project_code": [
+              "P02",
+              "P04",
+              "P07",
+              "P09",
+              "P11",
+              "P12",
+              "P13",
+              "P14",
+              "P15",
+              "P16",
+              "P18",
+              "P03",
+              "P05",
+              "P10",
+              "P01",
+              "P06",
+              "P08",
+              "P17"
+            ],
+            "region": [
+              "Hải Phòng",
+              "Quảng Ninh",
+              "Đan Phượng, Hà Nội",
+              "Đông Anh, Hà Nội",
+              "Thanh Hóa",
+              "Vũ Yên, Hải Phòng",
+              "Hưng Yên",
+              "Nam Từ Liêm, Hà Nội",
+              "Gia Lâm, Hà Nội",
+              "Nha Trang, Khánh Hòa",
+              "Đà Nẵng",
+              "Quảng Trị",
+              "Hóc Môn, TP.HCM",
+              "Cần Giờ, TP.HCM",
+              "Long An",
+              "TP. Thủ Đức, TP.HCM"
+            ],
+            "project_status": [
+              "Đang xây dựng",
+              "Đang xây dựng*",
+              "Đã hoàn thành",
+              "Trang dự án chưa cập nhật rõ"
+            ],
+            "contextual_summary": "Danh mục 18 dự án cùng địa bàn, quy mô và trạng thái.",
+            "contextual_search_terms": [
+              "P01",
+              "P18",
+              "trạng thái dự án"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "2. Khung đánh giá tiện ích"
+          ],
+          "metadata": {
+            "clause_type": "amenity_evaluation_framework",
+            "contextual_summary": "Khung kiểm tra mức độ vận hành của các nhóm tiện ích.",
+            "contextual_search_terms": [
+              "giáo dục",
+              "y tế",
+              "thương mại",
+              "giao thông"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "2. Khung đánh giá tiện ích"
+          ],
+          "contains_any": [
+            "| Nhóm | Nội dung cần kiểm tra | Chỉ báo thực tế |"
+          ],
+          "metadata": {
+            "table_header": "Nhóm | Nội dung cần kiểm tra | Chỉ báo thực tế"
+          }
+        },
+        {
+          "section_titles": [
+            "4. Cụm dự án du lịch–nghỉ dưỡng"
+          ],
+          "metadata": {
+            "clause_type": "tourism_cluster_comparison",
+            "contextual_summary": "So sánh hạt nhân trải nghiệm của cụm dự án nghỉ dưỡng.",
+            "contextual_search_terms": [
+              "Pearl Bay",
+              "Hải Vân Bay",
+              "Green Paradise"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "4. Cụm dự án du lịch–nghỉ dưỡng"
+          ],
+          "contains_any": [
+            "| Dự án | Hạt nhân trải nghiệm | Định vị sử dụng |"
+          ],
+          "metadata": {
+            "table_header": "Dự án | Hạt nhân trải nghiệm | Định vị sử dụng | Điểm phải xác minh"
+          }
+        },
+        {
+          "section_titles": [
+            "5. Checklist khảo sát tiện ích"
+          ],
+          "metadata": {
+            "clause_type": "amenity_checklist",
+            "contextual_summary": "Checklist khảo sát tiện ích tại hiện trường.",
+            "contextual_search_terms": [
+              "đã vận hành",
+              "đang xây",
+              "quy hoạch"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P02 • Happy Home Tràng Cát"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Happy Home Tràng Cát",
+            "project_code": "P02",
+            "region": "Hải Phòng",
+            "project_status": "Đang xây dựng",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Happy Home Tràng Cát tại Hải Phòng.",
+            "contextual_search_terms": [
+              "Happy Home Tràng Cát",
+              "P02",
+              "Hải Phòng",
+              "59 tiện ích ngoài trời"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P04 • Vinhomes Global Gate Hạ Long"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Vinhomes Global Gate Hạ Long",
+            "project_code": "P04",
+            "region": "Quảng Ninh",
+            "project_status": "Đang xây dựng",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Vinhomes Global Gate Hạ Long tại Quảng Ninh.",
+            "contextual_search_terms": [
+              "Vinhomes Global Gate Hạ Long",
+              "P04",
+              "Quảng Ninh",
+              "Paradise Lagoon hơn 680 ha, công viên rừng ngập mặn 800 ha, Global Sportia 9,4 ha, hồ bơi nổi 5.000 m², golf, outlet/TOD 73 ha, làng đại học 200 ha"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P07 • Vinhomes Golden City"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Vinhomes Golden City",
+            "project_code": "P07",
+            "region": "Hải Phòng",
+            "project_status": "Đang xây dựng",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Vinhomes Golden City tại Hải Phòng.",
+            "contextual_search_terms": [
+              "Vinhomes Golden City",
+              "P07",
+              "Hải Phòng",
+              "Khoảng 41 ha mặt nước–cây xanh, 5 công viên chủ đề trên 18 ha, Central Forest 5 ha và 164 tiện ích"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P09 • Vinhomes Wonder City"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Vinhomes Wonder City",
+            "project_code": "P09",
+            "region": "Đan Phượng, Hà Nội",
+            "project_status": "Đang xây dựng",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Vinhomes Wonder City tại Đan Phượng, Hà Nội.",
+            "contextual_search_terms": [
+              "Vinhomes Wonder City",
+              "P09",
+              "Đan Phượng, Hà Nội",
+              "99 tiện ích, hồ cảnh quan 51.000 m², 24,5 ha cây xanh–mặt nước, Adventure Park, Wellness Park, Vincom Plaza và trường học"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P11 • Vinhomes Global Gate"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Vinhomes Global Gate",
+            "project_code": "P11",
+            "region": "Đông Anh, Hà Nội",
+            "project_status": "Đang xây dựng",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Vinhomes Global Gate tại Đông Anh, Hà Nội.",
+            "contextual_search_terms": [
+              "Vinhomes Global Gate",
+              "P11",
+              "Đông Anh, Hà Nội",
+              "Trung tâm Hội chợ Triển lãm Quốc gia 90 ha, Wonderland 5,6 ha, công viên–hồ cảnh quan, thương mại và giáo dục"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P12 • Vinhomes Star City"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Vinhomes Star City",
+            "project_code": "P12",
+            "region": "Thanh Hóa",
+            "project_status": "Đang xây dựng*",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Vinhomes Star City tại Thanh Hóa.",
+            "contextual_search_terms": [
+              "Vinhomes Star City",
+              "P12",
+              "Thanh Hóa",
+              "Vinschool, Vinmec, trung tâm thương mại 6 tầng, hồ bơi Sentosa Oasis, công viên và thể thao"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P13 • Vinhomes Royal Island"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Vinhomes Royal Island",
+            "project_code": "P13",
+            "region": "Vũ Yên, Hải Phòng",
+            "project_status": "Đang xây dựng",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Vinhomes Royal Island tại Vũ Yên, Hải Phòng.",
+            "contextual_search_terms": [
+              "Vinhomes Royal Island",
+              "P13",
+              "Vũ Yên, Hải Phòng",
+              "Sân golf 36 hố, VinWonders gần 20 ha, Vincom Mega Mall trên 55.000 m², học viện cưỡi ngựa, Royal Marina và quảng trường châu Âu"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P14 • Vinhomes Ocean Park 3"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Vinhomes Ocean Park 3",
+            "project_code": "P14",
+            "region": "Hưng Yên",
+            "project_status": "Đang xây dựng",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Vinhomes Ocean Park 3 tại Hưng Yên.",
+            "contextual_search_terms": [
+              "Vinhomes Ocean Park 3",
+              "P14",
+              "Hưng Yên",
+              "Tropical Lagoon, bể bơi bốn mùa, bể Olympic, Aqua Bay, VinWonders Water Park, Marina Square và liên kết Mega Grand World"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P15 • Vinhomes Ocean Park 2"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Vinhomes Ocean Park 2",
+            "project_code": "P15",
+            "region": "Hưng Yên",
+            "project_status": "Đã hoàn thành",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Vinhomes Ocean Park 2 tại Hưng Yên.",
+            "contextual_search_terms": [
+              "Vinhomes Ocean Park 2",
+              "P15",
+              "Hưng Yên",
+              "Royal Wave Park, Kingdom Avenue, Empire Park, K-Town, Vincom Mega Mall, trường học và Vinmec"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P16 • Vinhomes Smart City"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Vinhomes Smart City",
+            "project_code": "P16",
+            "region": "Nam Từ Liêm, Hà Nội",
+            "project_status": "Trang dự án chưa cập nhật rõ",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Vinhomes Smart City tại Nam Từ Liêm, Hà Nội.",
+            "contextual_search_terms": [
+              "Vinhomes Smart City",
+              "P16",
+              "Nam Từ Liêm, Hà Nội",
+              "Vincom Mega Mall 68.000 m², Vinschool, Vinmec và hệ thống an ninh–vận hành thông minh"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P18 • Vinhomes Ocean Park"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Vinhomes Ocean Park",
+            "project_code": "P18",
+            "region": "Gia Lâm, Hà Nội",
+            "project_status": "Đã hoàn thành",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Vinhomes Ocean Park tại Gia Lâm, Hà Nội.",
+            "contextual_search_terms": [
+              "Vinhomes Ocean Park",
+              "P18",
+              "Gia Lâm, Hà Nội",
+              "Hồ nước ngọt 24,5 ha, biển hồ nước mặn 6,1 ha, VinUniversity, Vinschool, Vincom Mega Mall và mạng công viên–thể thao"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P03 • Vinhomes Pearl Bay"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Vinhomes Pearl Bay",
+            "project_code": "P03",
+            "region": "Nha Trang, Khánh Hòa",
+            "project_status": "Đang xây dựng",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Vinhomes Pearl Bay tại Nha Trang, Khánh Hòa.",
+            "contextual_search_terms": [
+              "Vinhomes Pearl Bay",
+              "P03",
+              "Nha Trang, Khánh Hòa",
+              "Bãi biển riêng 2,14 ha, ga cáp treo, VinWonders Nha Trang 50 ha, Vinpearl Harbour 24/7, hai sân golf 18 hố"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P05 • Vinhomes Hải Vân Bay"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Vinhomes Hải Vân Bay",
+            "project_code": "P05",
+            "region": "Đà Nẵng",
+            "project_status": "Đang xây dựng",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Vinhomes Hải Vân Bay tại Đà Nẵng.",
+            "contextual_search_terms": [
+              "Vinhomes Hải Vân Bay",
+              "P05",
+              "Đà Nẵng",
+              "VinWonders 24,8 ha, Lifestyle Hub, làng ẩm thực, công viên chủ đề, Malibu Wellness Hub và trường học"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P10 • Vincom Shophouse Royal Park"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Vincom Shophouse Royal Park",
+            "project_code": "P10",
+            "region": "Quảng Trị",
+            "project_status": "Đã hoàn thành",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Vincom Shophouse Royal Park tại Quảng Trị.",
+            "contextual_search_terms": [
+              "Vincom Shophouse Royal Park",
+              "P10",
+              "Quảng Trị",
+              "Vincom Plaza, hồ bơi rooftop, hồ bơi bốn mùa 400 m², khu thể thao 7.000 m², công viên gia đình 800 m² và hồ sinh thái 6.000 m²"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P01 • Vinhomes Sài Gòn Park"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Vinhomes Sài Gòn Park",
+            "project_code": "P01",
+            "region": "Hóc Môn, TP.HCM",
+            "project_status": "Đang xây dựng",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Vinhomes Sài Gòn Park tại Hóc Môn, TP.HCM.",
+            "contextual_search_terms": [
+              "Vinhomes Sài Gòn Park",
+              "P01",
+              "Hóc Môn, TP.HCM",
+              "Hệ sinh thái đô thị–giáo dục–giải trí"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P06 • Vinhomes Green Paradise"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Vinhomes Green Paradise",
+            "project_code": "P06",
+            "region": "Cần Giờ, TP.HCM",
+            "project_status": "Đang xây dựng",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Vinhomes Green Paradise tại Cần Giờ, TP.HCM.",
+            "contextual_search_terms": [
+              "Vinhomes Green Paradise",
+              "P06",
+              "Cần Giờ, TP.HCM",
+              "Paradise Lagoon hơn 800 ha, khu giải trí 122 ha, hai sân golf, Blue Waves Theatre, cảng quốc tế và khoảng 7.000 phòng khách sạn"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P08 • Vinhomes Green City"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Vinhomes Green City",
+            "project_code": "P08",
+            "region": "Long An",
+            "project_status": "Đang xây dựng",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Vinhomes Green City tại Long An.",
+            "contextual_search_terms": [
+              "Vinhomes Green City",
+              "P08",
+              "Long An",
+              "Vincom Mega Mall, Vinschool, 7 hồ cảnh quan 16,9 ha, 12 công viên 29,7 ha và 122 tiện ích"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "P17 • Vinhomes Grand Park"
+          ],
+          "contains_any": [
+            "| Địa bàn / quy mô | Tiện ích nổi bật |"
+          ],
+          "metadata": {
+            "clause_type": "project_amenities",
+            "table_header": "Địa bàn / quy mô | Tiện ích nổi bật | Tình trạng cần lưu ý",
+            "project_name": "Vinhomes Grand Park",
+            "project_code": "P17",
+            "region": "TP. Thủ Đức, TP.HCM",
+            "project_status": "Đang xây dựng",
+            "contextual_summary": "Tiện ích nổi bật và lưu ý triển khai của Vinhomes Grand Park tại TP. Thủ Đức, TP.HCM.",
+            "contextual_search_terms": [
+              "Vinhomes Grand Park",
+              "P17",
+              "TP. Thủ Đức, TP.HCM",
+              "Vincom Mega Mall, Vinschool, phòng khám Vinmec, VinWonders, công viên Ánh Sáng 36 ha, Rainbow Park và bến du thuyền"
+            ]
+          }
+        }
+      ]
+    },
+    "Vinhomes_Ke_Hoach_Xay_Dung_Trien_Khai.docx": {
+      "current_document_metadata": {
+        "title": "Vinhomes_Ke_Hoach_Xay_Dung_Trien_Khai.docx",
+        "document_type": "implementation_plan",
+        "source_kind": "docx",
+        "language": "vi"
+      },
+      "document_metadata": {
+        "title": "Vinhomes_Ke_Hoach_Xay_Dung_Trien_Khai.docx",
+        "document_type": "implementation_plan",
+        "source_kind": "docx",
+        "language": "vi",
+        "domain": "real_estate_projects",
+        "source": "Vinhomes Market và nguồn công khai",
+        "year": 2026,
+        "data_period": "through 2026-08-04",
+        "document_version": 1,
+        "effective_status": "current",
+        "lifecycle_status": "latest",
+        "as_of_date": "2026-08-04",
+        "keyword_aliases": [
+          "kế hoạch xây dựng",
+          "tiến độ Vinhomes",
+          "mốc triển khai"
+        ]
+      },
+      "rules": [
+        {
+          "section_titles": [
+            "1. Tóm tắt điều hành"
+          ],
+          "metadata": {
+            "clause_type": "executive_summary",
+            "contextual_summary": "Tóm tắt chu kỳ mở rộng và các cụm triển khai 2024–2026.",
+            "contextual_search_terms": [
+              "2024–2026",
+              "đại đô thị",
+              "du lịch ven biển"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "1. Tóm tắt điều hành"
+          ],
+          "contains_any": [
+            "| Giai đoạn | Mốc chính | Ý nghĩa triển khai |"
+          ],
+          "metadata": {
+            "table_header": "Giai đoạn | Mốc chính | Ý nghĩa triển khai"
+          }
+        },
+        {
+          "section_titles": [
+            "2. Danh mục và trạng thái công khai"
+          ],
+          "contains_any": [
+            "| Dự án | Địa bàn | Quy mô | Bắt đầu | Trạng thái | Nguồn |"
+          ],
+          "metadata": {
+            "clause_type": "project_status_catalog",
+            "table_header": "Dự án | Địa bàn | Quy mô | Bắt đầu | Trạng thái | Nguồn",
+            "project_name": [
+              "Vinhomes Sài Gòn Park",
+              "Happy Home Tràng Cát",
+              "Vinhomes Pearl Bay",
+              "Vinhomes Global Gate Hạ Long",
+              "Vinhomes Hải Vân Bay",
+              "Vinhomes Green Paradise",
+              "Vinhomes Golden City",
+              "Vinhomes Green City",
+              "Vinhomes Wonder City",
+              "Vincom Shophouse Royal Park",
+              "Vinhomes Global Gate",
+              "Vinhomes Star City",
+              "Vinhomes Royal Island",
+              "Vinhomes Ocean Park 3",
+              "Vinhomes Ocean Park 2",
+              "Vinhomes Smart City",
+              "Vinhomes Grand Park",
+              "Vinhomes Ocean Park"
+            ],
+            "project_status": [
+              "Đang xây dựng",
+              "Đã hoàn thành",
+              "Đang xây dựng*",
+              "Trang dự án chưa cập nhật rõ"
+            ],
+            "region": [
+              "Hóc Môn, TP.HCM",
+              "Hải Phòng",
+              "Nha Trang, Khánh Hòa",
+              "Quảng Ninh",
+              "Đà Nẵng",
+              "Cần Giờ, TP.HCM",
+              "Long An",
+              "Đan Phượng, Hà Nội",
+              "Quảng Trị",
+              "Đông Anh, Hà Nội",
+              "Thanh Hóa",
+              "Vũ Yên, Hải Phòng",
+              "Hưng Yên",
+              "Nam Từ Liêm, Hà Nội",
+              "TP. Thủ Đức, TP.HCM",
+              "Gia Lâm, Hà Nội"
+            ],
+            "source_code": [
+              "[P01]",
+              "[P02]",
+              "[P03]",
+              "[P04]",
+              "[P05]",
+              "[P06]",
+              "[P07]",
+              "[P08]",
+              "[P09]",
+              "[P10]",
+              "[P11]",
+              "[P12]",
+              "[P13]",
+              "[P14]",
+              "[P15]",
+              "[P16]",
+              "[P17]",
+              "[P18]"
+            ],
+            "contextual_summary": "Danh mục 18 dự án và trạng thái công khai tại 04/08/2026.",
+            "contextual_search_terms": [
+              "đang xây dựng",
+              "đã hoàn thành",
+              "18 dự án"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "3. Các mốc triển khai trọng điểm"
+          ],
+          "contains_any": [
+            "| Thời điểm | Dự án | Nội dung | Loại mốc | Nguồn |"
+          ],
+          "metadata": {
+            "clause_type": "project_milestones",
+            "table_header": "Thời điểm | Dự án | Nội dung | Loại mốc | Nguồn",
+            "project_name": [
+              "Green City",
+              "Green Paradise",
+              "Hải Vân Bay/Làng Vân",
+              "Global Gate Hạ Long",
+              "Hải Vân Bay",
+              "Sài Gòn Park",
+              "Wonder City"
+            ],
+            "source_code": [
+              "[C02]",
+              "[C03]",
+              "[C04]",
+              "[C05]",
+              "[C06]",
+              "[C07]"
+            ],
+            "contextual_summary": "Các mốc khởi công, ra mắt và mục tiêu triển khai trọng điểm.",
+            "contextual_search_terms": [
+              "khởi công",
+              "ra mắt",
+              "mục tiêu hoàn thành"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "5. Trọng tâm đô thị du lịch–nghỉ dưỡng"
+          ],
+          "metadata": {
+            "clause_type": "tourism_project_progress",
+            "contextual_summary": "Trạng thái và mốc cần theo dõi của các dự án du lịch.",
+            "contextual_search_terms": [
+              "Pearl Bay",
+              "Global Gate Hạ Long",
+              "Hải Vân Bay"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "5. Trọng tâm đô thị du lịch–nghỉ dưỡng"
+          ],
+          "contains_any": [
+            "| Dự án | Hợp phần chủ đạo | Trạng thái công khai |"
+          ],
+          "metadata": {
+            "table_header": "Dự án | Hợp phần chủ đạo | Trạng thái công khai | Mốc cần theo dõi"
+          }
+        },
+        {
+          "section_titles": [
+            "6. Ma trận theo dõi tiến độ"
+          ],
+          "metadata": {
+            "clause_type": "progress_monitoring_matrix",
+            "contextual_summary": "Ma trận tài liệu, tần suất và dấu hiệu cảnh báo tiến độ.",
+            "contextual_search_terms": [
+              "pháp lý",
+              "thi công",
+              "bàn giao",
+              "vận hành"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "6. Ma trận theo dõi tiến độ"
+          ],
+          "contains_any": [
+            "| Chỉ tiêu | Tài liệu cần lấy | Tần suất | Dấu hiệu cảnh báo |"
+          ],
+          "metadata": {
+            "table_header": "Chỉ tiêu | Tài liệu cần lấy | Tần suất | Dấu hiệu cảnh báo"
+          }
+        },
+        {
+          "section_titles": [
+            "Vùng Thủ đô"
+          ],
+          "metadata": {
+            "clause_type": "deployment_cluster_analysis",
+            "region": "Vùng Thủ đô",
+            "contextual_summary": "Phân tích cụm triển khai Vùng Thủ đô.",
+            "contextual_search_terms": [
+              "Wonder City",
+              "trung tâm triển lãm",
+              "kết nối vùng"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "Hải Phòng–Quảng Ninh"
+          ],
+          "metadata": {
+            "clause_type": "deployment_cluster_analysis",
+            "region": "Hải Phòng–Quảng Ninh",
+            "contextual_summary": "Phân tích cụm triển khai Hải Phòng–Quảng Ninh.",
+            "contextual_search_terms": [
+              "Royal Island",
+              "Global Gate Hạ Long",
+              "hạ tầng vịnh"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "Duyên hải miền Trung"
+          ],
+          "metadata": {
+            "clause_type": "deployment_cluster_analysis",
+            "region": "Duyên hải miền Trung",
+            "contextual_summary": "Phân tích cụm triển khai Duyên hải miền Trung.",
+            "contextual_search_terms": [
+              "Pearl Bay",
+              "Hải Vân Bay",
+              "Q4/2027"
+            ]
+          }
+        },
+        {
+          "section_titles": [
+            "TP.HCM và vùng phụ cận"
+          ],
+          "metadata": {
+            "clause_type": "deployment_cluster_analysis",
+            "region": "TP.HCM và vùng phụ cận",
+            "contextual_summary": "Phân tích cụm triển khai TP.HCM và vùng phụ cận.",
+            "contextual_search_terms": [
+              "Grand Park",
+              "Green City",
+              "Green Paradise"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
