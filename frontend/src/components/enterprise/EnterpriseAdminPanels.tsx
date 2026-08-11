@@ -40,6 +40,99 @@ type AdminPanelProps = {
   onSuccess: Notify;
 };
 
+const USER_STATUS_LABEL: Record<string, string> = {
+  ACTIVE: "Đang hoạt động",
+  LOCKED: "Đã khóa",
+  DISABLED: "Đã vô hiệu hóa",
+};
+
+const ORGANIZATION_KIND_LABEL = {
+  roles: "Vai trò",
+  groups: "Nhóm",
+  departments: "Phòng ban",
+} as const;
+
+const REPORT_STATUS_LABEL: Record<string, string> = {
+  OPEN: "Chờ xử lý",
+  INVESTIGATING: "Đang xác minh",
+  RESOLVED: "Đã giải quyết",
+  DISMISSED: "Đã bỏ qua",
+};
+
+const FUNCTIONAL_PERMISSION_LABEL: Record<string, string> = {
+  ASK_KNOWLEDGE: "Tra cứu kho tri thức",
+  UPLOAD_DOCUMENT: "Tải tài liệu lên",
+  MANAGE_DOCUMENT: "Quản lý tài liệu",
+  REVIEW_DOCUMENT: "Kiểm duyệt tài liệu",
+  PUBLISH_DOCUMENT: "Xuất bản tài liệu",
+  ARCHIVE_DOCUMENT: "Lưu trữ tài liệu",
+  MANAGE_ACCESS_POLICY: "Quản lý chính sách truy cập",
+  MANAGE_USER: "Quản lý người dùng",
+  MANAGE_ROLE: "Quản lý vai trò",
+  MANAGE_GROUP: "Quản lý nhóm",
+  MANAGE_DEPARTMENT: "Quản lý phòng ban",
+  VIEW_AUDIT: "Xem nhật ký kiểm toán",
+  VIEW_ANALYTICS: "Xem số liệu tổng hợp",
+  MANAGE_REPORT: "Xử lý báo cáo câu trả lời",
+};
+
+const AUDIT_ACTION_LABEL: Record<string, string> = {
+  ENTERPRISE_ANSWER_COMPLETED: "Hoàn tất câu trả lời doanh nghiệp",
+  DOCUMENT_CREATED: "Tạo tài liệu",
+  DOCUMENT_UPDATED: "Cập nhật tài liệu",
+  DOCUMENT_ARCHIVED: "Lưu trữ tài liệu",
+  DOCUMENT_VERSION_CREATED: "Tạo phiên bản tài liệu",
+  DOCUMENT_VERSION_REVIEWED: "Kiểm duyệt phiên bản",
+  DOCUMENT_VERSION_PUBLISHED: "Xuất bản phiên bản",
+  DOCUMENT_PERMISSION_GRANTED: "Cấp quyền tài liệu",
+  DOCUMENT_PERMISSION_REVOKED: "Thu hồi quyền tài liệu",
+  PROCESSING_JOB_RETRIED: "Chạy lại xử lý tài liệu",
+  PROCESSING_JOB_REPROCESSED_FROM_REVIEW: "Xử lý lại theo yêu cầu kiểm duyệt",
+  USER_PROFILE_CREATED: "Tạo hồ sơ người dùng",
+  USER_PROFILE_UPDATED: "Cập nhật hồ sơ người dùng",
+  DOCUMENT_METADATA_ASSERTION_VERIFIED: "Xác nhận metadata đề xuất",
+  DOCUMENT_METADATA_ASSERTION_REJECTED: "Từ chối metadata đề xuất",
+};
+
+const DEFAULT_ORGANIZATION_NAME: Record<string, string> = {
+  ADMIN: "Quản trị viên",
+  DOCUMENT_REVIEWER: "Người kiểm duyệt tài liệu",
+  EMPLOYEE: "Nhân viên",
+};
+
+const AUDIT_ENTITY_LABEL: Record<string, string> = {
+  enterprise_message: "Tin nhắn hỏi đáp",
+  source_files: "Tệp nguồn",
+  user_roles: "Vai trò của người dùng",
+  role_permissions: "Quyền của vai trò",
+  knowledge_document: "Tài liệu tri thức",
+  document_version: "Phiên bản tài liệu",
+  document_permission: "Quyền tài liệu",
+  processing_job: "Yêu cầu xử lý",
+  document_metadata_assertion: "Metadata đề xuất",
+};
+
+const AUDIT_TABLE_LABEL: Record<string, string> = {
+  SOURCE_FILES: "tệp nguồn",
+  USER_ROLES: "vai trò của người dùng",
+  ROLE_PERMISSIONS: "quyền của vai trò",
+  USER_GROUPS: "nhóm của người dùng",
+  USER_DEPARTMENTS: "phòng ban của người dùng",
+  DOCUMENT_PERMISSIONS: "quyền tài liệu",
+};
+
+function auditActionLabel(value: string) {
+  if (AUDIT_ACTION_LABEL[value]) return AUDIT_ACTION_LABEL[value];
+  const tableAction = /^TABLE_(.+)_(INSERT|UPDATE|DELETE)$/.exec(value);
+  if (!tableAction) return value;
+  const operation = { INSERT: "Thêm", UPDATE: "Cập nhật", DELETE: "Xóa" }[tableAction[2]];
+  return `${operation} ${AUDIT_TABLE_LABEL[tableAction[1]] || tableAction[1].toLocaleLowerCase("vi-VN")}`;
+}
+
+function organizationName(item: OrganizationUnit) {
+  return DEFAULT_ORGANIZATION_NAME[item.code] || item.name;
+}
+
 function readableDate(value: string | null) {
   if (!value) return "—";
   return new Date(value).toLocaleString("vi-VN", {
@@ -110,7 +203,7 @@ export function IdentityAdminPanel({ permissions, onError, onSuccess }: AdminPan
       setFunctionalPermissions(nextPermissions ?? []);
       if (nextRoles?.length) setRoleId((current) => current || nextRoles[0].id);
     } catch (cause) {
-      onError(cause instanceof Error ? cause.message : "Không thể tải dữ liệu IAM");
+      onError(cause instanceof Error ? cause.message : "Không thể tải dữ liệu người dùng và tổ chức");
     } finally {
       setLoading(false);
     }
@@ -153,7 +246,7 @@ export function IdentityAdminPanel({ permissions, onError, onSuccess }: AdminPan
         setUserDepartments(nextDepartments);
       })
       .catch((cause: unknown) => {
-        if (!cancelled) onError(cause instanceof Error ? cause.message : "Không thể tải membership");
+        if (!cancelled) onError(cause instanceof Error ? cause.message : "Không thể tải thông tin thành viên");
       })
       .finally(() => {
         if (!cancelled) setDetailLoading(false);
@@ -170,7 +263,7 @@ export function IdentityAdminPanel({ permissions, onError, onSuccess }: AdminPan
     listEnterpriseRolePermissions(roleId)
       .then((items) => { if (!cancelled) setRolePermissions(items); })
       .catch((cause: unknown) => {
-        if (!cancelled) onError(cause instanceof Error ? cause.message : "Không thể tải quyền của role");
+        if (!cancelled) onError(cause instanceof Error ? cause.message : "Không thể tải quyền của vai trò");
       });
     return () => { cancelled = true; };
   }, [canManageRoles, roleId]);
@@ -192,9 +285,9 @@ export function IdentityAdminPanel({ permissions, onError, onSuccess }: AdminPan
       setCode("");
       setName("");
       await reload();
-      onSuccess("Đã tạo đơn vị IAM và ghi audit");
+      onSuccess("Đã tạo đơn vị tổ chức và ghi nhật ký kiểm toán");
     } catch (cause) {
-      onError(cause instanceof Error ? cause.message : "Không thể tạo đơn vị IAM");
+      onError(cause instanceof Error ? cause.message : "Không thể tạo đơn vị tổ chức");
     }
   }
 
@@ -213,9 +306,9 @@ export function IdentityAdminPanel({ permissions, onError, onSuccess }: AdminPan
       if (membershipKind === "departments") {
         setUserDepartments(await listEnterpriseUserDepartments(userId, true));
       }
-      onSuccess("Đã cập nhật membership; quyền hiệu lực sẽ được tính lại ở request kế tiếp");
+      onSuccess("Đã cập nhật tư cách thành viên; quyền sẽ được tính lại ở yêu cầu tiếp theo");
     } catch (cause) {
-      onError(cause instanceof Error ? cause.message : "Không thể cập nhật membership");
+      onError(cause instanceof Error ? cause.message : "Không thể cập nhật tư cách thành viên");
     }
   }
 
@@ -223,7 +316,7 @@ export function IdentityAdminPanel({ permissions, onError, onSuccess }: AdminPan
     kind: "roles" | "groups" | "departments",
     id: string,
   ) {
-    if (!userId || !window.confirm("Thu hồi membership này?")) return;
+    if (!userId || !window.confirm("Thu hồi tư cách thành viên này?")) return;
     setSaving(true);
     try {
       await removeEnterpriseMembership(userId, kind, id);
@@ -232,9 +325,9 @@ export function IdentityAdminPanel({ permissions, onError, onSuccess }: AdminPan
       if (kind === "departments") {
         setUserDepartments(await listEnterpriseUserDepartments(userId, true));
       }
-      onSuccess("Đã thu hồi membership và ghi audit");
+      onSuccess("Đã thu hồi tư cách thành viên và ghi nhật ký kiểm toán");
     } catch (cause) {
-      onError(cause instanceof Error ? cause.message : "Không thể thu hồi membership");
+      onError(cause instanceof Error ? cause.message : "Không thể thu hồi tư cách thành viên");
     } finally {
       setSaving(false);
     }
@@ -248,9 +341,9 @@ export function IdentityAdminPanel({ permissions, onError, onSuccess }: AdminPan
       if (assigned) await removeEnterpriseRolePermission(roleId, permission.id);
       else await assignEnterpriseRolePermission(roleId, permission.id);
       setRolePermissions(await listEnterpriseRolePermissions(roleId));
-      onSuccess(assigned ? "Đã gỡ functional permission" : "Đã gán functional permission");
+      onSuccess(assigned ? "Đã gỡ quyền chức năng" : "Đã gán quyền chức năng");
     } catch (cause) {
-      onError(cause instanceof Error ? cause.message : "Không thể cập nhật role permission");
+      onError(cause instanceof Error ? cause.message : "Không thể cập nhật quyền của vai trò");
     } finally {
       setSaving(false);
     }
@@ -265,7 +358,7 @@ export function IdentityAdminPanel({ permissions, onError, onSuccess }: AdminPan
       setUsers(page.items);
       onSuccess(`Đã chuyển trạng thái tài khoản sang ${status}`);
     } catch (cause) {
-      onError(cause instanceof Error ? cause.message : "Không thể cập nhật trạng thái user");
+      onError(cause instanceof Error ? cause.message : "Không thể cập nhật trạng thái người dùng");
     } finally {
       setSaving(false);
     }
@@ -288,7 +381,7 @@ export function IdentityAdminPanel({ permissions, onError, onSuccess }: AdminPan
       setTemporaryPassword("");
       await reload();
       setUserId(employee.user_id);
-      onSuccess(`Đã tạo tài khoản ${employee.email} với role EMPLOYEE`);
+      onSuccess(`Đã tạo tài khoản ${employee.email} với vai trò Nhân viên`);
     } catch (cause) {
       onError(cause instanceof Error ? cause.message : "Không thể tạo tài khoản nhân viên");
     } finally {
@@ -296,16 +389,16 @@ export function IdentityAdminPanel({ permissions, onError, onSuccess }: AdminPan
     }
   }
 
-  if (loading) return <PanelLoader label="Đang tải IAM…" />;
+  if (loading) return <PanelLoader label="Đang tải người dùng và tổ chức…" />;
 
   const organizationColumns: Array<[string, OrganizationUnit[]]> = [];
-  if (canManageRoles) organizationColumns.push(["Roles", roles]);
-  if (canManageGroups) organizationColumns.push(["Groups", groups]);
-  if (canManageDepartments) organizationColumns.push(["Departments", departments]);
+  if (canManageRoles) organizationColumns.push(["Vai trò", roles]);
+  if (canManageGroups) organizationColumns.push(["Nhóm", groups]);
+  if (canManageDepartments) organizationColumns.push(["Phòng ban", departments]);
   return (
     <div>
-      <h1 className="font-heading text-2xl font-bold">Identity & Organization</h1>
-      <p className="mt-1 text-sm text-dim">Quản lý user profile, role, group, department và membership có hiệu lực tức thời.</p>
+      <h1 className="font-heading text-2xl font-bold">Người dùng và cơ cấu tổ chức</h1>
+      <p className="mt-1 text-sm text-dim">Quản lý hồ sơ người dùng, vai trò, nhóm, phòng ban và tư cách thành viên.</p>
 
       <div className={`mt-6 grid gap-5 ${canManageUsers && organizationKinds.length ? "xl:grid-cols-[1.25fr_1fr]" : ""}`}>
         {canManageUsers && <section className="rounded-2xl border border-border bg-panel p-5">
@@ -315,35 +408,35 @@ export function IdentityAdminPanel({ permissions, onError, onSuccess }: AdminPan
           </div>
           <form onSubmit={provisionEmployee} className="mb-5 rounded-xl border border-accent/25 bg-accent/5 p-4">
             <div className="mb-1 font-heading text-sm font-semibold">Tạo tài khoản nhân viên</div>
-            <p className="mb-3 text-[10px] leading-4 text-faint">Tài khoản được xác nhận ngay và tự động nhận role EMPLOYEE. Hãy chuyển mật khẩu tạm qua kênh an toàn.</p>
+            <p className="mb-3 text-[10px] leading-4 text-faint">Tài khoản được xác nhận ngay và tự động nhận vai trò Nhân viên. Hãy chuyển mật khẩu tạm qua kênh an toàn.</p>
             <div className="grid gap-2 sm:grid-cols-2">
               <input type="email" required value={employeeEmail} onChange={(event) => setEmployeeEmail(event.target.value)} placeholder="Email nhân viên" className="rounded-lg border border-border bg-background px-3 py-2 text-xs" />
               <input value={employeeName} onChange={(event) => setEmployeeName(event.target.value)} placeholder="Họ và tên" className="rounded-lg border border-border bg-background px-3 py-2 text-xs" />
               <input value={employeeCode} onChange={(event) => setEmployeeCode(event.target.value)} placeholder="Mã nhân viên (không bắt buộc)" className="rounded-lg border border-border bg-background px-3 py-2 text-xs" />
               <input type="password" required minLength={8} autoComplete="new-password" value={temporaryPassword} onChange={(event) => setTemporaryPassword(event.target.value)} placeholder="Mật khẩu tạm · tối thiểu 8 ký tự" className="rounded-lg border border-border bg-background px-3 py-2 text-xs" />
             </div>
-            <button disabled={saving || !employeeEmail.trim() || temporaryPassword.length < 8} className="mt-3 w-full rounded-lg bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground disabled:opacity-50">{saving ? "Đang tạo…" : "Tạo tài khoản EMPLOYEE"}</button>
+            <button disabled={saving || !employeeEmail.trim() || temporaryPassword.length < 8} className="mt-3 w-full rounded-lg bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground disabled:opacity-50">{saving ? "Đang tạo…" : "Tạo tài khoản nhân viên"}</button>
           </form>
           <div className="max-h-[420px] space-y-2 overflow-y-auto">
             {users.map((user) => (
               <button key={user.user_id} onClick={() => setUserId(user.user_id)} className={`w-full rounded-xl border p-3 text-left ${userId === user.user_id ? "border-accent bg-accent/10" : "border-border bg-background"}`}>
-                <div className="flex items-center justify-between gap-3"><span className="truncate text-xs font-semibold">{user.full_name || user.company_user_id || user.user_id}</span><span className="text-[10px] text-faint">{user.status}</span></div>
+                <div className="flex items-center justify-between gap-3"><span className="truncate text-xs font-semibold">{user.full_name || user.company_user_id || user.user_id}</span><span title={user.status} className="text-[10px] text-faint">{USER_STATUS_LABEL[user.status]}</span></div>
                 <div className="mt-1 truncate text-[10px] text-faint">{user.user_id}</div>
               </button>
             ))}
-            {!users.length && <div className="py-12 text-center text-xs text-faint">Chưa có user profile.</div>}
+            {!users.length && <div className="py-12 text-center text-xs text-faint">Chưa có hồ sơ người dùng.</div>}
           </div>
           {userId && <div className="mt-4 rounded-xl border border-border bg-background p-3">
             <div className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-faint">Trạng thái tài khoản</div>
-            <div className="flex flex-wrap gap-2">{(["ACTIVE", "LOCKED", "DISABLED"] as const).map((status) => <button key={status} type="button" disabled={saving} onClick={() => void setUserStatus(status)} className="rounded-md border border-border px-2 py-1 text-[10px] disabled:opacity-50">{status}</button>)}</div>
+            <div className="flex flex-wrap gap-2">{(["ACTIVE", "LOCKED", "DISABLED"] as const).map((status) => <button key={status} type="button" disabled={saving} onClick={() => void setUserStatus(status)} className="rounded-md border border-border px-2 py-1 text-[10px] disabled:opacity-50">{USER_STATUS_LABEL[status]}</button>)}</div>
           </div>}
         </section>}
 
         {!!organizationKinds.length && <div className="space-y-5">
           <form onSubmit={createOrganization} className="rounded-2xl border border-border bg-panel p-5">
-            <div className="mb-4 font-heading font-semibold">Tạo role / group / department</div>
+            <div className="mb-4 font-heading font-semibold">Tạo vai trò, nhóm hoặc phòng ban</div>
             <div className="grid gap-3">
-              <select value={organizationKind} onChange={(event) => setOrganizationKind(event.target.value as typeof organizationKind)} className="rounded-lg border border-border bg-background px-3 py-2 text-xs">{organizationKinds.map((kind) => <option key={kind} value={kind}>{kind === "roles" ? "Role" : kind === "groups" ? "Group" : "Department"}</option>)}</select>
+              <select value={organizationKind} onChange={(event) => setOrganizationKind(event.target.value as typeof organizationKind)} className="rounded-lg border border-border bg-background px-3 py-2 text-xs">{organizationKinds.map((kind) => <option key={kind} value={kind}>{ORGANIZATION_KIND_LABEL[kind]}</option>)}</select>
               <input value={code} onChange={(event) => setCode(event.target.value)} placeholder="Mã định danh" className="rounded-lg border border-border bg-background px-3 py-2 text-xs" />
               <input value={name} onChange={(event) => setName(event.target.value)} placeholder="Tên hiển thị" className="rounded-lg border border-border bg-background px-3 py-2 text-xs" />
               <button className="rounded-lg bg-accent px-3 py-2 text-xs font-semibold text-accent-foreground">Tạo mới</button>
@@ -351,37 +444,37 @@ export function IdentityAdminPanel({ permissions, onError, onSuccess }: AdminPan
           </form>
 
           <form onSubmit={assignMembership} className="rounded-2xl border border-border bg-panel p-5">
-            <div className="mb-1 font-heading font-semibold">Gán membership</div>
-            <div className="mb-4 truncate text-[10px] text-faint">User: {userId || (canManageUsers ? "chọn từ danh sách" : "nhập UUID bên dưới")}</div>
+            <div className="mb-1 font-heading font-semibold">Gán người dùng vào tổ chức</div>
+            <div className="mb-4 truncate text-[10px] text-faint">Người dùng: {userId || (canManageUsers ? "chọn từ danh sách" : "nhập UUID bên dưới")}</div>
             <div className="grid gap-3">
-              {!canManageUsers && <input value={userId} onChange={(event) => setUserId(event.target.value)} placeholder="User UUID" className="rounded-lg border border-border bg-background px-3 py-2 text-xs" />}
-              <select value={membershipKind} onChange={(event) => { setMembershipKind(event.target.value as typeof membershipKind); setObjectId(""); }} className="rounded-lg border border-border bg-background px-3 py-2 text-xs">{organizationKinds.map((kind) => <option key={kind} value={kind}>{kind === "roles" ? "Role" : kind === "groups" ? "Group" : "Department"}</option>)}</select>
-              <select value={objectId} onChange={(event) => setObjectId(event.target.value)} className="rounded-lg border border-border bg-background px-3 py-2 text-xs"><option value="">Chọn đối tượng</option>{membershipOptions.map((item) => <option key={item.id} value={item.id}>{item.code} · {item.name}</option>)}</select>
-              <button disabled={!userId || !objectId} className="rounded-lg bg-foreground px-3 py-2 text-xs font-semibold text-background disabled:opacity-50">Gán cho user</button>
+              {!canManageUsers && <input value={userId} onChange={(event) => setUserId(event.target.value)} placeholder="UUID người dùng" className="rounded-lg border border-border bg-background px-3 py-2 text-xs" />}
+              <select value={membershipKind} onChange={(event) => { setMembershipKind(event.target.value as typeof membershipKind); setObjectId(""); }} className="rounded-lg border border-border bg-background px-3 py-2 text-xs">{organizationKinds.map((kind) => <option key={kind} value={kind}>{ORGANIZATION_KIND_LABEL[kind]}</option>)}</select>
+              <select value={objectId} onChange={(event) => setObjectId(event.target.value)} className="rounded-lg border border-border bg-background px-3 py-2 text-xs"><option value="">Chọn đối tượng</option>{membershipOptions.map((item) => <option key={item.id} value={item.id}>{item.code} · {organizationName(item)}</option>)}</select>
+              <button disabled={!userId || !objectId} className="rounded-lg bg-foreground px-3 py-2 text-xs font-semibold text-background disabled:opacity-50">Gán cho người dùng</button>
             </div>
           </form>
         </div>}
       </div>
 
       {userId && (canManageRoles || canManageGroups || canManageDepartments) && <section className="mt-5 rounded-2xl border border-border bg-panel p-5">
-        <div className="mb-4 flex items-center justify-between"><div className="font-heading font-semibold">Membership hiện tại</div>{detailLoading && <Icon icon="lucide:loader-circle" className="animate-spin" />}</div>
+        <div className="mb-4 flex items-center justify-between"><div className="font-heading font-semibold">Tư cách thành viên hiện tại</div>{detailLoading && <Icon icon="lucide:loader-circle" className="animate-spin" />}</div>
         <div className="grid gap-4 lg:grid-cols-3">
-          {canManageRoles && <MembershipList title="Roles" items={userRoles.map((item) => ({ id: item.role_id, label: `${item.role.code} · ${item.role.name}`, inactive: item.role.status !== "ACTIVE" }))} disabled={saving} onRemove={(id) => void removeMembership("roles", id)} />}
-          {canManageGroups && <MembershipList title="Groups" items={userGroups.map((item) => ({ id: item.group_id, label: `${item.group.code} · ${item.group.name}`, inactive: item.group.status !== "ACTIVE" }))} disabled={saving} onRemove={(id) => void removeMembership("groups", id)} />}
-          {canManageDepartments && <MembershipList title="Departments" items={userDepartments.map((item) => ({ id: item.department_id, label: `${item.department.code} · ${item.department.name}${item.is_primary ? " · primary" : ""}`, inactive: Boolean(item.end_at) }))} disabled={saving} onRemove={(id) => void removeMembership("departments", id)} />}
+          {canManageRoles && <MembershipList title="Vai trò" items={userRoles.map((item) => ({ id: item.role_id, label: `${item.role.code} · ${organizationName(item.role)}`, inactive: item.role.status !== "ACTIVE" }))} disabled={saving} onRemove={(id) => void removeMembership("roles", id)} />}
+          {canManageGroups && <MembershipList title="Nhóm" items={userGroups.map((item) => ({ id: item.group_id, label: `${item.group.code} · ${organizationName(item.group)}`, inactive: item.group.status !== "ACTIVE" }))} disabled={saving} onRemove={(id) => void removeMembership("groups", id)} />}
+          {canManageDepartments && <MembershipList title="Phòng ban" items={userDepartments.map((item) => ({ id: item.department_id, label: `${item.department.code} · ${organizationName(item.department)}${item.is_primary ? " · chính" : ""}`, inactive: Boolean(item.end_at) }))} disabled={saving} onRemove={(id) => void removeMembership("departments", id)} />}
         </div>
       </section>}
 
       {canManageRoles && <section className="mt-5 rounded-2xl border border-border bg-panel p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="font-heading font-semibold">Functional permissions theo role</div><div className="mt-1 text-[10px] text-faint">Mọi thay đổi có hiệu lực ở request kế tiếp và được audit.</div></div><select value={roleId} onChange={(event) => setRoleId(event.target.value)} className="rounded-lg border border-border bg-background px-3 py-2 text-xs">{roles.map((role) => <option key={role.id} value={role.id}>{role.code} · {role.name}</option>)}</select></div>
-        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">{functionalPermissions.map((permission) => { const assigned = rolePermissions.some((item) => item.id === permission.id); return <button key={permission.id} type="button" disabled={!roleId || saving} onClick={() => void toggleRolePermission(permission)} className={`rounded-xl border p-3 text-left disabled:opacity-50 ${assigned ? "border-green/40 bg-green/10" : "border-border bg-background"}`}><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold">{permission.code}</span><Icon icon={assigned ? "lucide:check" : "lucide:plus"} /></div><div className="mt-1 text-[10px] text-faint">{permission.name}</div></button>; })}</div>
+        <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="font-heading font-semibold">Quyền chức năng theo vai trò</div><div className="mt-1 text-[10px] text-faint">Mọi thay đổi có hiệu lực ở yêu cầu tiếp theo và được ghi vào nhật ký kiểm toán.</div></div><select value={roleId} onChange={(event) => setRoleId(event.target.value)} className="rounded-lg border border-border bg-background px-3 py-2 text-xs">{roles.map((role) => <option key={role.id} value={role.id}>{role.code} · {organizationName(role)}</option>)}</select></div>
+        <div className="mt-4 grid gap-2 sm:grid-cols-2 xl:grid-cols-3">{functionalPermissions.map((permission) => { const assigned = rolePermissions.some((item) => item.id === permission.id); return <button key={permission.id} type="button" disabled={!roleId || saving} onClick={() => void toggleRolePermission(permission)} className={`rounded-xl border p-3 text-left disabled:opacity-50 ${assigned ? "border-green/40 bg-green/10" : "border-border bg-background"}`}><div className="flex items-center justify-between gap-2"><span className="text-xs font-semibold">{FUNCTIONAL_PERMISSION_LABEL[permission.code] || permission.name}</span><Icon icon={assigned ? "lucide:check" : "lucide:plus"} /></div><div className="mt-1 text-[10px] text-faint">Mã quyền: {permission.code}</div></button>; })}</div>
       </section>}
 
       {!!organizationColumns.length && <div className="mt-5 grid gap-4 lg:grid-cols-3">
         {organizationColumns.map(([label, items]) => (
           <section key={label} className="rounded-2xl border border-border bg-panel p-4">
             <div className="mb-3 font-heading text-sm font-semibold">{label} · {items.length}</div>
-            <div className="max-h-64 space-y-2 overflow-y-auto">{items.map((item) => <div key={item.id} className="rounded-lg border border-border bg-background px-3 py-2"><div className="text-xs font-semibold">{item.code}</div><div className="mt-0.5 text-[10px] text-faint">{item.name} · {item.status}</div></div>)}</div>
+            <div className="max-h-64 space-y-2 overflow-y-auto">{items.map((item) => <div key={item.id} className="rounded-lg border border-border bg-background px-3 py-2"><div className="text-xs font-semibold">{item.code}</div><div className="mt-0.5 text-[10px] text-faint">{organizationName(item)} · {USER_STATUS_LABEL[item.status] || item.status}</div></div>)}</div>
           </section>
         ))}
       </div>}
@@ -395,7 +488,7 @@ function MembershipList({ title, items, disabled, onRemove }: {
   disabled: boolean;
   onRemove: (id: string) => void;
 }) {
-  return <div className="rounded-xl border border-border bg-background p-3"><div className="mb-2 text-xs font-semibold">{title} · {items.length}</div><div className="space-y-2">{items.map((item) => <div key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-border px-2 py-2"><span className={`truncate text-[10px] ${item.inactive ? "text-faint line-through" : "text-dim"}`}>{item.label}</span><button type="button" disabled={disabled || item.inactive} onClick={() => onRemove(item.id)} className="text-[10px] text-red disabled:opacity-30">Thu hồi</button></div>)}{!items.length && <div className="py-4 text-center text-[10px] text-faint">Không có membership.</div>}</div></div>;
+  return <div className="rounded-xl border border-border bg-background p-3"><div className="mb-2 text-xs font-semibold">{title} · {items.length}</div><div className="space-y-2">{items.map((item) => <div key={item.id} className="flex items-center justify-between gap-2 rounded-lg border border-border px-2 py-2"><span className={`truncate text-[10px] ${item.inactive ? "text-faint line-through" : "text-dim"}`}>{item.label}</span><button type="button" disabled={disabled || item.inactive} onClick={() => onRemove(item.id)} className="text-[10px] text-red disabled:opacity-30">Thu hồi</button></div>)}{!items.length && <div className="py-4 text-center text-[10px] text-faint">Không có tư cách thành viên.</div>}</div></div>;
 }
 
 export function GovernanceAdminPanel({ permissions, onError, onSuccess }: AdminPanelProps) {
@@ -419,7 +512,7 @@ export function GovernanceAdminPanel({ permissions, onError, onSuccess }: AdminP
       setLogs(logPage?.items ?? []);
       setReports(reportPage?.items ?? []);
     } catch (cause) {
-      onError(cause instanceof Error ? cause.message : "Không thể tải dữ liệu governance");
+      onError(cause instanceof Error ? cause.message : "Không thể tải dữ liệu kiểm toán và giám sát");
     } finally {
       setLoading(false);
     }
@@ -431,44 +524,44 @@ export function GovernanceAdminPanel({ permissions, onError, onSuccess }: AdminP
 
   async function resolve(report: EnterpriseAnswerReport, status: "RESOLVED" | "DISMISSED") {
     if (!canManageReports) return;
-    const note = window.prompt("Ghi chú xử lý report:");
+    const note = window.prompt("Ghi chú xử lý báo cáo:");
     if (!note?.trim()) return;
     try {
       await resolveEnterpriseAnswerReport(report.id, status, note.trim());
       await reload();
-      onSuccess(`Đã chuyển report sang ${status}`);
+      onSuccess(`Đã chuyển báo cáo sang trạng thái: ${REPORT_STATUS_LABEL[status]}`);
     } catch (cause) {
-      onError(cause instanceof Error ? cause.message : "Không thể xử lý report");
+      onError(cause instanceof Error ? cause.message : "Không thể xử lý báo cáo");
     }
   }
 
-  if (loading) return <PanelLoader label="Đang tải audit và analytics…" />;
+  if (loading) return <PanelLoader label="Đang tải nhật ký và số liệu tổng hợp…" />;
 
   const metrics: Array<[string, string | number, string]> = summary ? [
-    ["Published", summary.published_documents, "text-green"],
-    ["Draft", summary.draft_documents, "text-yellow"],
-    ["Job lỗi", summary.failed_jobs, "text-red"],
-    ["Report mở", summary.open_reports, "text-red"],
-    ["Feedback tốt", summary.feedback_up, "text-green"],
-    ["No-answer", summary.no_answer_rate === null ? "—" : `${(summary.no_answer_rate * 100).toFixed(1)}%`, "text-blue"],
+    ["Đã xuất bản", summary.published_documents, "text-green"],
+    ["Bản nháp", summary.draft_documents, "text-yellow"],
+    ["Lần xử lý lỗi", summary.failed_jobs, "text-red"],
+    ["Báo cáo chờ xử lý", summary.open_reports, "text-red"],
+    ["Phản hồi tích cực", summary.feedback_up, "text-green"],
+    ["Không có câu trả lời", summary.no_answer_rate === null ? "—" : `${(summary.no_answer_rate * 100).toFixed(1)}%`, "text-blue"],
   ] : [];
   return (
     <div>
-      <div className="flex items-end justify-between gap-4"><div><h1 className="font-heading text-2xl font-bold">Audit & Governance</h1><p className="mt-1 text-sm text-dim">Theo dõi lifecycle, chất lượng câu trả lời và audit append-only theo request/trace ID.</p></div><button onClick={() => void reload()} className="rounded-lg border border-border px-3 py-2 text-xs">Làm mới</button></div>
+      <div className="flex items-end justify-between gap-4"><div><h1 className="font-heading text-2xl font-bold">Kiểm toán và giám sát</h1><p className="mt-1 text-sm text-dim">Theo dõi vòng đời tài liệu, chất lượng câu trả lời và nhật ký không thể sửa theo mã yêu cầu/truy vết.</p></div><button onClick={() => void reload()} className="rounded-lg border border-border px-3 py-2 text-xs">Làm mới</button></div>
       {!!metrics.length && <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">{metrics.map(([label, value, color]) => <div key={label} className="rounded-2xl border border-border bg-panel p-4"><div className={`font-heading text-2xl font-bold ${color}`}>{value}</div><div className="mt-1 text-[10px] uppercase tracking-wide text-faint">{label}</div></div>)}</div>}
 
       <div className={`mt-5 grid gap-5 ${canViewAudit ? "xl:grid-cols-[1fr_1.2fr]" : ""}`}>
         {canViewAudit && <section className="rounded-2xl border border-border bg-panel p-5">
-          <div className="mb-4 font-heading font-semibold">Answer reports · {reports.length}</div>
+          <div className="mb-4 font-heading font-semibold">Báo cáo câu trả lời · {reports.length}</div>
           <div className="max-h-[520px] space-y-3 overflow-y-auto">
-            {reports.map((report) => <div key={report.id} className="rounded-xl border border-border bg-background p-3"><div className="flex items-start justify-between gap-3"><div><div className="text-xs font-semibold">{report.reason_code}</div><div className="mt-1 text-[10px] text-faint">{readableDate(report.created_at)} · {report.reporter_user_id}</div></div><span className="rounded-full border border-border px-2 py-1 text-[10px]">{report.status}</span></div>{report.details && <p className="mt-3 text-xs leading-5 text-dim">{report.details}</p>}{canManageReports && (report.status === "OPEN" || report.status === "INVESTIGATING") ? <div className="mt-3 flex gap-2"><button onClick={() => void resolve(report, "RESOLVED")} className="rounded-md bg-green/10 px-2.5 py-1.5 text-[10px] text-green">Resolve</button><button onClick={() => void resolve(report, "DISMISSED")} className="rounded-md bg-inset px-2.5 py-1.5 text-[10px] text-faint">Dismiss</button></div> : null}</div>)}
-            {!reports.length && <div className="py-16 text-center text-xs text-faint">Không có report cần xử lý.</div>}
+            {reports.map((report) => <div key={report.id} className="rounded-xl border border-border bg-background p-3"><div className="flex items-start justify-between gap-3"><div><div className="text-xs font-semibold">{report.reason_code}</div><div className="mt-1 text-[10px] text-faint">{readableDate(report.created_at)} · {report.reporter_user_id}</div></div><span title={report.status} className="rounded-full border border-border px-2 py-1 text-[10px]">{REPORT_STATUS_LABEL[report.status]}</span></div>{report.details && <p className="mt-3 text-xs leading-5 text-dim">{report.details}</p>}{canManageReports && (report.status === "OPEN" || report.status === "INVESTIGATING") ? <div className="mt-3 flex gap-2"><button onClick={() => void resolve(report, "RESOLVED")} className="rounded-md bg-green/10 px-2.5 py-1.5 text-[10px] text-green">Đánh dấu đã giải quyết</button><button onClick={() => void resolve(report, "DISMISSED")} className="rounded-md bg-inset px-2.5 py-1.5 text-[10px] text-faint">Bỏ qua</button></div> : null}</div>)}
+            {!reports.length && <div className="py-16 text-center text-xs text-faint">Không có báo cáo nào cần xử lý.</div>}
           </div>
         </section>}
 
         {canViewAudit && <section className="rounded-2xl border border-border bg-panel p-5">
-          <div className="mb-4 font-heading font-semibold">Audit stream · {logs.length}</div>
-          <div className="max-h-[520px] space-y-2 overflow-y-auto">{logs.map((log) => <div key={log.id} className="rounded-xl border border-border bg-background p-3"><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold">{log.action}</span><span className="text-[10px] text-faint">{readableDate(log.created_at)}</span></div><div className="mt-1 truncate text-[10px] text-faint">{log.entity_type} · {log.entity_id || "—"}</div><div className="mt-1 truncate text-[10px] text-faint">request {log.request_id || "—"} · trace {log.trace_id || "—"}</div></div>)}</div>
+          <div className="mb-4 font-heading font-semibold">Nhật ký kiểm toán · {logs.length}</div>
+          <div className="max-h-[520px] space-y-2 overflow-y-auto">{logs.map((log) => <div key={log.id} className="rounded-xl border border-border bg-background p-3"><div className="flex items-center justify-between gap-3"><span title={log.action} className="text-xs font-semibold">{auditActionLabel(log.action)}</span><span className="text-[10px] text-faint">{readableDate(log.created_at)}</span></div><div className="mt-1 truncate text-[10px] text-faint">Đối tượng: {AUDIT_ENTITY_LABEL[log.entity_type] || log.entity_type} · {log.entity_id || "—"}</div><div className="mt-1 truncate text-[10px] text-faint">Mã yêu cầu {log.request_id || "—"} · mã truy vết {log.trace_id || "—"}</div></div>)}</div>
         </section>}
       </div>
     </div>

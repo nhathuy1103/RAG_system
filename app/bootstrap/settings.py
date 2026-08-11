@@ -29,6 +29,7 @@ class Settings(BaseSettings):
         ]
     )
     ingestion_worker_enabled: bool = True
+    ingestion_worker_concurrency: int = Field(default=2, ge=1, le=8)
     ingestion_worker_poll_seconds: float = Field(default=2.0, gt=0)
     ingestion_worker_lease_seconds: int = Field(default=1800, ge=30)
 
@@ -104,7 +105,11 @@ class Settings(BaseSettings):
 
     @property
     def ingestion_worker_is_configured(self) -> bool:
-        if not self.ingestion_worker_enabled or self.supabase_service_role_key is None:
+        if (
+            not self.ingestion_worker_enabled
+            or self.supabase_url is None
+            or self.supabase_service_role_key is None
+        ):
             return False
         return bool(self.supabase_service_role_key.get_secret_value().strip())
 

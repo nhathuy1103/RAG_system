@@ -221,6 +221,30 @@ class KnowledgeDocumentListResponse(BaseModel):
     offset: int
 
 
+class DocumentSearchabilityResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    document_id: UUID
+    title: str
+    document_status: str
+    visibility: str
+    current_version_id: UUID | None = None
+    version_status: str | None = None
+    metadata_revision: int
+    chunk_count: int
+    ready_projection_count: int
+    lexical_ready_projection_count: int
+    lexical_stale_count: int
+    embedding_stale_count: int
+    refresh_requested_revision: int | None = None
+    refresh_processed_at: datetime | None = None
+    refresh_error: str | None = None
+    searchable_for_actor: bool
+    fully_indexed: bool
+    blocking_reasons: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
 class KnowledgeDocumentCreateRequest(BaseModel):
     title: str = Field(min_length=1, max_length=500)
     description: str | None = Field(default=None, max_length=5000)
@@ -271,6 +295,33 @@ class VersionReviewRequest(BaseModel):
     decision: Literal["APPROVE", "REJECT", "REPROCESS"]
     note: str | None = Field(default=None, max_length=5000)
     rejection_reason: str | None = Field(default=None, max_length=5000)
+
+
+class MetadataAssertionReviewRequest(BaseModel):
+    decision: Literal["VERIFIED", "REJECTED"]
+    rejection_reason: str | None = Field(default=None, max_length=5000)
+
+
+class DocumentMetadataAssertionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    document_id: UUID
+    document_version_id: UUID | None
+    field_name: str
+    value: str
+    normalized_value: str
+    source_type: str
+    confidence: float
+    verification_status: str
+    evidence: list[dict[str, object]] = Field(default_factory=list)
+    model: str | None = None
+    prompt_version: str | None = None
+    input_checksum: str | None = None
+    created_at: datetime | None = None
+    verified_by: UUID | None = None
+    verified_at: datetime | None = None
+    rejection_reason: str | None = None
 
 
 class ArchiveDocumentRequest(BaseModel):
@@ -494,7 +545,9 @@ class EnterpriseCitationResponse(BaseModel):
 
 class AnswerRetrievalResponse(BaseModel):
     strategy: str
+    candidate_count: int = 0
     evidence_count: int
+    gate_reason: str | None = None
 
 
 class AskQuestionResponse(BaseModel):
@@ -504,6 +557,7 @@ class AskQuestionResponse(BaseModel):
     answer_status: Literal["ANSWERED", "INSUFFICIENT_EVIDENCE", "FAILED"]
     citations: list[EnterpriseCitationResponse]
     retrieval: AnswerRetrievalResponse
+    error_code: str | None = None
     trace_id: str | None = None
 
 
@@ -516,6 +570,7 @@ class MessageResponse(BaseModel):
     content: str
     created_at: datetime
     answer_status: Literal["ANSWERED", "INSUFFICIENT_EVIDENCE", "FAILED"] | None = None
+    error_code: str | None = None
     citations: list[EnterpriseCitationResponse] = Field(default_factory=list)
 
 

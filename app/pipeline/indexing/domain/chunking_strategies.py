@@ -4,7 +4,7 @@ import json
 import re
 from bisect import bisect_right
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from hashlib import sha256
 
@@ -16,6 +16,8 @@ from app.pipeline.documents.domain.models import (
 )
 from app.pipeline.indexing.domain.chunk import CHUNK_VERSION, METADATA_VERSION, Chunk
 from app.shared.contextual_text import ChunkContext, build_embedding_text, build_search_text
+
+_SENTENCE_TERMINATOR_PATTERN = re.compile(r"[.!?…。！？]+[\"'”’»)\]}]*$")
 
 
 @dataclass(frozen=True)
@@ -395,6 +397,7 @@ class ContentAwareChunkStrategy(StructureAwareRecursiveChunkStrategy):
     ) -> list[Chunk]:
         rows = _table_rows(block.text)
         header = _table_header(block, rows)
+        header_lines = _table_header_lines(block, rows, header)
         data_rows = _table_data_rows(rows, header)
         token_count = _estimate_tokens(block.text)
         if not rows or token_count <= self.config.table_atomic_max_tokens or len(rows) <= 2:
@@ -436,7 +439,10 @@ class ContentAwareChunkStrategy(StructureAwareRecursiveChunkStrategy):
             ),
             start=1,
         ):
-            group_text = "\n".join(group_rows)
+            # Every independently retrieved row group must retain its column
+            # meaning. Repeating only the table header is structural context,
+            # not overlap between source data rows.
+            group_text = "\n".join([*header_lines, *group_rows])
             row_start_ordinal = next_row_ordinal
             row_end_ordinal = row_start_ordinal + len(group_rows) - 1
             next_row_ordinal = row_end_ordinal + 1
@@ -460,6 +466,7 @@ class ContentAwareChunkStrategy(StructureAwareRecursiveChunkStrategy):
                         "table_data_row_end_ordinal": row_end_ordinal,
                         "table_location": block.metadata.get("location"),
                         "table_header": header,
+                        "table_header_repeated": bool(header_lines),
                         "canonical_content": group_text,
                         "section_path": list(section_path),
                         "retrieval_metadata": {
@@ -471,6 +478,252 @@ class ContentAwareChunkStrategy(StructureAwareRecursiveChunkStrategy):
                 )
             )
         return chunks
+
+
+@dataclass(frozen=True)
+class _OrderedSection:
+    section: DocumentSection
+    path: tuple[str, ...]
+    parent_id: str | None
+
+
+class ParentChildStructureChunkStrategy(ContentAwareChunkStrategy):
+    """Non-overlapping structural children backed by exact section parents.
+
+    Parent content is materialized once, on the first child in the parent, so
+    persistence can restore the complete section without duplicating a large
+    JSON value on every vector row. Every child carries the stable parent id
+    and its ordinal within that parent.
+    """
+
+    name = "parent_child_structure"
+    version = "1.0"
+    parent_context_version = "section-parent-v1"
+
+    def __init__(self, config: StrategyConfig | None = None) -> None:
+        effective = config or StrategyConfig()
+        # A stale CHUNK_OVERLAP value must never weaken this strategy's hard
+        # no-overlap contract.
+        super().__init__(replace(effective, overlap=0))
+
+    def split(self, document: LogicalDocument) -> tuple[Chunk, ...]:
+        block_by_id = {block.id: block for block in document.blocks}
+        ordered_sections = _ordered_sections(document.sections)
+        if not ordered_sections:
+            ordered_sections = [
+                _OrderedSection(
+                    section=DocumentSection(
+                        id="document",
+                        title=document.title,
+                        block_ids=[block.id for block in document.blocks],
+                    ),
+                    path=(document.title,),
+                    parent_id=None,
+                )
+            ]
+
+        section_by_id = {context.section.id: context for context in ordered_sections}
+        partition_by_section = _parent_partition_by_section(ordered_sections)
+        processed: set[str] = set()
+        raw_chunks: list[tuple[Chunk, str]] = []
+        parent_blocks: dict[str, list[DocumentBlock]] = {}
+        parent_sections: dict[str, _OrderedSection] = {}
+
+        for context in ordered_sections:
+            section = context.section
+            partition_section_id = partition_by_section[section.id]
+            parent_sections.setdefault(
+                partition_section_id,
+                section_by_id[partition_section_id],
+            )
+            section_blocks = [
+                block_by_id[block_id]
+                for block_id in section.block_ids
+                if (
+                    block_id in block_by_id
+                    and block_id not in processed
+                    and block_by_id[block_id].text.strip()
+                    and _is_indexable_block(block_by_id[block_id])
+                )
+            ]
+            processed.update(block.id for block in section_blocks)
+            parent_blocks.setdefault(partition_section_id, []).extend(section_blocks)
+            section_chunks = self._split_section(
+                document,
+                section,
+                section_blocks,
+                len(raw_chunks),
+                section_path=context.path,
+            )
+            raw_chunks.extend((chunk, partition_section_id) for chunk in section_chunks)
+
+        remaining = [
+            block
+            for block in document.blocks
+            if block.id not in processed and block.text.strip() and _is_indexable_block(block)
+        ]
+        if remaining:
+            fallback = DocumentSection(
+                id="unlinked-blocks",
+                title=document.title,
+                block_ids=[block.id for block in remaining],
+            )
+            context = _OrderedSection(
+                section=fallback,
+                path=(document.title,),
+                parent_id=None,
+            )
+            parent_sections[fallback.id] = context
+            parent_blocks[fallback.id] = remaining
+            fallback_chunks = self._split_section(
+                document,
+                fallback,
+                remaining,
+                len(raw_chunks),
+                section_path=context.path,
+            )
+            raw_chunks.extend((chunk, fallback.id) for chunk in fallback_chunks)
+
+        chunks_by_parent: dict[str, list[Chunk]] = {}
+        for chunk, partition_section_id in raw_chunks:
+            chunks_by_parent.setdefault(partition_section_id, []).append(chunk)
+
+        annotated: list[Chunk] = []
+        for partition_section_id, group in chunks_by_parent.items():
+            context = parent_sections[partition_section_id]
+            blocks = parent_blocks.get(partition_section_id, [])
+            parent_content = "\n\n".join(
+                block.text.strip() for block in blocks if block.text.strip()
+            )
+            parent_checksum = sha256(parent_content.encode("utf-8")).hexdigest()
+            parent_id = _parent_chunk_id(
+                document,
+                context,
+                blocks,
+                config_checksum=self.config.checksum(self.name),
+            )
+            page_values = [block.page for block in blocks if block.page is not None]
+            holder_chunk_id = group[0].id
+            for child_index, chunk in enumerate(group):
+                metadata = dict(chunk.metadata)
+                metadata.update(
+                    {
+                        "node_type": "child",
+                        "parent_chunk_id": parent_id,
+                        "parent_context_holder_source_chunk_id": holder_chunk_id,
+                        "parent_context_version": self.parent_context_version,
+                        "parent_section_id": context.section.id,
+                        "parent_section_title": context.section.title,
+                        "parent_section_path": list(context.path),
+                        "parent_child_index": child_index,
+                        "parent_child_count": len(group),
+                        "parent_token_count": _estimate_tokens(parent_content),
+                        "parent_content_checksum": parent_checksum,
+                        "overlap_tokens": 0,
+                    }
+                )
+                if child_index == 0:
+                    metadata["parent_context"] = {
+                        "content": parent_content,
+                        "content_checksum": parent_checksum,
+                        "token_count": _estimate_tokens(parent_content),
+                        "source_block_ids": [block.id for block in blocks],
+                        "page_start": min(page_values) if page_values else None,
+                        "page_end": max(page_values) if page_values else None,
+                        "section_id": context.section.id,
+                        "section_title": context.section.title,
+                        "section_path": list(context.path),
+                    }
+                annotated.append(
+                    replace(
+                        chunk,
+                        parent_chunk=parent_id,
+                        metadata=metadata,
+                    )
+                )
+        return tuple(annotated)
+
+
+def _ordered_sections(sections: Iterable[DocumentSection]) -> list[_OrderedSection]:
+    """Flatten section input while restoring hierarchy from heading levels."""
+
+    flattened = _flatten_sections(sections)
+    ordered: list[_OrderedSection] = []
+    stack: list[_OrderedSection] = []
+    for section in flattened:
+        while stack and stack[-1].section.level >= section.level:
+            stack.pop()
+        title = " ".join((section.title or "").split()).strip()
+        path = (*stack[-1].path, title) if stack and title else stack[-1].path if stack else ()
+        if not stack and title:
+            path = (title,)
+        context = _OrderedSection(
+            section=section,
+            path=path,
+            parent_id=stack[-1].section.id if stack else None,
+        )
+        ordered.append(context)
+        stack.append(context)
+    return ordered
+
+
+def _parent_partition_by_section(
+    sections: Sequence[_OrderedSection],
+) -> dict[str, str]:
+    """Choose non-overlapping retrieval parents from the heading hierarchy.
+
+    Multiple root headings each become one parent.  When the document has one
+    wrapper/title root, each direct child becomes a parent and the root's own
+    preamble remains a small separate parent.  This avoids turning a common
+    ``# Document title`` wrapper into one giant retrieval parent.
+    """
+
+    by_id = {context.section.id: context for context in sections}
+    roots = [context for context in sections if context.parent_id is None]
+    root_ids = {context.section.id for context in roots}
+    use_direct_children = len(roots) == 1 and any(
+        context.parent_id == roots[0].section.id for context in sections
+    )
+
+    partitions: dict[str, str] = {}
+    for context in sections:
+        current = context
+        lineage = [current]
+        while current.parent_id is not None:
+            current = by_id[current.parent_id]
+            lineage.append(current)
+        root = lineage[-1]
+        if not use_direct_children or context.section.id in root_ids:
+            partitions[context.section.id] = root.section.id
+            continue
+        direct_child = next(
+            item for item in reversed(lineage[:-1]) if item.parent_id == root.section.id
+        )
+        partitions[context.section.id] = direct_child.section.id
+    return partitions
+
+
+def _parent_chunk_id(
+    document: LogicalDocument,
+    context: _OrderedSection,
+    blocks: Sequence[DocumentBlock],
+    *,
+    config_checksum: str,
+) -> str:
+    identity = "|".join(
+        (
+            document.id,
+            str(document.version),
+            context.section.id,
+            ">".join(context.path),
+            ",".join(block.id for block in blocks),
+            config_checksum,
+        )
+    )
+    return (
+        f"{document.id}:v{document.version}:parent:{config_checksum[:16]}:"
+        f"{sha256(identity.encode('utf-8')).hexdigest()[:16]}"
+    )
 
 
 def _estimate_tokens(text: str) -> int:
@@ -502,7 +755,7 @@ def _pack_structural_units(
         stream_parts.append(text)
         stream_length += len(text)
         matches = list(re.finditer(r"\S+", text))
-        sentence_cursor = len(token_records)
+        unit_token_start = len(token_records)
         token_records.extend(
             (
                 match.group(0),
@@ -514,10 +767,12 @@ def _pack_structural_units(
             for match in matches
         )
         paragraph_boundaries.add(len(token_records))
-        for sentence in re.split(r"(?<=[.!?。！？])\s+", text.strip()):
-            sentence_cursor += len(sentence.split())
-            if sentence_cursor < len(token_records):
-                sentence_boundaries.add(sentence_cursor)
+        for token_index, match in enumerate(matches, start=unit_token_start + 1):
+            if (
+                token_index < len(token_records)
+                and _SENTENCE_TERMINATOR_PATTERN.search(match.group(0))
+            ):
+                sentence_boundaries.add(token_index)
 
     source_stream = "".join(stream_parts)
     ordered_paragraph_boundaries = sorted(paragraph_boundaries)
@@ -538,10 +793,14 @@ def _pack_structural_units(
                 target_end,
                 minimum_preferred,
             )
+            # A complete sentence is a stronger boundary than target fullness.
+            # Allow a short chunk when needed instead of cutting the following
+            # sentence in half. A hard token cut remains the safe fallback when
+            # one sentence alone is longer than the configured chunk size.
             sentence_boundary = _last_boundary(
                 ordered_sentence_boundaries,
                 target_end,
-                minimum_preferred,
+                cursor + overlap_tokens + 1,
             )
             end = paragraph_boundary or sentence_boundary or target_end
         window = token_records[cursor:end]
@@ -618,16 +877,43 @@ def _table_header(block: DocumentBlock, rows: list[str]) -> str | None:
     return rows[0] if rows else None
 
 
+def _table_header_lines(
+    block: DocumentBlock,
+    rows: list[str],
+    header: str | None,
+) -> tuple[str, ...]:
+    if len(rows) >= 2 and _is_markdown_separator_row(rows[1]):
+        return (rows[0], rows[1])
+    if rows and header and _table_cells(rows[0]) == _table_cells(header):
+        return (rows[0],)
+    metadata_header = block.metadata.get("header")
+    if isinstance(metadata_header, list):
+        values = [str(value).strip() for value in metadata_header if str(value).strip()]
+        if values:
+            return (f"| {' | '.join(values)} |",)
+    return (header,) if header else ()
+
+
 def _table_data_rows(rows: list[str], header: str | None) -> list[str]:
     """Return all data rows whether the parser embeds or detaches the header."""
 
     if not rows or not header:
         return rows
+    offset = 1 if _table_cells(rows[0]) == _table_cells(header) else 0
+    if len(rows) > offset and _is_markdown_separator_row(rows[offset]):
+        offset += 1
+    return rows[offset:]
 
-    def normalize(value: str) -> str:
-        return "|".join(part.strip().casefold() for part in value.split("|"))
 
-    return rows[1:] if normalize(rows[0]) == normalize(header) else rows
+def _table_cells(value: str) -> tuple[str, ...]:
+    return tuple(
+        part.strip().casefold() for part in value.strip().strip("|").split("|") if part.strip()
+    )
+
+
+def _is_markdown_separator_row(value: str) -> bool:
+    cells = [part.strip() for part in value.strip().strip("|").split("|")]
+    return bool(cells) and all(re.fullmatch(r":?-{3,}:?", cell) for cell in cells)
 
 
 def _table_row_groups(
@@ -689,6 +975,7 @@ def _flatten_sections(
 
 __all__ = [
     "ContentAwareChunkStrategy",
+    "ParentChildStructureChunkStrategy",
     "StrategyConfig",
     "StructureAwareRecursiveChunkStrategy",
 ]

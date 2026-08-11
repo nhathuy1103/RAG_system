@@ -34,8 +34,9 @@ _LSH_BAND_COUNT = 8
 _LSH_BAND_WIDTH = 2
 _MAX_BATCH_FUZZY_CANDIDATES = 16
 _RELATION_PRIORITY = {
-    RelationType.CONFLICT_CANDIDATE: 4,
-    RelationType.VERSION_CANDIDATE: 3,
+    RelationType.CONFLICT_CANDIDATE: 5,
+    RelationType.VERSION_CANDIDATE: 4,
+    RelationType.TEMPORAL_SERIES: 3,
     RelationType.NEAR_DUPLICATE: 2,
     RelationType.TEMPLATE_VARIANT: 1,
 }
@@ -58,6 +59,7 @@ class ChunkDedupPlan:
     near_duplicate_count: int = 0
     version_candidate_count: int = 0
     conflict_candidate_count: int = 0
+    temporal_series_count: int = 0
     template_variant_count: int = 0
 
     def to_stats(self) -> dict[str, int]:
@@ -67,6 +69,7 @@ class ChunkDedupPlan:
             "near_duplicate_count": self.near_duplicate_count,
             "version_candidate_count": self.version_candidate_count,
             "conflict_candidate_count": self.conflict_candidate_count,
+            "temporal_series_count": self.temporal_series_count,
             "template_variant_count": self.template_variant_count,
             "database_vector_reuse_count": len(self.precomputed_vectors),
             "batch_vector_reuse_count": len(self.reuse_from_chunk_index),
@@ -250,6 +253,7 @@ def plan_chunk_deduplication(
         near_duplicate_count=relation_counts[RelationType.NEAR_DUPLICATE],
         version_candidate_count=relation_counts[RelationType.VERSION_CANDIDATE],
         conflict_candidate_count=relation_counts[RelationType.CONFLICT_CANDIDATE],
+        temporal_series_count=relation_counts[RelationType.TEMPORAL_SERIES],
         template_variant_count=relation_counts[RelationType.TEMPLATE_VARIANT],
     )
 
@@ -483,6 +487,11 @@ def _build_document_relations(
 
     results: list[QualityRelationCandidate] = []
     for target_document_id, document_matches in by_document.items():
+        temporal_pair_count = sum(
+            match.analysis.scope_comparison is ScopeComparison.TEMPORAL_DIVERGENCE
+            for match in document_matches
+        )
+        temporal_majority = temporal_pair_count * 2 > len(document_matches)
         conflicts = [
             match
             for match in document_matches
@@ -491,7 +500,7 @@ def _build_document_relations(
             and match.analysis.validated_conflict_count > 0
             and match.analysis.scope_comparison is ScopeComparison.SAME_SCOPE
         ]
-        if conflicts:
+        if conflicts and not temporal_majority:
             selected_group = _deduplicate_conflict_matches(conflicts)
             relation_type = RelationType.CONFLICT_CANDIDATE
         else:
@@ -502,6 +511,7 @@ def _build_document_relations(
             relation_type = RelationType.DISTINCT
             for candidate_type in (
                 RelationType.VERSION_CANDIDATE,
+                RelationType.TEMPORAL_SERIES,
                 RelationType.NEAR_DUPLICATE,
                 RelationType.TEMPLATE_VARIANT,
             ):
@@ -539,6 +549,12 @@ def _build_document_relations(
                 "matched_probe_count": len(matched_indexes),
                 "probe_count": fuzzy_probe_count,
                 "matched_chunk_pair_count": len(selected_group),
+                "temporal_divergence_pair_count": temporal_pair_count,
+                "temporal_divergence_ratio": round(
+                    temporal_pair_count / len(document_matches),
+                    6,
+                ),
+                "temporal_majority_guard_applied": temporal_majority,
                 "validated_conflict_count": sum(
                     match.analysis.validated_conflict_count for match in selected_group
                 ),

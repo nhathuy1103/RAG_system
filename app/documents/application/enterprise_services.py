@@ -8,6 +8,8 @@ from uuid import UUID, uuid4
 
 from app.documents.domain.enterprise_models import (
     AccessDecision,
+    DocumentMetadataAssertion,
+    DocumentSearchability,
     DocumentVersion,
     DocumentVersionReviewContext,
     InitialDocumentUpload,
@@ -54,6 +56,9 @@ class EnterpriseDocumentService:
 
     async def get_document(self, document_id: UUID) -> KnowledgeDocument | None:
         return await self._repository.get_document(document_id)
+
+    async def list_searchability(self, *, document_id: UUID | None) -> list[DocumentSearchability]:
+        return await self._repository.list_searchability(document_id=document_id)
 
     async def create_document(self, value: NewKnowledgeDocument) -> KnowledgeDocument:
         title = value.title.strip()
@@ -118,6 +123,48 @@ class EnterpriseDocumentService:
             decision=decision,
             note=note,
             rejection_reason=rejection_reason,
+        )
+
+    async def list_metadata_assertions(
+        self,
+        version_id: UUID,
+        *,
+        verification_status: str | None,
+    ) -> list[DocumentMetadataAssertion]:
+        normalized = verification_status.upper() if verification_status else None
+        if normalized not in {None, "UNVERIFIED", "VERIFIED", "REJECTED"}:
+            raise EnterpriseDocumentValidationError(
+                "INVALID_METADATA_ASSERTION_STATUS",
+                "Metadata assertion status is invalid",
+            )
+        return await self._repository.list_metadata_assertions(
+            version_id,
+            verification_status=normalized,
+        )
+
+    async def review_metadata_assertion(
+        self,
+        assertion_id: UUID,
+        *,
+        decision: str,
+        rejection_reason: str | None,
+    ) -> DocumentMetadataAssertion:
+        normalized = decision.upper().strip()
+        reason = rejection_reason.strip() if rejection_reason else None
+        if normalized not in {"VERIFIED", "REJECTED"}:
+            raise EnterpriseDocumentValidationError(
+                "INVALID_METADATA_ASSERTION_DECISION",
+                "Decision must be VERIFIED or REJECTED",
+            )
+        if normalized == "REJECTED" and not reason:
+            raise EnterpriseDocumentValidationError(
+                "REJECTION_REASON_REQUIRED",
+                "A rejection reason is required",
+            )
+        return await self._repository.review_metadata_assertion(
+            assertion_id,
+            decision=normalized,
+            rejection_reason=reason,
         )
 
     async def publish_version(self, version_id: UUID) -> DocumentVersion:

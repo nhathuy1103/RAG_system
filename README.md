@@ -10,9 +10,10 @@ Native PDF
   -> Supabase Storage
   -> durable ingestion job
   -> Advanced Extraction
-  -> chunking
+  -> evidence-backed metadata enrichment (deterministic first, LLM last)
+  -> parent/child chunking
   -> OpenAI text-embedding-3-small
-  -> pgvector
+  -> canonical metadata + retrieval projection (PostgreSQL FTS/pgvector)
   -> hybrid retrieval
   -> streamed chat kèm citation
 ```
@@ -38,6 +39,7 @@ README này hướng tới đội kỹ thuật cần dựng môi trường phát
 | Enterprise IAM và ACL | Đã có RBAC chức năng, group/department và quyền tài liệu theo access subject |
 | Enterprise document lifecycle | Đã có upload khởi tạo atomic, source file, logical document, version, processing history, review, publish, archive, retry và audit |
 | Enterprise grounded Q&A | Chỉ retrieval `PUBLISHED + ACTIVE + current + ASK_KNOWLEDGE + READ`; trusted backend kiểm tra lại ACL và lưu answer/citation atomic |
+| Canonical retrieval metadata | Document/version là nguồn chuẩn; parent/child được lưu thật; LLM chỉ tạo assertion có evidence và phải review trước khi thành hard filter |
 | OCR | Có thể bật, nhưng đang là luồng experimental; PDF scan phức tạp có thể bị quality gate chặn |
 | Import URL/text | Frontend đã có entry point nhưng backend chưa có API tương ứng; không thuộc demo path |
 
@@ -106,6 +108,9 @@ User question
 Generation mặc định là closed-book: câu trả lời dựa trên context được retrieval, trừ khi chủ động bật
 `GENERATION_ALLOW_OUTSIDE_KNOWLEDGE`.
 
+Quy tắc canonical metadata, evidence gate và review LLM được chốt tại
+[`docs/architecture/document-metadata-policy.md`](docs/architecture/document-metadata-policy.md).
+
 ## Chạy demo
 
 Demo path dùng API và frontend chạy local, còn Auth, Storage, Postgres/pgvector chạy trên Supabase
@@ -146,6 +151,12 @@ Trong SQL Editor của một Supabase project mới, chạy lần lượt các f
 21. `supabase/migrations/21_enterprise_security_retrieval.sql`
 22. `supabase/migrations/22_enterprise_answer_ingestion_bridge.sql`
 23. `supabase/migrations/23_enterprise_workflow_completion.sql`
+24. `supabase/migrations/24_legacy_notebook_enterprise_bridge.sql`
+25. `supabase/migrations/25_canonical_metadata_parent_projection.sql`
+26. `supabase/migrations/26_temporal_scope_series.sql`
+27. `supabase/migrations/27_fix_complete_processing_job_v2_digest.sql`
+28. `supabase/migrations/28_guided_document_publish.sql`
+29. `supabase/migrations/29_allow_reupload_after_archive.sql`
 
 Các migration tạo schema ứng dụng, RLS, hai private bucket `documents` và
 `knowledge-source-files`, pgvector search RPC, Enterprise IAM/ACL/lifecycle,
@@ -153,8 +164,8 @@ document identity/version/conflict, audit và guarded reversal. Đọc
 [hướng dẫn migration 08/09](docs/migrations/08-09-knowledge-quality.md) trước khi cập nhật một
 project đang có dữ liệu và [runbook Enterprise](docs/operations/enterprise-knowledge-runbook.md)
 trước khi rollout. Không chạy `RESET_AND_REBUILD.sql` trên project có dữ liệu cần giữ: script đó
-xóa dữ liệu ứng dụng trước khi dựng lại schema 01–23. Sau khi đổi migration, sinh lại file reset
-bằng lệnh dưới đây; phần canonical phải khớp nguyên văn, đúng thứ tự với các migration 01–23.
+xóa dữ liệu ứng dụng trước khi dựng lại schema 01–29. Sau khi đổi migration, sinh lại file reset
+bằng lệnh dưới đây; phần canonical phải khớp nguyên văn, đúng thứ tự với các migration 01–29.
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate_enterprise_reset.ps1
@@ -286,6 +297,7 @@ Postgres nên không cần URL hoặc service riêng.
 | `SUPABASE_JWT_AUDIENCE` | `authenticated` | Audience cần có trong access token |
 | `CORS_ORIGINS` | localhost `5173` | Danh sách JSON các frontend origin |
 | `INGESTION_WORKER_ENABLED` | `true` | Chạy worker nền cùng process FastAPI |
+| `INGESTION_WORKER_CONCURRENCY` | `2` | Số worker lease job song song; tăng thận trọng theo quota OpenAI/DB |
 | `INGESTION_WORKER_POLL_SECONDS` | `2` | Chu kỳ tìm job đang chờ |
 | `INGESTION_WORKER_LEASE_SECONDS` | `1800` | Thời gian lease; worker gia hạn khi đang xử lý |
 
@@ -295,8 +307,8 @@ Postgres nên không cần URL hoặc service riêng.
 |---|---|---|
 | `MAX_FILE_SIZE_BYTES` | `10485760` | Giới hạn cố định 10 MiB, khớp API, pipeline và Storage |
 | `CHUNK_SIZE` | `600` | Kích thước chunk mục tiêu |
-| `CHUNK_OVERLAP` | `80` | Phần nội dung chồng lấn |
-| `CHUNKING_STRATEGY` | `structure_recursive` | Giữ cấu trúc tài liệu khi chia chunk |
+| `CHUNK_OVERLAP` | `0` | Không lặp nội dung giữa các child chunk |
+| `CHUNKING_STRATEGY` | `parent_child_structure` | Child theo cấu trúc, parent giữ trọn section và dừng đúng ranh giới heading |
 | `ADVANCED_EXTRACTION_ENABLED` | `true` | Bật Advanced Extraction |
 | `EXTRACTION_QUALITY_MODE` | `rag` | Quality policy dành cho retrieval; `structured` nghiêm hơn |
 | `MAX_EXTRACTION_PROVIDER_ATTEMPTS` | `1` | Số lần thử extraction provider |

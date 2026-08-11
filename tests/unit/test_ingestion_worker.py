@@ -14,6 +14,7 @@ from docx import Document as DocxDocument
 from app.bootstrap.settings import Settings as AppSettings
 from app.ingestion.application.worker import (
     IngestionWorker,
+    _retrieval_metadata_fill_statistics,
     build_ingestion_profile,
 )
 from app.ingestion.domain.models import (
@@ -57,6 +58,36 @@ CONTENT = b"Revenue increased in 2026.\n\nCosts stayed controlled."
 CSV_CONTENT = (
     "Dự án,Tòa,Mã căn,Giá bán,Ngày hiệu lực\nSunrise,A,U01,3000000000,2025-03-01\n"
 ).encode()
+
+
+def test_retrieval_metadata_fill_statistics_are_value_free_and_per_field() -> None:
+    chunks = (
+        PersistedChunk(
+            id=UUID(int=101),
+            chunk_index=0,
+            content="A",
+            token_count=1,
+            metadata={
+                "retrieval_metadata": {
+                    "document_type": "policy",
+                    "project_code": "P16",
+                }
+            },
+        ),
+        PersistedChunk(
+            id=UUID(int=102),
+            chunk_index=1,
+            content="B",
+            token_count=1,
+            metadata={"retrieval_metadata": {"document_type": "policy"}},
+        ),
+    )
+
+    statistics = _retrieval_metadata_fill_statistics(chunks)
+
+    assert statistics["document_type"] == {"filled": 2, "total": 2, "rate": 1.0}
+    assert statistics["project_code"] == {"filled": 1, "total": 2, "rate": 0.5}
+    assert "P16" not in repr(statistics)
 
 
 def make_job(
@@ -940,6 +971,16 @@ def test_ingestion_profile_requires_openai_qdrant_contract() -> None:
     assert profile.configuration["contextual_enrichment_model"] == "gpt-4o-mini"
     assert profile.configuration["contextual_enrichment_prompt_version"] == "chunk-context-v4"
     assert profile.configuration["contextual_text_version"] == "contextual-text-v4"
+    assert profile.configuration["document_metadata_enrichment_enabled"] is True
+    assert profile.configuration["document_metadata_enrichment_model"] == "gpt-4o-mini"
+    assert (
+        profile.configuration["document_metadata_enrichment_prompt_version"]
+        == "document-metadata-vi-v2"
+    )
+    assert (
+        profile.configuration["document_metadata_enrichment_verification_policy"]
+        == "exact_evidence_unverified"
+    )
     assert profile.configuration["embedding_provider"] == "openai"
     assert profile.configuration["vector_store_backend"] == "qdrant"
     assert profile.configuration["knowledge_quality_mode"] == "off"

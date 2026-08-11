@@ -92,7 +92,7 @@ async def append_conversation_message(
     conversation_id: UUID,
     payload: MessageCreateRequest,
     request: Request,
-    _principal: Annotated[PrincipalContext, Depends(require_ask_knowledge)],
+    principal: Annotated[PrincipalContext, Depends(require_ask_knowledge)],
     service: Annotated[
         EnterpriseQuestionService,
         Depends(get_enterprise_question_service),
@@ -103,6 +103,7 @@ async def append_conversation_message(
         payload.content,
         filters=payload.filters,
         trace_id=request_trace_id(request),
+        user_id=principal.user_id,
     )
     status_value: Literal["ANSWERED", "INSUFFICIENT_EVIDENCE", "FAILED"]
     if result.assistant_message.answer_status == "COMPLETED":
@@ -129,8 +130,11 @@ async def append_conversation_message(
         ],
         retrieval=AnswerRetrievalResponse(
             strategy=result.retrieval_strategy,
+            candidate_count=result.candidate_count,
             evidence_count=result.evidence_count,
+            gate_reason=result.gate_reason,
         ),
+        error_code=result.error_code,
         trace_id=result.trace_id,
     )
 
@@ -257,6 +261,7 @@ def _message_response(item: EnterpriseMessage) -> MessageResponse:
         content=item.content,
         created_at=item.created_at,
         answer_status=public_status,
+        error_code=item.error_code,
         citations=[
             EnterpriseCitationResponse.model_validate(citation)
             for citation in item.citations

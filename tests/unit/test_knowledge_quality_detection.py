@@ -269,3 +269,87 @@ def test_ann_different_scopes_are_template_variants() -> None:
 
     assert candidates[0].relation_type == RelationType.TEMPLATE_VARIANT
     assert candidates[0].signals["validated_conflict_count"] == 0
+
+
+def test_ann_persists_temporal_series_candidate() -> None:
+    chunk = replace(
+        _chunk(0, "Revenue in 2024 was 120 million USD."),
+        metadata={
+            "claim_scope": ClaimScope(
+                project_id="project-a",
+                reference_year="2024",
+            ).to_metadata()
+        },
+    )
+    hit = replace(
+        _hit("Revenue in 2026 was 145 million USD."),
+        metadata={
+            "claim_scope": ClaimScope(
+                project_id="project-a",
+                reference_year="2026",
+            ).to_metadata()
+        },
+    )
+
+    candidates = detect_document_relation_candidates(
+        vector_index=_ScriptedVectorIndex([[hit]]),
+        chunks=(chunk,),
+        max_probe_chunks=1,
+        candidates_per_probe=3,
+    )
+
+    assert candidates[0].relation_type is RelationType.TEMPORAL_SERIES
+    assert candidates[0].detector_version == "knowledge-quality-v4"
+    assert candidates[0].signals["temporal_divergence_ratio"] == 1.0
+    assert candidates[0].signals["validated_conflict_count"] == 0
+
+
+def test_ann_temporal_majority_cannot_be_promoted_to_conflict() -> None:
+    scope_2024 = ClaimScope(project_id="project-a", reference_year="2024").to_metadata()
+    scope_2026 = ClaimScope(project_id="project-a", reference_year="2026").to_metadata()
+    chunks = tuple(
+        replace(_chunk(index, text), metadata={"claim_scope": scope_2024})
+        for index, text in enumerate(
+            (
+                "Revenue in 2024 was 120 million USD.",
+                "Profit in 2024 was 80 million USD.",
+                "Budget in 2024 was 60 million USD.",
+            )
+        )
+    )
+    index = _ScriptedVectorIndex(
+        [
+            [
+                replace(
+                    _hit("Revenue in 2024 was 121 million USD.", chunk_id="same-year"),
+                    metadata={"claim_scope": scope_2024},
+                )
+            ],
+            [
+                replace(
+                    _hit("Profit in 2026 was 90 million USD.", chunk_id="later-profit"),
+                    metadata={"claim_scope": scope_2026},
+                )
+            ],
+            [
+                replace(
+                    _hit("Budget in 2026 was 75 million USD.", chunk_id="later-budget"),
+                    metadata={"claim_scope": scope_2026},
+                )
+            ],
+        ]
+    )
+
+    candidates = detect_document_relation_candidates(
+        vector_index=index,
+        chunks=chunks,
+        max_probe_chunks=3,
+        candidates_per_probe=3,
+    )
+
+    assert candidates[0].relation_type is RelationType.TEMPORAL_SERIES
+    assert candidates[0].signals["temporal_majority_guard_applied"] is True
+    assert candidates[0].signals["relation_pair_counts"] == {
+        "conflict_candidate": 1,
+        "temporal_series": 2,
+    }

@@ -14,8 +14,9 @@ from app.knowledge_quality.domain.models import (
 )
 
 _PAIR_PRIORITY = {
-    RelationType.CONFLICT_CANDIDATE.value: 6,
-    RelationType.VERSION_CANDIDATE.value: 5,
+    RelationType.CONFLICT_CANDIDATE.value: 7,
+    RelationType.VERSION_CANDIDATE.value: 6,
+    RelationType.TEMPORAL_SERIES.value: 5,
     RelationType.NEAR_DUPLICATE.value: 4,
     RelationType.TEMPLATE_VARIANT.value: 3,
     RelationType.EXACT_CONTENT.value: 2,

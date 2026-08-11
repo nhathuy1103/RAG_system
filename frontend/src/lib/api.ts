@@ -60,7 +60,8 @@ export type DocumentRelationType =
   | "related"
   | "distinct"
   | "technical_duplicate"
-  | "template_variant";
+  | "template_variant"
+  | "temporal_series";
 
 export type DocumentRelationStatus =
   | "pending"

@@ -45,7 +45,7 @@ class PostgrestGovernanceRepository(GovernanceRepository):
         self, query: str, *, limit: int, filters: dict[str, object]
     ) -> list[SearchHit]:
         payload = await self._rpc(
-            "search_enterprise_knowledge",
+            "search_enterprise_retrieval_projection",
             {"p_query": query, "p_limit": limit, "p_filters": filters},
         )
         return [self._parse_search_hit(row) for row in self._rows(payload, "search")]
@@ -58,7 +58,7 @@ class PostgrestGovernanceRepository(GovernanceRepository):
         filters: dict[str, object],
     ) -> list[SearchHit]:
         payload = await self._rpc(
-            "match_enterprise_document_chunks",
+            "match_enterprise_retrieval_projection",
             {
                 "p_query_embedding": query_embedding,
                 "p_limit": limit,
@@ -68,6 +68,43 @@ class PostgrestGovernanceRepository(GovernanceRepository):
         return [
             self._parse_search_hit(row)
             for row in self._rows(payload, "dense enterprise search")
+        ]
+
+    async def resolve_document_number(self, document_number: str) -> list[UUID]:
+        payload = await self._rpc(
+            "resolve_enterprise_document_number",
+            {"p_document_number": document_number},
+        )
+        result: list[UUID] = []
+        for row in self._rows(payload, "document-number resolution"):
+            try:
+                result.append(UUID(str(row["document_id"])))
+            except (KeyError, TypeError, ValueError) as exc:
+                raise GovernanceRepositoryError(
+                    "Invalid document-number resolution response"
+                ) from exc
+        return result
+
+    async def expand_context(
+        self,
+        chunk_ids: tuple[UUID, ...],
+        *,
+        sibling_window: int,
+        limit: int,
+    ) -> list[SearchHit]:
+        if not chunk_ids:
+            return []
+        payload = await self._rpc(
+            "expand_enterprise_chunk_context",
+            {
+                "p_chunk_ids": [str(value) for value in chunk_ids],
+                "p_sibling_window": sibling_window,
+                "p_limit": limit,
+            },
+        )
+        return [
+            self._parse_search_hit(row)
+            for row in self._rows(payload, "enterprise context expansion")
         ]
 
     async def create_conversation(self, title: str | None) -> EnterpriseConversation:
@@ -373,6 +410,7 @@ class PostgrestGovernanceRepository(GovernanceRepository):
             content=str(row["content"]),
             created_at=cls._datetime(row["created_at"]),
             answer_status=(str(row["answer_status"]) if row.get("answer_status") else None),
+            error_code=(str(row["error_code"]) if row.get("error_code") else None),
             citations=(
                 tuple(
                     cls._parse_citation(item)

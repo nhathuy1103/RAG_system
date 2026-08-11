@@ -19,6 +19,7 @@ def test_initial_upload_is_one_database_transaction_with_duplicate_protection() 
     assert "has_functional_permission(actor, 'upload_document')" in body
     assert "pg_advisory_xact_lock" in body
     assert "an identical source is already registered" in body
+    assert "registered_documents.status <> 'archived'" in body
     for table in (
         "source_files",
         "knowledge_documents",

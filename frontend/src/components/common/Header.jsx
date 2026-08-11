@@ -2,9 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Icon } from '@iconify/react';
-import { useNotebookStore } from '../../stores/notebookStore.js';
 import { useThemeStore } from '../../stores/themeStore.js';
-import { useUiStore } from '../../stores/uiStore.js';
 import { useProfileStore } from '../../stores/profileStore.js';
 import { supabase } from '../../lib/supabase';
 import { getEnterpriseMe } from '../../lib/enterpriseApi';
@@ -15,7 +13,6 @@ function UserMenu({ enterpriseKnowledgeEnabled, canOpenEnterpriseAdmin, onOpenPr
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const profile = useProfileStore((state) => state.profile);
-  const isLegacyAdmin = profile?.role === 'admin';
 
   return (
     <div className="relative">
@@ -44,17 +41,10 @@ function UserMenu({ enterpriseKnowledgeEnabled, canOpenEnterpriseAdmin, onOpenPr
                     {profile.display_name || 'Chưa đặt tên'}
                   </div>
                   <div className="mt-0.5 text-[11.5px] text-faint">
-                    {canOpenEnterpriseAdmin ? 'Quản trị Enterprise' : isLegacyAdmin ? 'Quản trị viên' : 'Thành viên'}
+                    {canOpenEnterpriseAdmin ? 'Quản trị kho tri thức' : 'Thành viên'}
                   </div>
                 </div>
               )}
-              <button
-                onClick={() => { setOpen(false); navigate('/legacy/notebooks'); }}
-                className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-[13px] text-foreground hover:bg-inset"
-              >
-                <Icon icon="lucide:home" width={15} height={15} />
-                Notebook legacy
-              </button>
               {enterpriseKnowledgeEnabled && <button
                 onClick={() => { setOpen(false); navigate('/knowledge'); }}
                 className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-[13px] text-foreground hover:bg-inset"
@@ -67,7 +57,7 @@ function UserMenu({ enterpriseKnowledgeEnabled, canOpenEnterpriseAdmin, onOpenPr
                 className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-[13px] text-foreground hover:bg-inset"
               >
                 <Icon icon="lucide:chart-no-axes-combined" width={15} height={15} />
-                Báo cáo Context v4
+                Báo cáo chất lượng ngữ cảnh v4
               </button>
               <button
                 onClick={() => { setOpen(false); navigate('/tools/extraction-inspector'); }}
@@ -89,16 +79,7 @@ function UserMenu({ enterpriseKnowledgeEnabled, canOpenEnterpriseAdmin, onOpenPr
                     className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-[13px] text-foreground hover:bg-inset"
                   >
                     <Icon icon="lucide:shield-check" width={15} height={15} />
-                    Knowledge Admin
-                  </button>
-              )}
-              {isLegacyAdmin && (
-                  <button
-                    onClick={() => { setOpen(false); navigate('/admin'); }}
-                    className="flex w-full items-center gap-2.5 px-3.5 py-2.5 text-left text-[13px] text-foreground hover:bg-inset"
-                  >
-                    <Icon icon="lucide:layout-dashboard" width={15} height={15} />
-                    Admin Dashboard cũ
+                    Quản trị kho tri thức
                   </button>
               )}
               <button
@@ -135,15 +116,11 @@ const ENTERPRISE_ADMIN_PERMISSIONS = new Set([
 export default function Header({ enterpriseKnowledgeEnabled = true }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { activeNotebook } = useNotebookStore();
   const { theme, toggleTheme } = useThemeStore();
-  const { sidebarOpen, toggleSidebar } = useUiStore();
   const fetchProfile = useProfileStore((state) => state.fetchProfile);
   const [showSignOut, setShowSignOut] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [enterprisePermissions, setEnterprisePermissions] = useState([]);
-
-  const inWorkspace = location.pathname.startsWith('/notebook/');
 
   useEffect(() => {
     fetchProfile().catch((e) => console.error('Failed to fetch profile:', e));
@@ -176,65 +153,29 @@ export default function Header({ enterpriseKnowledgeEnabled = true }) {
   return (
     <header className="z-10 flex h-14 shrink-0 items-center gap-4 border-b border-border bg-panel px-5">
       <button
-        onClick={() => navigate(enterpriseKnowledgeEnabled ? '/knowledge' : '/legacy/notebooks')}
+        onClick={() => navigate('/knowledge')}
         className="flex shrink-0 items-center gap-2 rounded-md hover:opacity-80"
       >
         <div className="flex h-7 w-7 items-center justify-center rounded-md bg-accent text-accent-foreground">
           <Icon icon="lucide:layers" width={14} height={14} />
         </div>
-        <span className="font-heading text-[15px] font-bold tracking-tight text-foreground">Enterprise Knowledge</span>
+        <span className="font-heading text-[15px] font-bold tracking-tight text-foreground">Kho tri thức doanh nghiệp</span>
       </button>
 
       <div className="h-5 w-px bg-border" />
 
-      {inWorkspace && (
-        <button
-          onClick={toggleSidebar}
-          title={sidebarOpen ? 'Ẩn thanh bên' : 'Hiện thanh bên'}
-          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-border transition-colors ${
-            sidebarOpen ? 'bg-accent/10 text-accent' : 'bg-background text-faint'
-          } hover:bg-accent/10 hover:text-accent`}
-        >
-          <Icon icon="lucide:panel-left" width={16} height={16} />
-        </button>
-      )}
-
       <div className="flex flex-1 items-center gap-1.5 overflow-hidden">
-        {inWorkspace ? (
-          <>
-            <button
-              onClick={() => navigate('/legacy/notebooks')}
-              title="Về sổ tay của tôi"
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-faint hover:bg-inset hover:text-foreground"
-            >
-              <Icon icon="lucide:arrow-left" width={15} height={15} />
-            </button>
-            <button
-              onClick={() => navigate('/legacy/notebooks')}
-              className="shrink-0 text-[13px] text-faint hover:text-foreground hover:underline"
-            >
-              Notebook legacy
-            </button>
-            <Icon icon="lucide:chevron-right" width={14} height={14} />
-            <span className="truncate text-[13px] font-semibold text-foreground">
-              {activeNotebook ? activeNotebook.title : 'Chưa chọn sổ tay'}
-            </span>
-          </>
-        ) : (
-          <span className="truncate text-[13px] font-semibold text-foreground">
-            {location.pathname === '/admin/knowledge'
-              ? 'Knowledge Admin'
-              : location.pathname === '/knowledge'
-                ? 'Tra cứu tri thức doanh nghiệp'
-              : location.pathname === '/admin'
-              ? 'Admin Dashboard'
-              : location.pathname === '/tools/extraction-inspector'
-                ? 'Kiểm tra trích xuất'
-              : location.pathname === '/reports/context-quality-v4'
-                ? 'Báo cáo Contextual Retrieval v4'
-                : 'Sổ tay của bạn'}
-          </span>
-        )}
+        <span className="truncate text-[13px] font-semibold text-foreground">
+          {location.pathname === '/admin/knowledge'
+            ? 'Quản trị kho tri thức'
+            : location.pathname === '/knowledge'
+              ? 'Tra cứu tri thức doanh nghiệp'
+            : location.pathname === '/tools/extraction-inspector'
+              ? 'Kiểm tra trích xuất'
+            : location.pathname === '/reports/context-quality-v4'
+              ? 'Báo cáo chất lượng truy xuất ngữ cảnh v4'
+              : 'Kho tri thức doanh nghiệp'}
+        </span>
       </div>
 
       <div className="flex shrink-0 items-center gap-2.5">

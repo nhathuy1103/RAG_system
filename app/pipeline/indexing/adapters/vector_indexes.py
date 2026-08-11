@@ -591,6 +591,7 @@ class QdrantVectorIndex:
             ),
             "strategy_version": str(chunk.metadata.get("strategy_version") or ""),
         }
+        compact_metadata.update(_parent_chunk_metadata(chunk.metadata, include_context=False))
         claim_scope = chunk.metadata.get("claim_scope")
         if claim_scope is not None:
             compact_metadata["claim_scope"] = claim_scope
@@ -838,6 +839,7 @@ class PgVectorIndex:
                 ),
                 "strategy_version": str(chunk.metadata.get("strategy_version") or ""),
                 "retrieval_metadata": dict(chunk.retrieval_metadata),
+                **_parent_chunk_metadata(chunk.metadata, include_context=True),
             },
             "embedding": list(chunk.embedding),
         }
@@ -863,6 +865,30 @@ def _source_block_ids(value: object) -> list[str]:
     if isinstance(value, (list, tuple, set)):
         return [str(item).strip() for item in value if str(item).strip()]
     return []
+
+
+def _parent_chunk_metadata(
+    metadata: Mapping[str, object],
+    *,
+    include_context: bool,
+) -> dict[str, object]:
+    keys = (
+        "node_type",
+        "parent_chunk_id",
+        "parent_context_holder_source_chunk_id",
+        "parent_context_version",
+        "parent_section_id",
+        "parent_section_title",
+        "parent_section_path",
+        "parent_child_index",
+        "parent_child_count",
+        "parent_token_count",
+        "parent_content_checksum",
+    )
+    values = {key: metadata[key] for key in keys if metadata.get(key) is not None}
+    if include_context and metadata.get("parent_context") is not None:
+        values["parent_context"] = metadata["parent_context"]
+    return values
 
 
 def _matches_retrieval_metadata(

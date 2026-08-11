@@ -39,15 +39,31 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         stop_event = asyncio.Event()
-        worker_task: asyncio.Task[None] | None = None
+        worker_tasks: list[asyncio.Task[None]] = []
+        _app.state.ingestion_worker_enabled = resolved_settings.ingestion_worker_enabled
+        _app.state.ingestion_worker_configured = (
+            resolved_settings.ingestion_worker_is_configured
+        )
+        _app.state.ingestion_worker_task = None
+        _app.state.ingestion_worker_tasks = ()
         if resolved_settings.ingestion_worker_is_configured:
-            worker_task = asyncio.create_task(
-                run_ingestion_worker(resolved_settings, stop_event, telemetry=telemetry),
-                name="document-ingestion-worker",
-            )
+            worker_tasks = [
+                asyncio.create_task(
+                    run_ingestion_worker(
+                        resolved_settings,
+                        stop_event,
+                        telemetry=telemetry,
+                    ),
+                    name=f"document-ingestion-worker-{slot + 1}",
+                )
+                for slot in range(resolved_settings.ingestion_worker_concurrency)
+            ]
+            _app.state.ingestion_worker_task = worker_tasks[0]
+            _app.state.ingestion_worker_tasks = tuple(worker_tasks)
             await asyncio.sleep(0)
-            if worker_task.done():
-                await worker_task
+            for worker_task in worker_tasks:
+                if worker_task.done():
+                    await worker_task
         elif resolved_settings.ingestion_worker_enabled:
             LOGGER.warning(
                 "Ingestion worker is enabled but SUPABASE_SERVICE_ROLE_KEY is not configured"
@@ -55,14 +71,25 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         try:
             yield
         finally:
-            if worker_task is not None:
+            if worker_tasks:
                 stop_event.set()
                 try:
-                    await asyncio.wait_for(worker_task, timeout=10)
+                    results = await asyncio.wait_for(
+                        asyncio.gather(*worker_tasks, return_exceptions=True),
+                        timeout=10,
+                    )
+                    for result in results:
+                        if isinstance(result, Exception):
+                            LOGGER.error(
+                                "Ingestion worker stopped unexpectedly",
+                                exc_info=result,
+                            )
                 except TimeoutError:
-                    worker_task.cancel()
-                except Exception:
-                    LOGGER.exception("Ingestion worker stopped unexpectedly")
+                    for worker_task in worker_tasks:
+                        worker_task.cancel()
+                finally:
+                    _app.state.ingestion_worker_task = None
+                    _app.state.ingestion_worker_tasks = ()
             telemetry.flush()
             telemetry.shutdown()
 

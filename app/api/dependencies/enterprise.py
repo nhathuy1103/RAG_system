@@ -230,6 +230,7 @@ def get_enterprise_question_service(
     ],
     settings: Annotated[Settings, Depends(get_settings)],
     ingestion_settings: Annotated[IngestionSettings, Depends(get_ingestion_settings)],
+    telemetry: Annotated[Telemetry, Depends(get_telemetry)],
 ) -> EnterpriseQuestionService:
     return EnterpriseQuestionService(
         repository,
@@ -245,6 +246,7 @@ def get_enterprise_question_service(
         mmr_lambda=settings.retrieval_mmr_lambda,
         max_chunks_per_document=settings.retrieval_max_chunks_per_document,
         history_limit=settings.chat_history_max_turns,
+        telemetry=telemetry,
     )
 
 

@@ -19,8 +19,9 @@ from app.pipeline.indexing.domain.embedded_chunk import EmbeddedChunk
 from app.pipeline.indexing.ports.vector_index import VectorIndex, VectorSearchHit
 
 _RELATION_PRIORITY = {
-    RelationType.CONFLICT_CANDIDATE: 5,
-    RelationType.VERSION_CANDIDATE: 4,
+    RelationType.CONFLICT_CANDIDATE: 6,
+    RelationType.VERSION_CANDIDATE: 5,
+    RelationType.TEMPORAL_SERIES: 4,
     RelationType.NEAR_DUPLICATE: 3,
     RelationType.TEMPLATE_VARIANT: 2,
     RelationType.EXACT_CONTENT: 1,
@@ -119,6 +120,11 @@ def detect_document_relation_candidates(
         relation_groups: dict[RelationType, list[_PairEvidence]] = {}
         for pair in aggregate.evidence:
             relation_groups.setdefault(pair.analysis.relation_type, []).append(pair)
+        temporal_pair_count = sum(
+            pair.analysis.scope_comparison is ScopeComparison.TEMPORAL_DIVERGENCE
+            for pair in aggregate.evidence
+        )
+        temporal_majority = temporal_pair_count * 2 > len(aggregate.evidence)
 
         selected_group: list[_PairEvidence] | None = None
         relation_type: RelationType | None = None
@@ -130,6 +136,8 @@ def detect_document_relation_candidates(
         )
         for detected_type, pairs in ordered_groups:
             if detected_type == RelationType.CONFLICT_CANDIDATE:
+                if temporal_majority:
+                    continue
                 pairs = [
                     pair
                     for pair in pairs
@@ -175,6 +183,12 @@ def detect_document_relation_candidates(
                 "matched_probe_count": len(matched_probe_indexes),
                 "probe_count": probe_count,
                 "matched_chunk_pair_count": len(selected_group),
+                "temporal_divergence_pair_count": temporal_pair_count,
+                "temporal_divergence_ratio": round(
+                    temporal_pair_count / len(aggregate.evidence),
+                    6,
+                ),
+                "temporal_majority_guard_applied": temporal_majority,
                 "validated_conflict_count": sum(
                     pair.analysis.validated_conflict_count for pair in selected_group
                 ),

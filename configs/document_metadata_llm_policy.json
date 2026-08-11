@@ -1,0 +1,55 @@
+{
+  "schema_version": "2.0",
+  "policy_id": "document-metadata-llm-vi-v2",
+  "runtime_mode": "evidence_backed_ranking",
+  "prompt": {
+    "language": "vi",
+    "version": "document-metadata-vi-v2",
+    "system_prompt_path": "configs/prompts/document_metadata_llm_vi.txt"
+  },
+  "precedence_high_to_low": [
+    "user_confirmed",
+    "system_record",
+    "parser_extracted",
+    "chunker_extracted",
+    "llm_inferred"
+  ],
+  "global_rules": {
+    "fill_missing_fields_only": true,
+    "never_overwrite_higher_precedence": true,
+    "evidence_quote_must_be_exact_contiguous_text": true,
+    "ambiguous_or_conflicting_evidence": "abstain",
+    "model_confidence_is_not_verification": true,
+    "security_scope_may_be_inferred": false
+  },
+  "llm_fields": [
+    "document_number",
+    "document_type",
+    "category",
+    "domain",
+    "project_code",
+    "project_name",
+    "department_code",
+    "effective_from",
+    "effective_to",
+    "year",
+    "data_period"
+  ],
+  "non_llm_fields": [
+    "owner_id",
+    "notebook_id",
+    "document_ids",
+    "content_kind",
+    "section_title",
+    "section_path",
+    "page_number",
+    "table_header",
+    "effective_status"
+  ],
+  "promotion": {
+    "retrieval_ranking_allowed": true,
+    "automatic_hard_filter_allowed": false,
+    "canonical_document_update_requires": "explicit_review_rpc",
+    "effective_status": "derive_from_effective_dates_at_query_time"
+  }
+}

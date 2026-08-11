@@ -54,6 +54,7 @@ class EnterpriseMessage:
     created_at: datetime
     answer_status: str | None = None
     citations: tuple[EnterpriseCitation, ...] = ()
+    error_code: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,6 +64,9 @@ class AskQuestionResult:
     citations: tuple[EnterpriseCitation, ...]
     retrieval_strategy: str
     evidence_count: int
+    candidate_count: int = 0
+    gate_reason: str | None = None
+    error_code: str | None = None
     trace_id: str | None = None
 
 

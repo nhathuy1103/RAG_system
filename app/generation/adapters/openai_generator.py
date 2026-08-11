@@ -89,6 +89,7 @@ class OpenAIAnswerGenerator:
         evidence: tuple[RetrievalCandidate, ...],
     ) -> AsyncIterator[GenerationEvent]:
         evidence_by_alias = build_evidence_aliases(evidence)
+        evidence_trace_metadata = _evidence_trace_metadata(evidence)
         conflict_alias_pairs = (
             _conflict_alias_pairs(evidence_by_alias) if self._conflict_annotations_enabled else ()
         )
@@ -123,7 +124,10 @@ class OpenAIAnswerGenerator:
                     for source_id, candidate in evidence_by_alias.items()
                 ],
             },
-            metadata={"evidence_count": len(evidence)},
+            metadata={
+                "evidence_count": len(evidence),
+                **evidence_trace_metadata,
+            },
             model=self._model,
             model_parameters={
                 "temperature": self._temperature,
@@ -136,6 +140,7 @@ class OpenAIAnswerGenerator:
                 metadata={
                     "evidence_count": len(evidence),
                     "conflict_pair_count": len(conflict_alias_pairs),
+                    **evidence_trace_metadata,
                 },
             )
             stream = await self._client.chat.completions.create(
@@ -228,6 +233,57 @@ class OpenAIAnswerGenerator:
                     "output_tokens": output_tokens,
                 },
             )
+
+
+_TRACEABLE_RETRIEVAL_METADATA_FIELDS = (
+    "document_type",
+    "category",
+    "domain",
+    "project_code",
+    "department_code",
+    "year",
+    "effective_at",
+    "content_kind",
+    "language",
+)
+
+
+def _evidence_trace_metadata(
+    evidence: tuple[RetrievalCandidate, ...],
+) -> dict[str, object]:
+    """Summarize evidence identity and canonical metadata without chunk text."""
+
+    document_ids = sorted({candidate.chunk.document_id for candidate in evidence})
+    chunk_ids = [candidate.chunk.id for candidate in evidence]
+    version_ids: set[str] = set()
+    observed_fields: set[str] = set()
+    canonical_values: dict[str, set[str]] = {
+        field_name: set() for field_name in _TRACEABLE_RETRIEVAL_METADATA_FIELDS
+    }
+    for candidate in evidence:
+        metadata = candidate.chunk.typed_metadata
+        version_id = metadata.text("document_version_id")
+        if version_id:
+            version_ids.add(version_id)
+        nested = metadata.get("retrieval_metadata")
+        retrieval_metadata = nested if isinstance(nested, Mapping) else metadata
+        observed_fields.update(str(key) for key in retrieval_metadata)
+        for field_name in _TRACEABLE_RETRIEVAL_METADATA_FIELDS:
+            value = retrieval_metadata.get(field_name)
+            if value in (None, "") or isinstance(value, dict | list):
+                continue
+            canonical_values[field_name].add(str(value))
+
+    trace_metadata: dict[str, object] = {
+        "evidence_document_ids": ",".join(document_ids) or "none",
+        "evidence_document_version_ids": ",".join(sorted(version_ids)) or "none",
+        "evidence_chunk_ids": ",".join(chunk_ids) or "none",
+        "retrieval_metadata_fields": ",".join(sorted(observed_fields)) or "none",
+    }
+    for field_name, values in canonical_values.items():
+        if values:
+            trace_metadata[f"evidence_{field_name}"] = ",".join(sorted(values))
+    return trace_metadata
 
 
 def _build_user_prompt(

@@ -99,6 +99,39 @@ async def test_lists_filtered_relation_queue_with_exact_count() -> None:
 
 
 @pytest.mark.anyio
+async def test_round_trips_temporal_series_relation_type() -> None:
+    temporal_row = {
+        **RELATION_ROW,
+        "relation_type": "temporal_series",
+        "detector_version": "knowledge-quality-v4",
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.params["relation_type"] == "eq.temporal_series"
+        return httpx.Response(
+            200,
+            json=[temporal_row],
+            headers={"Content-Range": "0-0/1"},
+        )
+
+    async with httpx.AsyncClient(
+        base_url="https://example.supabase.co/rest/v1",
+        transport=httpx.MockTransport(handler),
+    ) as client:
+        relations, total = await PostgrestKnowledgeQualityRepository(client).list_relations(
+            NOTEBOOK_ID,
+            relation_status=None,
+            relation_type=RelationType.TEMPORAL_SERIES,
+            limit=50,
+            offset=0,
+        )
+
+    assert total == 1
+    assert relations[0].relation_type is RelationType.TEMPORAL_SERIES
+    assert relations[0].detector_version == "knowledge-quality-v4"
+
+
+@pytest.mark.anyio
 async def test_resolves_relation_through_transactional_rpc() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.method == "POST"

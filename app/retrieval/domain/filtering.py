@@ -12,9 +12,15 @@ def matches_metadata_filters(
     filters: StructuredMetadataFilters,
 ) -> bool:
     nested = metadata.get("retrieval_metadata")
-    retrieval_metadata = nested if isinstance(nested, Mapping) else metadata
+    retrieval_metadata = nested if isinstance(nested, Mapping) else {}
     for key, expected in filters.active_items():
+        # During the compatibility window old rows can be flat, new rows are
+        # nested, and some rows legitimately contain both shapes.  Prefer the
+        # canonical nested value but fall back per-field instead of selecting
+        # one entire object and silently losing the other.
         actual = retrieval_metadata.get(key)
+        if actual is None:
+            actual = metadata.get(key)
         if actual is None:
             return False
         if key == "year":

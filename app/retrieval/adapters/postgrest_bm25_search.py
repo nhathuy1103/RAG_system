@@ -63,8 +63,10 @@ class PostgrestBM25RetrievalAdapter:
             params["notebook_id"] = f"eq.{filters.notebook_id}"
         if filters.document_ids is not None:
             params["document_id"] = f"in.({','.join(filters.document_ids)})"
-        for field_name, value in filters.metadata.active_items():
-            params[f"metadata->retrieval_metadata->>{field_name}"] = f"eq.{value}"
+        # Do not pre-filter a compatibility corpus through only the nested JSON
+        # path.  Historical rows may keep retrieval fields flat.  The shared
+        # in-memory matcher below applies the same fail-closed semantics to
+        # either representation after the tenant/document scope is fetched.
 
         response = self.client.get("/document_chunks", params=params)
         response.raise_for_status()

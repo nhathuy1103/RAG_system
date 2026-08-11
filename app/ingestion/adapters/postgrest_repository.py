@@ -631,7 +631,7 @@ class PostgrestIngestionRepository(
         chunks: Sequence[PersistedChunk],
     ) -> IngestionCompletionDisposition:
         payload = await self._rpc(
-            "complete_processing_job",
+            "complete_processing_job_v3",
             {
                 "p_job_id": str(job.id),
                 "p_worker_id": worker_id,
@@ -805,7 +805,7 @@ def _enterprise_chunk_payload(chunk: PersistedChunk) -> dict[str, object]:
     checksum = str(metadata.get("checksum") or "").strip().lower()
     if len(checksum) != 64 or any(character not in "0123456789abcdef" for character in checksum):
         checksum = sha256(chunk.content.encode("utf-8")).hexdigest()
-    return {
+    payload: dict[str, object] = {
         "id": str(chunk.id),
         "chunk_index": chunk.chunk_index,
         "content": chunk.content,
@@ -818,6 +818,17 @@ def _enterprise_chunk_payload(chunk: PersistedChunk) -> dict[str, object]:
         "metadata": metadata,
         "embedding": list(chunk.embedding),
     }
+    if chunk.parent is not None:
+        payload["parent"] = chunk.parent
+    if chunk.projection:
+        payload["projection"] = chunk.projection
+    if chunk.document_metadata_assertions:
+        payload["document_metadata_assertions"] = list(
+            chunk.document_metadata_assertions
+        )
+    if chunk.version_artifact is not None:
+        payload["version_artifact"] = chunk.version_artifact
+    return payload
 
 
 def _positive_integer(value: object) -> int | None:

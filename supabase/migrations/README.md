@@ -62,8 +62,28 @@ sự thật vẫn là thư mục đó — các file ở đây để đọc/tra c
 24. `24_legacy_notebook_enterprise_bridge.sql` — tạo mapping Enterprise
     draft/source/version trong cùng transaction enqueue để màn hình Notebook legacy
     tiếp tục upload được sau cutover.
+25. `25_canonical_metadata_parent_projection.sql` — tách metadata canonical khỏi
+    retrieval projection, lưu parent/child thật, thêm FTS tiếng Việt có dấu/bỏ dấu,
+    exact document-number routing, evidence assertions và review RPC cho metadata LLM.
+26. `26_temporal_scope_series.sql` — cho phép lưu quan hệ `temporal_series` và
+    mở rộng allowlist của completion RPC để detector v4 không biến dữ liệu khác kỳ
+    thành conflict candidate.
+27. `27_fix_complete_processing_job_v2_digest.sql` — vá an toàn function completion
+    đã được cài từ migration 25 để dùng wrapper pgcrypto có schema rõ ràng.
+28. `28_guided_document_publish.sql` — gộp phê duyệt và xuất bản thành một thao tác
+    atomic “Đưa vào chatbot”, vẫn giữ nguyên kiểm tra quyền và audit hiện có.
+29. `29_allow_reupload_after_archive.sql` — tiếp tục chặn checksum trùng với tài liệu
+    đang dùng, nhưng cho phép upload lại khi mọi bản cùng nội dung đã được lưu trữ.
+30. `30_auto_publish_processed_documents.sql` — worker hoàn tất toàn bộ chunk/projection
+    rồi tự động duyệt và xuất bản bằng đúng quyền của người yêu cầu xử lý; nếu người đó
+    không còn quyền review/publish thì phiên bản vẫn dừng an toàn ở trạng thái chờ duyệt.
+31. `31_retrieval_reliability_hardening.sql` — sửa refresh lexical projection khi
+    metadata revision được tăng bởi trigger, thêm sparse recall tự nhiên không bắt mọi
+    filler word cùng xuất hiện, suy luận trạng thái hiệu lực tại thời điểm query, cấp
+    READ qua role ACL cho tài liệu INTERNAL/PUBLIC đã publish (không mở cho anon), và
+    cung cấp RPC chẩn đoán lifecycle/ACL/projection mà không trả nội dung chunk.
 
-Migration phải chạy đúng thứ tự; 09 phụ thuộc 08 và chuỗi Enterprise 17–24 phụ
+Migration phải chạy đúng thứ tự; 09 phụ thuộc 08 và chuỗi Enterprise 17–31 phụ
 thuộc toàn bộ nền tảng 01–16. Với project đã có dữ liệu, đọc
 [`docs/migrations/08-09-knowledge-quality.md`](../../docs/migrations/08-09-knowledge-quality.md),
 backup và thử trên clone trước khi chạy. Hướng dẫn rollout Enterprise nằm tại
@@ -75,9 +95,9 @@ mẫu evidence phát hành nằm tại
 
 **`RESET_AND_REBUILD.sql`** — 1 file duy nhất, tự chứa (không cần các file
 trên), **XOÁ SẠCH** rồi tạo lại toàn bộ theo đúng thứ tự trên, bao gồm
-knowledge-quality 08/09/13, pre-embedding chunk dedup 10, contextual retrieval
+knowledge-quality 08/09/13/26, pre-embedding chunk dedup 10, contextual retrieval
 11/12, chunk metadata compaction 14, structured retrieval filters 15, and the
-structured-fact layer 16, cùng toàn bộ Enterprise IAM/ACL/lifecycle/RAG 17–24.
+structured-fact layer 16, cùng toàn bộ Enterprise IAM/ACL/lifecycle/RAG 17–31.
 Đọc kỹ cảnh báo
 ở đầu file trước khi chạy — thao tác này **mất toàn bộ dữ liệu hiện có**
 (notebooks, documents, chat...), user (`auth.users`) không bị xoá.
@@ -93,7 +113,8 @@ pipeline.
 
 Phần schema sau marker `-- Extensions required by the schema.` trong
 `RESET_AND_REBUILD.sql` phải là bản nối **nguyên văn, đúng thứ tự** của mọi migration
-canonical `01_*.sql` đến `24_*.sql`. Không sửa phần này bằng tay. Sau khi đổi hoặc
+canonical `01_*.sql` đến migration mới nhất (`31_*.sql` hiện tại). Không sửa phần này
+bằng tay. Sau khi đổi hoặc
 thêm migration, chạy từ thư mục gốc:
 
 ```powershell

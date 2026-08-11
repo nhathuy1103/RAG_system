@@ -6,7 +6,11 @@ from app.retrieval.adapters.bm25_search import InMemoryBM25RetrievalAdapter
 from app.retrieval.adapters.postgrest_bm25_search import (
     PostgrestBM25RetrievalAdapter,
 )
-from app.retrieval.domain.models import EvidenceChunk, RetrievalFilters
+from app.retrieval.domain.models import (
+    EvidenceChunk,
+    RetrievalFilters,
+    StructuredMetadataFilters,
+)
 
 OWNER_ID = "20000000-0000-0000-0000-000000000002"
 NOTEBOOK_ID = "10000000-0000-0000-0000-000000000001"
@@ -153,3 +157,48 @@ def test_context_metadata_recovers_a_chunk_that_content_only_bm25_misses() -> No
     assert candidates[0].chunk.text == content
     assert candidates[0].chunk.search_text is not None
     assert "Travel policy" in candidates[0].chunk.search_text
+
+
+def test_metadata_filter_matches_flat_and_nested_compatibility_rows() -> None:
+    rows = [
+        {
+            **CHUNK_ROW,
+            "id": "40000000-0000-0000-0000-000000000041",
+            "metadata": {
+                "document_type": "policy",
+                "retrieval_metadata": {"title": "Legacy mixed row"},
+            },
+        },
+        {
+            **CHUNK_ROW,
+            "id": "40000000-0000-0000-0000-000000000042",
+            "metadata": {"retrieval_metadata": {"document_type": "policy"}},
+        },
+    ]
+    captured: list[httpx.Request] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        captured.append(request)
+        return httpx.Response(200, json=rows)
+
+    client = httpx.Client(
+        base_url="https://example.supabase.co/rest/v1",
+        transport=httpx.MockTransport(handler),
+    )
+    filters = RetrievalFilters(
+        owner_id=OWNER_ID,
+        notebook_id=NOTEBOOK_ID,
+        metadata=StructuredMetadataFilters(document_type="policy"),
+    )
+
+    candidates = PostgrestBM25RetrievalAdapter(client=client).search(
+        "chính sách nghỉ phép",
+        filters,
+        top_k=5,
+    )
+
+    assert {candidate.chunk.id for candidate in candidates} == {
+        "40000000-0000-0000-0000-000000000041",
+        "40000000-0000-0000-0000-000000000042",
+    }
+    assert "metadata->retrieval_metadata->>document_type" not in captured[0].url.params

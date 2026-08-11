@@ -7,6 +7,7 @@ from app.pipeline.documents.domain.parsed import ParsedDocument
 from app.pipeline.indexing.domain.chunk import Chunk
 from app.pipeline.indexing.domain.chunking_strategies import (
     ContentAwareChunkStrategy,
+    ParentChildStructureChunkStrategy,
     StrategyConfig,
     StructureAwareRecursiveChunkStrategy,
 )
@@ -14,7 +15,12 @@ from app.pipeline.shared.text_utils import compute_checksum_text
 
 DEFAULT_STRATEGY = "structure_recursive"
 CONTENT_AWARE_STRATEGY = "content_aware"
-SUPPORTED_STRATEGIES = (DEFAULT_STRATEGY, CONTENT_AWARE_STRATEGY)
+PARENT_CHILD_STRATEGY = "parent_child_structure"
+SUPPORTED_STRATEGIES = (
+    DEFAULT_STRATEGY,
+    CONTENT_AWARE_STRATEGY,
+    PARENT_CHILD_STRATEGY,
+)
 
 
 class ChunkerSettings(Protocol):
@@ -41,6 +47,7 @@ class ChunkData:
     document_id: str
     document_version: int
     section_id: str | None
+    parent_chunk_id: str | None
     offset_start: int
     offset_end: int
     strategy: str
@@ -96,6 +103,8 @@ def chunk_parsed_document(
         splitter = StructureAwareRecursiveChunkStrategy(effective)
     elif strategy == CONTENT_AWARE_STRATEGY:
         splitter = ContentAwareChunkStrategy(effective)
+    elif strategy == PARENT_CHILD_STRATEGY:
+        splitter = ParentChildStructureChunkStrategy(effective)
     else:
         raise ValueError(f"Unsupported chunking strategy: {strategy}")
     rich_chunks = splitter.split(logical)
@@ -124,6 +133,7 @@ def _project_chunk(chunk: Chunk, index: int, version: int) -> ChunkData:
         document_id=chunk.document_id,
         document_version=version,
         section_id=chunk.section_id,
+        parent_chunk_id=chunk.parent_chunk,
         offset_start=chunk.offset_start,
         offset_end=chunk.offset_end,
         strategy=chunk.strategy_name,
@@ -171,6 +181,14 @@ class Chunker:
         return cls(chunk_size, overlap, strategy_name=CONTENT_AWARE_STRATEGY)
 
     @classmethod
+    def parent_child_structure(
+        cls,
+        *,
+        chunk_size: int = 256,
+    ) -> Chunker:
+        return cls(chunk_size, 0, strategy_name=PARENT_CHILD_STRATEGY)
+
+    @classmethod
     def from_settings(cls, settings: ChunkerSettings) -> Chunker:
         return cls(
             chunk_size=int(settings.chunk_size),
@@ -196,6 +214,7 @@ class Chunker:
 __all__ = [
     "CONTENT_AWARE_STRATEGY",
     "DEFAULT_STRATEGY",
+    "PARENT_CHILD_STRATEGY",
     "SUPPORTED_STRATEGIES",
     "ChunkData",
     "Chunker",

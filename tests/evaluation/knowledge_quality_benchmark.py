@@ -49,6 +49,7 @@ _LABEL_BY_RELATION_VALUE = {
     "related": "distinct",
     "distinct": "distinct",
     "template_variant": "distinct",
+    "temporal_series": "version",
 }
 
 

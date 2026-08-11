@@ -3,39 +3,180 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 
 import {
+  AnswerDiagnostics,
   AnswerResponse,
+  ConversationMessage,
   EnterpriseCitation,
+  EnterpriseApiError,
   KnowledgeDocument,
   SearchHit,
   askEnterpriseQuestion,
   createEnterpriseConversation,
   getDocumentVersionSource,
+  getEnterpriseConversation,
   getEnterpriseMe,
   listKnowledgeDocuments,
   reportAnswer,
   searchKnowledge,
   submitAnswerFeedback,
 } from "../../lib/enterpriseApi";
+import {
+  getCurrentEnterpriseConversationId,
+  setCurrentEnterpriseConversationId,
+} from "../../lib/enterpriseSession.js";
 
-type ChatRow = {
+type ChatRow = AnswerDiagnostics & {
   id: string;
   role: "USER" | "ASSISTANT";
   content: string;
   status?: AnswerResponse["answer_status"];
   citations?: EnterpriseCitation[];
+  persisted?: boolean;
 };
+
+function toChatRow(message: ConversationMessage): ChatRow | null {
+  if (message.role === "SYSTEM") return null;
+  return {
+    id: message.id,
+    role: message.role,
+    content: message.content,
+    status: message.answer_status ?? undefined,
+    citations: message.citations || [],
+    error_code: message.error_code,
+    gate_reason: message.gate_reason,
+    candidate_count: message.candidate_count,
+    evidence_count: message.evidence_count,
+    persisted: true,
+  };
+}
+
+type DiagnosticKind =
+  | "NO_READABLE_DOCUMENTS"
+  | "NO_EVIDENCE"
+  | "INSUFFICIENT_EVIDENCE"
+  | "RETRIEVAL_FAILED"
+  | "CITATION_FAILED"
+  | "GENERATION_FAILED"
+  | "UNKNOWN_FAILED";
+
+const DIAGNOSTIC_PRESENTATION: Record<DiagnosticKind, {
+  icon: string;
+  title: string;
+  description: string;
+  className: string;
+}> = {
+  NO_READABLE_DOCUMENTS: {
+    icon: "lucide:shield-x",
+    title: "Tài khoản chưa có tài liệu có thể đọc",
+    description: "Không có tài liệu đồng thời ở trạng thái đã xuất bản, phiên bản đang hoạt động và có quyền READ. Tệp có thể vẫn tồn tại trong hệ thống; quản trị viên cần kiểm tra trạng thái và phân quyền.",
+    className: "border-red/30 bg-red/10 text-red",
+  },
+  NO_EVIDENCE: {
+    icon: "lucide:search-x",
+    title: "Retrieval chưa tìm thấy đoạn nội dung phù hợp",
+    description: "Truy vấn này không tạo được candidate phù hợp trong phạm vi được phép đọc. Điều này không có nghĩa kho tài liệu đang trống hoặc tệp đã bị mất.",
+    className: "border-yellow/30 bg-yellow/10 text-yellow",
+  },
+  INSUFFICIENT_EVIDENCE: {
+    icon: "lucide:circle-help",
+    title: "Đã tìm thấy dữ liệu nhưng chưa đủ để kết luận",
+    description: "Một hoặc nhiều đoạn nội dung đã qua retrieval, nhưng cổng kiểm soát evidence chưa cho phép hệ thống trả lời chắc chắn.",
+    className: "border-yellow/30 bg-yellow/10 text-yellow",
+  },
+  RETRIEVAL_FAILED: {
+    icon: "lucide:database-zap",
+    title: "Retrieval gặp lỗi kỹ thuật",
+    description: "Hệ thống không hoàn tất được bước tìm kiếm. Đây là lỗi vận hành cần thử lại hoặc kiểm tra trace, không phải kết luận rằng tài liệu không tồn tại.",
+    className: "border-red/30 bg-red/10 text-red",
+  },
+  CITATION_FAILED: {
+    icon: "lucide:quote",
+    title: "Có evidence nhưng kiểm tra trích dẫn thất bại",
+    description: "Retrieval đã có dữ liệu, nhưng câu trả lời sinh ra không vượt qua contract trích dẫn. Nội dung nguồn không bị coi là thiếu.",
+    className: "border-red/30 bg-red/10 text-red",
+  },
+  GENERATION_FAILED: {
+    icon: "lucide:bot-off",
+    title: "Có lỗi khi tạo câu trả lời",
+    description: "Bước sinh câu trả lời không hoàn tất. Hãy thử lại; đây không phải lỗi upload hay bằng chứng rằng tài liệu bị thiếu.",
+    className: "border-red/30 bg-red/10 text-red",
+  },
+  UNKNOWN_FAILED: {
+    icon: "lucide:triangle-alert",
+    title: "Yêu cầu chưa hoàn tất",
+    description: "Hệ thống trả về lỗi chưa được phân loại. Có thể dùng mã lỗi và trace để chẩn đoán mà không quy kết rằng kho tài liệu trống.",
+    className: "border-red/30 bg-red/10 text-red",
+  },
+};
+
+function diagnosticKind(message: ChatRow, hasReadableDocuments: boolean): DiagnosticKind | null {
+  if (message.role !== "ASSISTANT" || message.status === "ANSWERED") return null;
+  const signal = `${message.error_code || ""} ${message.gate_reason || ""}`.toUpperCase();
+  if (
+    signal.includes("NO_READABLE")
+    || signal.includes("NO_ACCESSIBLE")
+    || signal.includes("ACL_DENIED")
+    || signal.includes("ACL_NO")
+    || (!hasReadableDocuments && (signal.includes("NO_EVIDENCE") || message.status === "INSUFFICIENT_EVIDENCE"))
+  ) return "NO_READABLE_DOCUMENTS";
+  if (signal.includes("CITATION")) return "CITATION_FAILED";
+  if (signal.includes("RETRIEVAL")) return "RETRIEVAL_FAILED";
+  if (signal.includes("GENERATION") || signal.includes("LLM_")) return "GENERATION_FAILED";
+  if (signal.includes("NO_EVIDENCE") || message.candidate_count === 0) return "NO_EVIDENCE";
+  if (signal.includes("INSUFFICIENT") || message.status === "INSUFFICIENT_EVIDENCE") {
+    return "INSUFFICIENT_EVIDENCE";
+  }
+  return message.status === "FAILED" ? "UNKNOWN_FAILED" : null;
+}
+
+function AnswerDiagnosticBanner({
+  message,
+  hasReadableDocuments,
+}: {
+  message: ChatRow;
+  hasReadableDocuments: boolean;
+}) {
+  const kind = diagnosticKind(message, hasReadableDocuments);
+  if (!kind) return null;
+  const presentation = DIAGNOSTIC_PRESENTATION[kind];
+  return (
+    <div className={`mb-3 rounded-xl border px-3 py-3 ${presentation.className}`}>
+      <div className="flex items-start gap-2">
+        <Icon icon={presentation.icon} width={15} className="mt-0.5 shrink-0" />
+        <div>
+          <div className="text-xs font-semibold">{presentation.title}</div>
+          <p className="mt-1 text-[11px] leading-5 opacity-90">{presentation.description}</p>
+        </div>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-medium opacity-80">
+        {message.error_code && <span className="rounded-full border border-current/20 px-2 py-0.5">Mã: {message.error_code}</span>}
+        {message.gate_reason && <span className="rounded-full border border-current/20 px-2 py-0.5">Gate: {message.gate_reason}</span>}
+        {message.candidate_count !== null && message.candidate_count !== undefined && (
+          <span className="rounded-full border border-current/20 px-2 py-0.5">Candidate: {message.candidate_count}</span>
+        )}
+        {message.evidence_count !== null && message.evidence_count !== undefined && (
+          <span className="rounded-full border border-current/20 px-2 py-0.5">Evidence: {message.evidence_count}</span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function CitationList({ citations, onError }: { citations: EnterpriseCitation[]; onError: (message: string) => void }) {
   if (!citations.length) return null;
   async function openSource(citation: EnterpriseCitation) {
-    const target = window.open("", "_blank", "noopener,noreferrer");
+    const target = window.open("", "_blank");
+    if (!target) {
+      onError("Trình duyệt đã chặn tab tài liệu nguồn. Hãy cho phép popup rồi thử lại.");
+      return;
+    }
+    target.opener = null;
     try {
       const source = await getDocumentVersionSource(citation.document_id, citation.document_version_id);
       const suffix = citation.page ? `#page=${citation.page}` : "";
-      if (target) target.location.href = `${source.signed_url}${suffix}`;
-      else window.location.assign(`${source.signed_url}${suffix}`);
+      target.location.href = `${source.signed_url}${suffix}`;
     } catch (reason) {
-      target?.close();
+      target.close();
       onError(reason instanceof Error ? reason.message : "Không thể mở tài liệu nguồn");
     }
   }
@@ -63,14 +204,18 @@ function CitationList({ citations, onError }: { citations: EnterpriseCitation[];
 
 function SearchResult({ hit, onError }: { hit: SearchHit; onError: (message: string) => void }) {
   async function openSource() {
-    const target = window.open("", "_blank", "noopener,noreferrer");
+    const target = window.open("", "_blank");
+    if (!target) {
+      onError("Trình duyệt đã chặn tab tài liệu nguồn. Hãy cho phép popup rồi thử lại.");
+      return;
+    }
+    target.opener = null;
     try {
       const source = await getDocumentVersionSource(hit.document_id, hit.document_version_id);
       const suffix = hit.page_number ? `#page=${hit.page_number}` : "";
-      if (target) target.location.href = `${source.signed_url}${suffix}`;
-      else window.location.assign(`${source.signed_url}${suffix}`);
+      target.location.href = `${source.signed_url}${suffix}`;
     } catch (reason) {
-      target?.close();
+      target.close();
       onError(reason instanceof Error ? reason.message : "Không thể mở tài liệu nguồn");
     }
   }
@@ -101,26 +246,68 @@ export default function EmployeeKnowledgePortal() {
   const [query, setQuery] = useState("");
   const [searchHits, setSearchHits] = useState<SearchHit[]>([]);
   const [searching, setSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   const [activeMode, setActiveMode] = useState<"CHAT" | "SEARCH">("CHAT");
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatRow[]>([]);
   const [asking, setAsking] = useState(false);
+  const [restoringConversation, setRestoringConversation] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [enterpriseUserId, setEnterpriseUserId] = useState<string | null>(null);
   const [identity, setIdentity] = useState<string>("Nhân viên");
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([getEnterpriseMe(), listKnowledgeDocuments({ status: "PUBLISHED", limit: 100 })])
-      .then(([me, page]) => {
+    async function restorePortal() {
+      try {
+        const [me, page] = await Promise.all([
+          getEnterpriseMe(),
+          listKnowledgeDocuments({ status: "PUBLISHED", limit: 100 }),
+        ]);
         if (cancelled) return;
         setIdentity(me.email || me.user_id);
+        setEnterpriseUserId(me.user_id);
         setDocuments(page.items);
-      })
-      .catch((reason: unknown) => {
-        if (!cancelled) setError(reason instanceof Error ? reason.message : "Không thể tải kho tri thức");
-      });
+
+        const storedConversationId = getCurrentEnterpriseConversationId(me.user_id);
+        if (!storedConversationId) return;
+        try {
+          const conversation = await getEnterpriseConversation(storedConversationId);
+          if (cancelled) return;
+          setConversationId(conversation.id);
+          setMessages(
+            (conversation.messages || [])
+              .map(toChatRow)
+              .filter((message): message is ChatRow => message !== null),
+          );
+        } catch (reason) {
+          if (cancelled) return;
+          const unavailable = reason instanceof EnterpriseApiError
+            && [403, 404].includes(reason.status);
+          if (unavailable) {
+            setCurrentEnterpriseConversationId(me.user_id, null);
+          } else {
+            setError(reason instanceof Error
+              ? `Không thể khôi phục cuộc trò chuyện: ${reason.message}`
+              : "Không thể khôi phục cuộc trò chuyện hiện tại");
+          }
+        }
+      } catch (reason) {
+        if (!cancelled) {
+          setError(reason instanceof Error ? reason.message : "Không thể tải kho tri thức");
+        }
+      } finally {
+        if (!cancelled) setRestoringConversation(false);
+      }
+    }
+    void restorePortal();
     return () => { cancelled = true; };
   }, []);
+
+  useEffect(() => {
+    if (!enterpriseUserId || restoringConversation || !conversationId) return;
+    setCurrentEnterpriseConversationId(enterpriseUserId, conversationId);
+  }, [conversationId, enterpriseUserId, restoringConversation]);
 
   const categories = useMemo(
     () => Array.from(new Set(documents.map((item) => item.category).filter(Boolean))).slice(0, 8),
@@ -132,6 +319,7 @@ export default function EmployeeKnowledgePortal() {
     const normalized = query.trim();
     if (!normalized) return;
     setSearching(true);
+    setHasSearched(true);
     setError(null);
     try {
       const response = await searchKnowledge(normalized);
@@ -146,7 +334,7 @@ export default function EmployeeKnowledgePortal() {
   async function handleAsk(event: FormEvent) {
     event.preventDefault();
     const question = query.trim();
-    if (!question || asking) return;
+    if (!question || asking || restoringConversation) return;
     setAsking(true);
     setError(null);
     setQuery("");
@@ -159,6 +347,9 @@ export default function EmployeeKnowledgePortal() {
         targetConversation = created.id;
         setConversationId(created.id);
       }
+      if (enterpriseUserId) {
+        setCurrentEnterpriseConversationId(enterpriseUserId, targetConversation);
+      }
       const answer = await askEnterpriseQuestion(targetConversation, question);
       setMessages((current) => [
         ...current,
@@ -168,13 +359,41 @@ export default function EmployeeKnowledgePortal() {
           content: answer.answer,
           status: answer.answer_status,
           citations: answer.citations,
+          error_code: answer.error_code,
+          gate_reason: answer.gate_reason,
+          candidate_count: answer.candidate_count,
+          evidence_count: answer.evidence_count,
+          persisted: true,
         },
       ]);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Không thể trả lời câu hỏi");
+      const apiError = reason instanceof EnterpriseApiError ? reason : null;
+      setMessages((current) => [
+        ...current,
+        {
+          id: crypto.randomUUID(),
+          role: "ASSISTANT",
+          content: reason instanceof Error ? reason.message : "Không thể trả lời câu hỏi",
+          status: "FAILED",
+          error_code: apiError?.code || "REQUEST_FAILED",
+          gate_reason: apiError?.gateReason,
+          candidate_count: apiError?.candidateCount,
+          evidence_count: apiError?.evidenceCount,
+          persisted: false,
+        },
+      ]);
     } finally {
       setAsking(false);
     }
+  }
+
+  function startNewConversation() {
+    if (asking) return;
+    if (enterpriseUserId) setCurrentEnterpriseConversationId(enterpriseUserId, null);
+    setConversationId(null);
+    setMessages([]);
+    setQuery("");
+    setError(null);
   }
 
   async function rate(messageId: string, rating: "UP" | "DOWN") {
@@ -235,16 +454,28 @@ export default function EmployeeKnowledgePortal() {
               <div className="font-heading text-lg font-bold text-foreground">Tra cứu tri thức doanh nghiệp</div>
               <div className="mt-0.5 text-xs text-faint">Câu trả lời được kiểm soát bằng quyền và luôn truy ngược tới version nguồn.</div>
             </div>
-            <div className="flex rounded-xl border border-border bg-background p-1">
-              {(["CHAT", "SEARCH"] as const).map((mode) => (
+            <div className="flex items-center gap-2">
+              {activeMode === "CHAT" && (conversationId || messages.length > 0) && (
                 <button
-                  key={mode}
-                  onClick={() => setActiveMode(mode)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${activeMode === mode ? "bg-accent text-accent-foreground" : "text-dim"}`}
+                  type="button"
+                  disabled={asking}
+                  onClick={startNewConversation}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-semibold text-dim hover:bg-inset hover:text-foreground disabled:opacity-50"
                 >
-                  {mode === "CHAT" ? "Hỏi đáp" : "Tìm kiếm"}
+                  <Icon icon="lucide:plus" width={14} /> Hội thoại mới
                 </button>
-              ))}
+              )}
+              <div className="flex rounded-xl border border-border bg-background p-1">
+                {(["CHAT", "SEARCH"] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => setActiveMode(mode)}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${activeMode === mode ? "bg-accent text-accent-foreground" : "text-dim"}`}
+                  >
+                    {mode === "CHAT" ? "Hỏi đáp" : "Tìm kiếm"}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -260,11 +491,21 @@ export default function EmployeeKnowledgePortal() {
 
             {activeMode === "SEARCH" ? (
               <div className="space-y-4">
-                {!searchHits.length && !searching && (
+                {!searchHits.length && !searching && !hasSearched && (
                   <div className="py-20 text-center">
                     <Icon icon="lucide:files" width={42} className="mx-auto text-faint" />
                     <div className="mt-4 font-heading text-lg font-semibold">Tìm trên các tài liệu được phép</div>
                     <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-dim">Tìm kiếm sparse áp dụng ACL, trạng thái PUBLISHED và version ACTIVE trước khi xếp hạng. Chế độ hỏi đáp dùng pipeline hybrid có kiểm soát.</p>
+                  </div>
+                )}
+                {!searchHits.length && !searching && hasSearched && (
+                  <div className="rounded-2xl border border-yellow/30 bg-yellow/10 px-5 py-6 text-yellow">
+                    <div className="flex items-center gap-2 font-heading text-base font-semibold">
+                      <Icon icon="lucide:search-x" width={18} /> Chưa có đoạn nội dung khớp truy vấn
+                    </div>
+                    <p className="mt-2 text-sm leading-6 opacity-90">
+                      Tìm kiếm không trả về candidate trong các tài liệu bạn được phép đọc. Kết quả này không khẳng định tệp chưa được upload hoặc kho tài liệu đang trống.
+                    </p>
                   </div>
                 )}
                 {searching && <div className="py-20 text-center text-sm text-faint">Đang tìm kiếm evidence phù hợp...</div>}
@@ -272,7 +513,12 @@ export default function EmployeeKnowledgePortal() {
               </div>
             ) : (
               <div className="space-y-5 pb-8">
-                {!messages.length && (
+                {restoringConversation && (
+                  <div className="py-16 text-center text-sm text-faint">
+                    Đang khôi phục cuộc trò chuyện...
+                  </div>
+                )}
+                {!restoringConversation && !messages.length && (
                   <div className="py-16 text-center">
                     <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-accent text-accent-foreground">
                       <Icon icon="lucide:sparkles" width={24} />
@@ -284,20 +530,19 @@ export default function EmployeeKnowledgePortal() {
                 {messages.map((message) => (
                   <div key={message.id} className={`flex ${message.role === "USER" ? "justify-end" : "justify-start"}`}>
                     <article className={`max-w-3xl rounded-2xl px-5 py-4 ${message.role === "USER" ? "bg-accent text-accent-foreground" : "border border-border bg-panel text-foreground"}`}>
-                      {message.status === "INSUFFICIENT_EVIDENCE" && (
-                        <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-yellow/30 bg-yellow/10 px-2.5 py-1 text-[10px] font-semibold text-yellow">
-                          <Icon icon="lucide:circle-help" width={12} /> Không đủ evidence
-                        </div>
-                      )}
+                      <AnswerDiagnosticBanner
+                        message={message}
+                        hasReadableDocuments={documents.length > 0}
+                      />
                       <div className="markdown-body"><ReactMarkdown>{message.content}</ReactMarkdown></div>
                       {message.role === "ASSISTANT" && (
                         <>
                           <CitationList citations={message.citations || []} onError={setError} />
-                          <div className="mt-3 flex items-center gap-1 border-t border-border pt-2 text-faint">
+                          {message.persisted !== false && <div className="mt-3 flex items-center gap-1 border-t border-border pt-2 text-faint">
                             <button onClick={() => void rate(message.id, "UP")} title="Hữu ích" className="rounded-md p-1.5 hover:bg-inset hover:text-green"><Icon icon="lucide:thumbs-up" width={14} /></button>
                             <button onClick={() => void rate(message.id, "DOWN")} title="Không hữu ích" className="rounded-md p-1.5 hover:bg-inset hover:text-red"><Icon icon="lucide:thumbs-down" width={14} /></button>
                             <button onClick={() => void report(message.id)} title="Báo cáo câu trả lời" className="rounded-md p-1.5 hover:bg-inset hover:text-red"><Icon icon="lucide:flag" width={14} /></button>
-                          </div>
+                          </div>}
                         </>
                       )}
                     </article>
@@ -321,7 +566,7 @@ export default function EmployeeKnowledgePortal() {
                 className="h-12 w-full rounded-xl border border-border bg-background pl-11 pr-4 text-sm text-foreground outline-none focus:border-accent"
               />
             </div>
-            <button disabled={!query.trim() || asking || searching} className="flex h-12 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-semibold text-accent-foreground">
+            <button disabled={!query.trim() || asking || searching || restoringConversation} className="flex h-12 items-center gap-2 rounded-xl bg-accent px-5 text-sm font-semibold text-accent-foreground">
               <Icon icon="lucide:arrow-up" width={16} />
               <span className="hidden sm:inline">{activeMode === "CHAT" ? "Gửi" : "Tìm"}</span>
             </button>

@@ -11,6 +11,8 @@ import httpx2 as httpx
 
 from app.documents.domain.enterprise_models import (
     AccessDecision,
+    DocumentMetadataAssertion,
+    DocumentSearchability,
     DocumentVersion,
     DocumentVersionReviewContext,
     InitialDocumentUpload,
@@ -133,6 +135,15 @@ class PostgrestEnterpriseDocumentRepository(EnterpriseDocumentRepository):
         rows = self._rows(response.json(), "document lookup")
         return self._parse_document(rows[0]) if rows else None
 
+    async def list_searchability(self, *, document_id: UUID | None) -> list[DocumentSearchability]:
+        payload = await self._rpc(
+            "get_enterprise_document_searchability",
+            {"p_document_id": str(document_id) if document_id is not None else None},
+        )
+        return [
+            self._parse_searchability(row) for row in self._rows(payload, "document searchability")
+        ]
+
     async def create_document(self, value: NewKnowledgeDocument) -> KnowledgeDocument:
         payload = await self._rpc(
             "create_knowledge_document",
@@ -242,8 +253,56 @@ class PostgrestEnterpriseDocumentRepository(EnterpriseDocumentRepository):
         )
         return self._parse_version(self._one(payload, "version review"))
 
+    async def list_metadata_assertions(
+        self,
+        version_id: UUID,
+        *,
+        verification_status: str | None,
+    ) -> list[DocumentMetadataAssertion]:
+        params: dict[str, str] = {
+            "document_version_id": f"eq.{version_id}",
+            "select": "*",
+            "order": "created_at.asc,id.asc",
+        }
+        if verification_status:
+            params["verification_status"] = f"eq.{verification_status}"
+        response = await self._request(
+            "GET",
+            "/document_metadata_assertions",
+            params=params,
+        )
+        return [
+            self._parse_metadata_assertion(row)
+            for row in self._rows(response.json(), "document metadata assertion list")
+        ]
+
+    async def review_metadata_assertion(
+        self,
+        assertion_id: UUID,
+        *,
+        decision: str,
+        rejection_reason: str | None,
+    ) -> DocumentMetadataAssertion:
+        payload = await self._rpc(
+            "review_document_metadata_assertion",
+            {
+                "p_assertion_id": str(assertion_id),
+                "p_decision": decision,
+                "p_rejection_reason": rejection_reason,
+            },
+        )
+        return self._parse_metadata_assertion(
+            self._one(payload, "document metadata assertion review")
+        )
+
     async def publish_version(self, version_id: UUID) -> DocumentVersion:
-        payload = await self._rpc("publish_document_version", {"p_version_id": str(version_id)})
+        payload = await self._rpc(
+            "approve_and_publish_document_version",
+            {
+                "p_version_id": str(version_id),
+                "p_note": "Approved and published through the guided admin workflow",
+            },
+        )
         return self._parse_version(self._one(payload, "version publication"))
 
     async def archive_document(self, document_id: UUID, *, reason: str) -> KnowledgeDocument:
@@ -526,6 +585,48 @@ class PostgrestEnterpriseDocumentRepository(EnterpriseDocumentRepository):
         )
 
     @classmethod
+    def _parse_searchability(cls, row: Mapping[str, object]) -> DocumentSearchability:
+        searchable = row.get("searchable_for_actor")
+        fully_indexed = row.get("fully_indexed")
+        if not isinstance(searchable, bool) or not isinstance(fully_indexed, bool):
+            raise EnterpriseDocumentRepositoryError("Invalid document searchability response")
+        blocking_reasons = cls._string_tuple(
+            row.get("blocking_reasons", []), "searchability blocking reasons"
+        )
+        warnings = cls._string_tuple(row.get("warnings", []), "searchability warnings")
+        return DocumentSearchability(
+            document_id=UUID(str(row["document_id"])),
+            title=str(row["title"]),
+            document_status=str(row["document_status"]),
+            visibility=str(row["visibility"]),
+            current_version_id=cls._uuid(row.get("current_version_id")),
+            version_status=(str(row["version_status"]) if row.get("version_status") else None),
+            metadata_revision=int(str(row["metadata_revision"])),
+            chunk_count=int(str(row["chunk_count"])),
+            ready_projection_count=int(str(row["ready_projection_count"])),
+            lexical_ready_projection_count=int(str(row["lexical_ready_projection_count"])),
+            lexical_stale_count=int(str(row["lexical_stale_count"])),
+            embedding_stale_count=int(str(row["embedding_stale_count"])),
+            refresh_requested_revision=(
+                int(str(row["refresh_requested_revision"]))
+                if row.get("refresh_requested_revision") is not None
+                else None
+            ),
+            refresh_processed_at=cls._datetime(row.get("refresh_processed_at")),
+            refresh_error=(str(row["refresh_error"]) if row.get("refresh_error") else None),
+            searchable_for_actor=searchable,
+            fully_indexed=fully_indexed,
+            blocking_reasons=blocking_reasons,
+            warnings=warnings,
+        )
+
+    @staticmethod
+    def _string_tuple(value: object, label: str) -> tuple[str, ...]:
+        if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+            raise EnterpriseDocumentRepositoryError(f"Invalid {label} response")
+        return tuple(value)
+
+    @classmethod
     def _parse_version(cls, row: Mapping[str, object]) -> DocumentVersion:
         return DocumentVersion(
             id=UUID(str(row["id"])),
@@ -540,6 +641,42 @@ class PostgrestEnterpriseDocumentRepository(EnterpriseDocumentRepository):
             created_at=cls._datetime(row.get("created_at")),
             updated_at=cls._datetime(row.get("updated_at")),
             legacy_document_id=cls._uuid(row.get("legacy_document_id")),
+        )
+
+    @classmethod
+    def _parse_metadata_assertion(
+        cls,
+        row: Mapping[str, object],
+    ) -> DocumentMetadataAssertion:
+        evidence = row.get("evidence", [])
+        if not isinstance(evidence, list) or not all(
+            isinstance(item, Mapping) for item in evidence
+        ):
+            raise EnterpriseDocumentRepositoryError("Invalid metadata assertion evidence")
+        return DocumentMetadataAssertion(
+            id=UUID(str(row["id"])),
+            document_id=UUID(str(row["document_id"])),
+            document_version_id=cls._uuid(row.get("document_version_id")),
+            field_name=str(row["field_name"]),
+            value=str(row["value"]),
+            normalized_value=str(row["normalized_value"]),
+            source_type=str(row["source_type"]),
+            confidence=float(str(row["confidence"])),
+            verification_status=str(row["verification_status"]),
+            evidence=tuple(dict(item) for item in evidence),
+            model=str(row["model"]) if row.get("model") else None,
+            prompt_version=(
+                str(row["prompt_version"]) if row.get("prompt_version") else None
+            ),
+            input_checksum=(
+                str(row["input_checksum"]) if row.get("input_checksum") else None
+            ),
+            created_at=cls._datetime(row.get("created_at")),
+            verified_by=cls._uuid(row.get("verified_by")),
+            verified_at=cls._datetime(row.get("verified_at")),
+            rejection_reason=(
+                str(row["rejection_reason"]) if row.get("rejection_reason") else None
+            ),
         )
 
     @classmethod

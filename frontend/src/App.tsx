@@ -6,11 +6,9 @@ import type { Session } from "@supabase/supabase-js";
 
 import { supabase } from "./lib/supabase";
 import { EnterpriseApiError, getEnterpriseMe } from "./lib/enterpriseApi";
+import { getEnterpriseSessionIdentity } from "./lib/enterpriseSession.js";
 import Header from "./components/common/Header.jsx";
 import ToastNotification from "./components/common/ToastNotification.jsx";
-import HomePage from "./components/notebooks/HomePage.jsx";
-import NotebookWorkspace from "./components/layout/NotebookWorkspace.jsx";
-import AdminDashboard from "./components/admin/AdminDashboard.jsx";
 import LoginPage from "./components/auth/LoginPage";
 import "./stores/themeStore.js";
 
@@ -38,9 +36,7 @@ function getErrorMessage(error: unknown): string {
 // Keyed on page kind, not pathname, so switching notebooks doesn't retrigger.
 function AnimatedRoutes() {
   const location = useLocation();
-  const pageKey = location.pathname.startsWith("/notebook/")
-    ? "notebook"
-    : location.pathname;
+  const pageKey = location.pathname;
 
   return (
     <AnimatePresence mode="wait">
@@ -53,11 +49,9 @@ function AnimatedRoutes() {
         style={{ flex: 1, display: "flex", overflow: "hidden" }}
       >
         <Routes location={location}>
-          <Route
-            path="/"
-            element={enterpriseKnowledgeEnabled ? <Navigate to="/knowledge" replace /> : <HomePage />}
-          />
-          <Route path="/legacy/notebooks" element={<HomePage />} />
+          <Route path="/" element={<Navigate to="/knowledge" replace />} />
+          <Route path="/legacy/notebooks" element={<Navigate to="/knowledge" replace />} />
+          <Route path="/notebook/:notebookId" element={<Navigate to="/knowledge" replace />} />
           <Route
             path="/knowledge"
             element={
@@ -65,10 +59,9 @@ function AnimatedRoutes() {
                 <Suspense fallback={<div className="flex flex-1 items-center justify-center text-sm text-dim">Đang tải kho tri thức...</div>}>
                   <EmployeeKnowledgePortal />
                 </Suspense>
-              ) : <Navigate to="/legacy/notebooks" replace />
+              ) : <div className="flex flex-1 items-center justify-center text-sm text-dim">Kho tri thức doanh nghiệp chưa được bật.</div>
             }
           />
-          <Route path="/notebook/:notebookId" element={<NotebookWorkspace />} />
           <Route
             path="/reports/context-quality-v4"
             element={
@@ -77,7 +70,7 @@ function AnimatedRoutes() {
               </Suspense>
             }
           />
-          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin" element={<Navigate to="/admin/knowledge" replace />} />
           <Route
             path="/admin/knowledge"
             element={
@@ -85,7 +78,7 @@ function AnimatedRoutes() {
                 <Suspense fallback={<div className="flex flex-1 items-center justify-center text-sm text-dim">Đang tải Knowledge Admin...</div>}>
                   <AdminKnowledgePortal />
                 </Suspense>
-              ) : <Navigate to="/legacy/notebooks" replace />
+              ) : <Navigate to="/knowledge" replace />
             }
           />
           <Route
@@ -112,6 +105,7 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [enterpriseSessionReady, setEnterpriseSessionReady] = useState(!enterpriseKnowledgeEnabled);
+  const enterpriseSessionIdentity = getEnterpriseSessionIdentity(session);
 
   useEffect(() => {
     void supabase.auth.getSession().then(({ data }) => {
@@ -128,7 +122,7 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!session || !enterpriseKnowledgeEnabled) {
+    if (!enterpriseSessionIdentity || !enterpriseKnowledgeEnabled) {
       setEnterpriseSessionReady(!enterpriseKnowledgeEnabled);
       return undefined;
     }
@@ -153,7 +147,7 @@ function App() {
         await supabase.auth.signOut();
       });
     return () => { cancelled = true; };
-  }, [session]);
+  }, [enterpriseSessionIdentity]);
 
   async function handleAuth(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

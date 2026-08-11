@@ -10,6 +10,9 @@ from app.pipeline.documents.application.extraction_pipeline import AdvancedExtra
 from app.pipeline.indexing.adapters.context_enrichers import (
     create_openai_chunk_context_enricher,
 )
+from app.pipeline.indexing.adapters.document_metadata_enrichers import (
+    create_openai_document_metadata_enricher,
+)
 from app.pipeline.indexing.adapters.embedding_providers import create_embedding_provider
 from app.pipeline.indexing.adapters.vector_indexes import (
     InMemoryVectorIndex,
@@ -22,6 +25,7 @@ from app.pipeline.indexing.application.pipeline import (
     IngestionEmbeddingPipelineConfig,
 )
 from app.pipeline.indexing.ports.context_enricher import ChunkContextEnricher
+from app.pipeline.indexing.ports.document_metadata_enricher import DocumentMetadataEnricher
 from app.pipeline.indexing.ports.vector_index import VectorIndex
 
 
@@ -37,6 +41,22 @@ def build_chunk_context_enricher(
         base_url=settings.openai_base_url,
         timeout_seconds=settings.openai_timeout_seconds,
         config=settings.context_enrichment_config,
+        telemetry=telemetry,
+    )
+
+
+def build_document_metadata_enricher(
+    settings: Settings,
+    *,
+    telemetry: Telemetry | None = None,
+) -> DocumentMetadataEnricher | None:
+    if not settings.document_metadata_enrichment_enabled or not settings.openai_api_key:
+        return None
+    return create_openai_document_metadata_enricher(
+        api_key=settings.openai_api_key,
+        base_url=settings.openai_base_url,
+        timeout_seconds=settings.openai_timeout_seconds,
+        config=settings.document_metadata_enrichment_config,
         telemetry=telemetry,
     )
 
@@ -110,12 +130,17 @@ def build_ingestion_embedding_pipeline(
             else None
         ),
         context_enricher=build_chunk_context_enricher(effective, telemetry=telemetry),
+        document_metadata_enricher=build_document_metadata_enricher(
+            effective,
+            telemetry=telemetry,
+        ),
         telemetry=telemetry,
     )
 
 
 __all__ = [
     "build_chunk_context_enricher",
+    "build_document_metadata_enricher",
     "build_ingestion_embedding_pipeline",
     "build_vector_index",
 ]

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
+from datetime import date
 from enum import StrEnum
 from uuid import NAMESPACE_URL, uuid5
 
@@ -25,11 +26,18 @@ from app.pipeline.indexing.domain.context_enrichment import (
     ContextSourceScope,
     select_context_scope_metadata,
 )
+from app.pipeline.indexing.domain.document_metadata import (
+    DOCUMENT_METADATA_FIELDS,
+    DocumentMetadataAssertion,
+    DocumentMetadataEnrichmentRequest,
+    MetadataEvidenceBlock,
+)
 from app.pipeline.indexing.domain.embedded_chunk import EmbeddedChunk
 from app.pipeline.indexing.domain.retrieval_metadata import (
     normalize_chunk_retrieval_metadata,
 )
 from app.pipeline.indexing.ports.context_enricher import ChunkContextEnricher
+from app.pipeline.indexing.ports.document_metadata_enricher import DocumentMetadataEnricher
 from app.pipeline.indexing.ports.embedding_provider import EmbeddingProvider
 from app.pipeline.indexing.ports.vector_index import (
     GenerationAwareVectorIndex,
@@ -48,6 +56,7 @@ class IngestionEmbeddingStage(StrEnum):
     VALIDATING = "validating"
     PARSING = "parsing"
     SANITIZING = "sanitizing"
+    METADATA_ENRICHMENT = "metadata_enrichment"
     CHUNKING = "chunking"
     CONTEXTUALIZING = "contextualizing"
     EMBEDDING = "embedding"
@@ -65,6 +74,8 @@ class IngestionEmbeddingResult:
     parser_version: str
     embedding_model: str
     extraction_artifacts: object | None = None
+    document_metadata_assertions: tuple[DocumentMetadataAssertion, ...] = ()
+    document_metadata_profile: Mapping[str, object] | None = None
 
 
 @dataclass(frozen=True)
@@ -78,6 +89,8 @@ class PreparedIngestion:
     parser_name: str
     parser_version: str
     extraction_artifacts: object | None = None
+    document_metadata_assertions: tuple[DocumentMetadataAssertion, ...] = ()
+    document_metadata_profile: Mapping[str, object] | None = None
 
 
 @dataclass(frozen=True)
@@ -108,6 +121,7 @@ class IngestionEmbeddingPipeline:
         config: IngestionEmbeddingPipelineConfig | None = None,
         extraction_pipeline: AdvancedExtractionPipeline | None = None,
         context_enricher: ChunkContextEnricher | None = None,
+        document_metadata_enricher: DocumentMetadataEnricher | None = None,
         telemetry: Telemetry | None = None,
     ) -> None:
         self.parser_catalog = parser_catalog
@@ -117,6 +131,7 @@ class IngestionEmbeddingPipeline:
         self.config = config or IngestionEmbeddingPipelineConfig()
         self.extraction_pipeline = extraction_pipeline
         self.context_enricher = context_enricher
+        self.document_metadata_enricher = document_metadata_enricher
         self.telemetry = telemetry or Telemetry()
 
     def run(self, source: DocumentSource) -> IngestionEmbeddingResult:
@@ -167,11 +182,28 @@ class IngestionEmbeddingPipeline:
             "contextual_text_version": CONTEXTUAL_TEXT_VERSION,
         }
 
+    @property
+    def document_metadata_enrichment_profile(self) -> dict[str, object] | None:
+        if self.document_metadata_enricher is None:
+            return None
+        profile = self.document_metadata_enricher.profile
+        return {
+            "document_metadata_enrichment_model": profile["model"],
+            "document_metadata_enrichment_prompt_version": profile["prompt_version"],
+            "document_metadata_enrichment_max_chars": profile["max_document_chars"],
+            "document_metadata_enrichment_max_output_tokens": profile["max_output_tokens"],
+            "document_metadata_enrichment_strict": profile["strict"],
+            "document_metadata_enrichment_verification_policy": profile[
+                "verification_policy"
+            ],
+        }
+
     def prepare(
         self,
         source: DocumentSource,
         *,
         contextualize: bool = True,
+        metadata_enrich: bool | None = None,
     ) -> PreparedIngestion:
         """Validate, extract, sanitize, and chunk without embedding or indexing."""
         stages: list[IngestionEmbeddingStage] = []
@@ -223,25 +255,60 @@ class IngestionEmbeddingPipeline:
 
                 self._advance(stages, IngestionEmbeddingStage.SANITIZING)
                 parsed = sanitize_parsed_document(parsed)
-                parsed.document_metadata.update(
-                    {
-                        **source.metadata,
-                        "document_id": source.document_id,
-                        "document_version": source.version,
-                        "title": source.title,
-                        "source_title": source.title,
-                        "tenant_id": source.tenant_id,
-                        "owner_id": source.owner_id,
-                    }
-                )
-                parsed.logical_document = None
-                parsed.logical_document = parsed.to_logical_document()
                 observation.update(
                     output={
                         "parser": parsed.parser_name,
                         "parser_version": parsed.parser_version,
                         "page_count": len(parsed.pages),
                         "element_count": sum(len(page.elements) for page in parsed.pages),
+                    }
+                )
+
+        # Apply the same authoritative source layer to both the advanced and
+        # fallback extraction paths before metadata enrichment and chunking.
+        parsed.document_metadata.update(
+            {
+                **source.metadata,
+                "document_id": source.document_id,
+                "document_version": source.version,
+                "title": source.title,
+                "source_title": source.title,
+                "tenant_id": source.tenant_id,
+                "owner_id": source.owner_id,
+            }
+        )
+        parsed.logical_document = None
+        parsed.logical_document = parsed.to_logical_document()
+
+        document_metadata_assertions: tuple[DocumentMetadataAssertion, ...] = ()
+        document_metadata_profile: Mapping[str, object] | None = None
+        metadata_enricher = self.document_metadata_enricher
+        should_enrich_metadata = (
+            metadata_enricher is not None
+            if metadata_enrich is None
+            else metadata_enrich
+        )
+        if should_enrich_metadata and metadata_enricher is None:
+            raise RuntimeError(
+                "Document metadata enrichment is enabled but no LLM enricher is configured"
+            )
+        if should_enrich_metadata:
+            assert metadata_enricher is not None
+            with self.telemetry.observe(
+                "ingestion.enrich_document_metadata",
+                as_type="chain",
+                input={"document_id": source.document_id},
+            ) as observation:
+                self._advance(stages, IngestionEmbeddingStage.METADATA_ENRICHMENT)
+                document_metadata_assertions = self._enrich_document_metadata(source, parsed)
+                document_metadata_profile = dict(metadata_enricher.profile)
+                observation.update(
+                    output={
+                        "assertion_count": len(document_metadata_assertions),
+                        "fields": [item.field_name for item in document_metadata_assertions],
+                        "verified_count": sum(
+                            1 for item in document_metadata_assertions if item.verified
+                        ),
                     }
                 )
 
@@ -272,6 +339,8 @@ class IngestionEmbeddingPipeline:
             parser_name=parsed.parser_name,
             parser_version=parsed.parser_version,
             extraction_artifacts=extraction_artifacts,
+            document_metadata_assertions=document_metadata_assertions,
+            document_metadata_profile=document_metadata_profile,
         )
         return self.contextualize(prepared) if contextualize else prepared
 
@@ -430,6 +499,57 @@ class IngestionEmbeddingPipeline:
             )
         return tuple(enriched_chunks)
 
+    def _enrich_document_metadata(
+        self,
+        source: DocumentSource,
+        parsed: ParsedDocument,
+    ) -> tuple[DocumentMetadataAssertion, ...]:
+        enricher = self.document_metadata_enricher
+        if enricher is None:
+            return ()
+        existing = {
+            field_name
+            for layer in (source.metadata, parsed.document_metadata)
+            for field_name in DOCUMENT_METADATA_FIELDS
+            if layer.get(field_name) not in (None, "")
+        }
+        missing = tuple(field for field in DOCUMENT_METADATA_FIELDS if field not in existing)
+        logical = parsed.to_logical_document()
+        blocks = tuple(
+            MetadataEvidenceBlock(
+                block_id=block.id,
+                page_number=block.page,
+                text=block.text,
+            )
+            for block in logical.blocks
+            if block.text.strip()
+        )
+        result = enricher.enrich(
+            DocumentMetadataEnrichmentRequest(
+                document_title=source.title,
+                language=parsed.detected_language or logical.language or "unknown",
+                missing_fields=missing,
+                evidence_blocks=blocks,
+            )
+        )
+        # LLM assertions remain unverified. They may enrich projection/ranking,
+        # but the canonical document row is updated only by an explicit review RPC.
+        raw_inferred = parsed.document_metadata.get("inferred_metadata")
+        inferred = dict(raw_inferred) if isinstance(raw_inferred, Mapping) else {}
+        for assertion in result.assertions:
+            inferred.setdefault(assertion.field_name, assertion.normalized_value)
+        if inferred:
+            parsed.document_metadata["inferred_metadata"] = inferred
+        parsed.document_metadata["metadata_enrichment"] = {
+            "status": result.status,
+            "provider": result.provider,
+            "model": result.model,
+            "prompt_version": result.prompt_version,
+            "input_checksum": result.input_checksum,
+            "error_code": result.error_code,
+        }
+        return result.assertions
+
     def embed(
         self,
         prepared: PreparedIngestion,
@@ -559,6 +679,8 @@ class IngestionEmbeddingPipeline:
             parser_version=parsed.parser_version,
             embedding_model=self.embedding_provider.model_name,
             extraction_artifacts=prepared.extraction_artifacts,
+            document_metadata_assertions=prepared.document_metadata_assertions,
+            document_metadata_profile=prepared.document_metadata_profile,
         )
 
     def persist_vectors(
@@ -675,6 +797,8 @@ def build_embedded_chunk(
         "loose_content_signature": fingerprint.loose_signature,
         "normalization_version": fingerprint.normalization_version,
         "exact_duplicate_group_id": str(exact_duplicate_group_id),
+        "char_start": chunk.offset_start,
+        "char_end": chunk.offset_end,
     }
     ingestion_generation = str(source.metadata.get("ingestion_generation") or "").strip()
     if ingestion_generation:
@@ -692,6 +816,19 @@ def build_embedded_chunk(
         "table_data_row_end_ordinal",
         "table_location",
         "table_header",
+        "table_header_repeated",
+        "node_type",
+        "parent_chunk_id",
+        "parent_context_holder_source_chunk_id",
+        "parent_context_version",
+        "parent_section_id",
+        "parent_section_title",
+        "parent_section_path",
+        "parent_child_index",
+        "parent_child_count",
+        "parent_token_count",
+        "parent_content_checksum",
+        "parent_context",
     ):
         if (value := source_metadata.get(key)) is not None:
             chunk_metadata[key] = value
@@ -701,6 +838,7 @@ def build_embedded_chunk(
         source_metadata=source.metadata,
         title=source.title,
         section_title=chunk.section_title,
+        reference_date=date.today(),
     )
     return EmbeddedChunk(
         id=chunk.chunk_id,
@@ -721,6 +859,8 @@ def build_embedded_chunk(
         retrieval_metadata=retrieval_metadata,
         provenance_metadata=_mapping_metadata(source_metadata.get("provenance_metadata")),
         authority_metadata=_mapping_metadata(source_metadata.get("authority_metadata")),
+        embedding_text=embedding_text,
+        search_text=chunk.search_text,
     )
 
 

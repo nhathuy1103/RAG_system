@@ -27,7 +27,9 @@ from app.api.schemas.enterprise import (
     AccessTestRequest,
     AccessTestResponse,
     ArchiveDocumentRequest,
+    DocumentMetadataAssertionResponse,
     DocumentPermissionLiteral,
+    DocumentSearchabilityResponse,
     DocumentVersionCreateRequest,
     DocumentVersionResponse,
     DocumentVersionReviewContextResponse,
@@ -36,6 +38,7 @@ from app.api.schemas.enterprise import (
     KnowledgeDocumentListResponse,
     KnowledgeDocumentResponse,
     KnowledgeDocumentUpdateRequest,
+    MetadataAssertionReviewRequest,
     OperationResponse,
     PermissionGrantRequest,
     PermissionResponse,
@@ -158,6 +161,23 @@ async def list_documents(
         limit=limit,
         offset=offset,
     )
+
+
+@router.get(
+    "/documents/searchability",
+    response_model=list[DocumentSearchabilityResponse],
+)
+async def list_document_searchability(
+    _user: Annotated[CurrentUser, Depends(get_current_user)],
+    service: Annotated[EnterpriseDocumentService, Depends(get_enterprise_document_service)],
+    document_id: Annotated[UUID | None, Query()] = None,
+) -> list[DocumentSearchabilityResponse]:
+    """Return only actor-authorized lifecycle/index diagnostics, never chunk content."""
+
+    return [
+        DocumentSearchabilityResponse.model_validate(item)
+        for item in await service.list_searchability(document_id=document_id)
+    ]
 
 
 @router.post(
@@ -296,6 +316,46 @@ async def review_document_version(
 ) -> DocumentVersionResponse:
     version = await service.review_version(version_id, **payload.model_dump())
     return DocumentVersionResponse.model_validate(version)
+
+
+@router.get(
+    "/document-versions/{version_id}/metadata-assertions",
+    response_model=list[DocumentMetadataAssertionResponse],
+)
+async def list_document_metadata_assertions(
+    version_id: UUID,
+    _principal: Annotated[PrincipalContext, Depends(require_review_document)],
+    service: Annotated[EnterpriseDocumentService, Depends(get_enterprise_document_service)],
+    verification_status: Annotated[
+        Literal["UNVERIFIED", "VERIFIED", "REJECTED"] | None,
+        Query(),
+    ] = None,
+) -> list[DocumentMetadataAssertionResponse]:
+    return [
+        DocumentMetadataAssertionResponse.model_validate(item)
+        for item in await service.list_metadata_assertions(
+            version_id,
+            verification_status=verification_status,
+        )
+    ]
+
+
+@router.post(
+    "/metadata-assertions/{assertion_id}/review",
+    response_model=DocumentMetadataAssertionResponse,
+)
+async def review_document_metadata_assertion(
+    assertion_id: UUID,
+    payload: MetadataAssertionReviewRequest,
+    _principal: Annotated[PrincipalContext, Depends(require_review_document)],
+    service: Annotated[EnterpriseDocumentService, Depends(get_enterprise_document_service)],
+) -> DocumentMetadataAssertionResponse:
+    assertion = await service.review_metadata_assertion(
+        assertion_id,
+        decision=payload.decision,
+        rejection_reason=payload.rejection_reason,
+    )
+    return DocumentMetadataAssertionResponse.model_validate(assertion)
 
 
 @router.post("/document-versions/{version_id}/publish", response_model=DocumentVersionResponse)

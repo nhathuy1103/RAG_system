@@ -79,6 +79,31 @@ class KnowledgeDocument:
 
 
 @dataclass(frozen=True, slots=True)
+class DocumentSearchability:
+    """Actor-scoped lifecycle and retrieval-index readiness for a document."""
+
+    document_id: UUID
+    title: str
+    document_status: str
+    visibility: str
+    current_version_id: UUID | None
+    version_status: str | None
+    metadata_revision: int
+    chunk_count: int
+    ready_projection_count: int
+    lexical_ready_projection_count: int
+    lexical_stale_count: int
+    embedding_stale_count: int
+    refresh_requested_revision: int | None
+    refresh_processed_at: datetime | None
+    refresh_error: str | None
+    searchable_for_actor: bool
+    fully_indexed: bool
+    blocking_reasons: tuple[str, ...] = ()
+    warnings: tuple[str, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class DocumentVersion:
     id: UUID
     document_id: UUID
@@ -225,6 +250,27 @@ class DocumentVersionReviewContext:
     stage_history: tuple[ProcessingStageHistory, ...] = ()
     errors: tuple[ProcessingError, ...] = ()
     extracted_chunks: tuple[ReviewChunk, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class DocumentMetadataAssertion:
+    id: UUID
+    document_id: UUID
+    document_version_id: UUID | None
+    field_name: str
+    value: str
+    normalized_value: str
+    source_type: str
+    confidence: float
+    verification_status: str
+    evidence: tuple[dict[str, object], ...] = ()
+    model: str | None = None
+    prompt_version: str | None = None
+    input_checksum: str | None = None
+    created_at: datetime | None = None
+    verified_by: UUID | None = None
+    verified_at: datetime | None = None
+    rejection_reason: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

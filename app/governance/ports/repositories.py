@@ -55,6 +55,16 @@ class GovernanceRepository(Protocol):
         filters: dict[str, object],
     ) -> list[SearchHit]: ...
 
+    async def resolve_document_number(self, document_number: str) -> list[UUID]: ...
+
+    async def expand_context(
+        self,
+        chunk_ids: tuple[UUID, ...],
+        *,
+        sibling_window: int,
+        limit: int,
+    ) -> list[SearchHit]: ...
+
     async def create_conversation(self, title: str | None) -> EnterpriseConversation: ...
 
     async def get_conversation(self, conversation_id: UUID) -> ConversationDetail | None: ...

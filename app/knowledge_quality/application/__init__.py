@@ -25,6 +25,8 @@ from app.knowledge_quality.application.claims import (
 from app.knowledge_quality.application.scope import (
     compare_claim_scopes,
     extract_claim_scope,
+    extract_temporal_scope_qualifiers,
+    temporal_scopes_diverge,
 )
 
 __all__ = [
@@ -42,10 +44,12 @@ __all__ = [
     "detect_claim_conflicts",
     "extract_claims",
     "extract_claim_scope",
+    "extract_temporal_scope_qualifiers",
     "loose_normalize_text",
     "normalize_claim_comparison_text",
     "plan_chunk_deduplication",
     "simhash_hamming_distance",
     "simhash_lsh_bands",
     "strict_normalize_text",
+    "temporal_scopes_diverge",
 ]

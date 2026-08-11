@@ -690,9 +690,11 @@ def _merge_relation_candidates(
     detected: tuple[QualityRelationCandidate, ...],
 ) -> tuple[QualityRelationCandidate, ...]:
     relation_priority = {
-        RelationType.CONFLICT_CANDIDATE: 5,
-        RelationType.VERSION_CANDIDATE: 4,
-        RelationType.NEAR_DUPLICATE: 3,
+        RelationType.CONFLICT_CANDIDATE: 7,
+        RelationType.VERSION_CANDIDATE: 6,
+        RelationType.TEMPORAL_SERIES: 5,
+        RelationType.NEAR_DUPLICATE: 4,
+        RelationType.TEMPLATE_VARIANT: 3,
         RelationType.EXACT_CONTENT: 2,
         RelationType.RELATED: 1,
         RelationType.DISTINCT: 0,

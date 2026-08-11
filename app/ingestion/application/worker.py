@@ -56,11 +56,16 @@ from app.pipeline.documents.domain.source import DocumentSource
 from app.pipeline.indexing.adapters.context_enrichers import (
     build_context_enrichment_profile,
 )
+from app.pipeline.indexing.adapters.document_metadata_enrichers import (
+    DOCUMENT_METADATA_PROMPT_VERSION,
+)
 from app.pipeline.indexing.application.pipeline import (
     ChunkEmbeddingPlan,
     IngestionEmbeddingPipeline,
     IngestionEmbeddingResult,
 )
+from app.pipeline.indexing.domain.embedded_chunk import EmbeddedChunk
+from app.pipeline.shared.text_utils import compute_checksum_text
 from app.shared.contextual_text import CONTEXTUAL_TEXT_VERSION
 from app.structured_facts.application.comparison import (
     build_structured_relation_payloads,
@@ -87,6 +92,15 @@ REQUIRED_EMBEDDING_DIMENSIONS = 1536
 REQUIRED_VECTOR_STORES = {"qdrant", "pgvector"}
 KnowledgeQualityMode = Literal["off", "shadow", "on"]
 StructuredFactMode = Literal["off", "shadow", "on"]
+_KEY_RETRIEVAL_METADATA_FIELDS = (
+    "document_number",
+    "document_type",
+    "domain",
+    "project_code",
+    "year",
+    "data_period",
+    "effective_status",
+)
 
 
 class IngestionLeaseLostError(RuntimeError):
@@ -126,6 +140,27 @@ def build_ingestion_profile(
             "contextual_enrichment_enabled": settings.contextual_enrichment_enabled,
             **contextual_profile,
             "contextual_text_version": CONTEXTUAL_TEXT_VERSION,
+            "document_metadata_enrichment_enabled": (
+                settings.document_metadata_enrichment_enabled
+            ),
+            "document_metadata_enrichment_model": (
+                settings.document_metadata_enrichment_model
+            ),
+            "document_metadata_enrichment_prompt_version": (
+                DOCUMENT_METADATA_PROMPT_VERSION
+            ),
+            "document_metadata_enrichment_max_chars": (
+                settings.document_metadata_enrichment_max_chars
+            ),
+            "document_metadata_enrichment_max_output_tokens": (
+                settings.document_metadata_enrichment_max_output_tokens
+            ),
+            "document_metadata_enrichment_strict": (
+                settings.document_metadata_enrichment_strict
+            ),
+            "document_metadata_enrichment_verification_policy": (
+                "exact_evidence_unverified"
+            ),
             "embedding_provider": settings.embedding_provider,
             "vector_store_backend": settings.vector_store_backend,
             "knowledge_quality_mode": knowledge_quality_mode,
@@ -392,6 +427,7 @@ class IngestionWorker:
                 self._pipeline.prepare,
                 source,
                 contextualize=False,
+                metadata_enrich=self._document_metadata_enrichment_for_job(job),
             )
             await self._report_stage(
                 job,
@@ -598,7 +634,25 @@ class IngestionWorker:
                 input={"embedded_chunk_count": len(result.embedded_chunks)},
             ) as observation:
                 chunks = self._to_persisted_chunks(result)
-                observation.update(output={"persisted_chunk_count": len(chunks)})
+                metadata_coverage = _retrieval_metadata_fill_statistics(chunks)
+                enrichment = result.parsed_document.document_metadata.get(
+                    "metadata_enrichment"
+                )
+                enrichment_status = (
+                    str(enrichment.get("status") or "unknown")
+                    if isinstance(enrichment, Mapping)
+                    else "disabled"
+                )
+                observation.update(
+                    output={
+                        "persisted_chunk_count": len(chunks),
+                        "retrieval_metadata_coverage": metadata_coverage,
+                        "document_metadata_enrichment_status": enrichment_status,
+                        "document_metadata_assertion_count": len(
+                            result.document_metadata_assertions
+                        ),
+                    }
+                )
             if not chunks:
                 raise RuntimeError("Extraction produced no indexable chunks")
             dimensions = result.embedded_chunks[0].vector_size
@@ -688,6 +742,11 @@ class IngestionWorker:
                     "embedding_dimensions": dimensions,
                     "quality_relation_count": len(relations),
                     "chunk_preembedding_quality": chunk_dedup_stats,
+                    "retrieval_metadata_coverage": metadata_coverage,
+                    "document_metadata_enrichment_status": enrichment_status,
+                    "document_metadata_assertion_count": len(
+                        result.document_metadata_assertions
+                    ),
                     **structured_output,
                 }
             )
@@ -1026,6 +1085,26 @@ class IngestionWorker:
             )
         return True
 
+    def _document_metadata_enrichment_for_job(self, job: ClaimedIngestionJob) -> bool:
+        """Keep metadata extraction fixed to the durable enqueue-time policy."""
+        configured = job.configuration.get("document_metadata_enrichment_enabled")
+        if not isinstance(configured, bool) or not configured:
+            return False
+        runtime_profile = self._pipeline.document_metadata_enrichment_profile
+        if runtime_profile is None:
+            raise RuntimeError(
+                "Queued job enables metadata enrichment but runtime has no LLM enricher"
+            )
+        mismatched = tuple(
+            key for key, value in runtime_profile.items() if job.configuration.get(key) != value
+        )
+        if mismatched:
+            raise RuntimeError(
+                "Queued document metadata profile does not match runtime: "
+                + ", ".join(mismatched)
+            )
+        return True
+
     async def _safe_find_chunk_dedup_candidates(
         self,
         job: ClaimedIngestionJob,
@@ -1080,8 +1159,9 @@ class IngestionWorker:
         detected: tuple[QualityRelationCandidate, ...],
     ) -> tuple[QualityRelationCandidate, ...]:
         relation_priority = {
-            RelationType.CONFLICT_CANDIDATE: 6,
-            RelationType.VERSION_CANDIDATE: 5,
+            RelationType.CONFLICT_CANDIDATE: 7,
+            RelationType.VERSION_CANDIDATE: 6,
+            RelationType.TEMPORAL_SERIES: 5,
             RelationType.NEAR_DUPLICATE: 4,
             RelationType.TEMPLATE_VARIANT: 3,
             RelationType.EXACT_CONTENT: 2,
@@ -1143,7 +1223,7 @@ class IngestionWorker:
         result: IngestionEmbeddingResult,
     ) -> tuple[PersistedChunk, ...]:
         persisted: list[PersistedChunk] = []
-        for chunk in result.embedded_chunks:
+        for position, chunk in enumerate(result.embedded_chunks):
             row_id = uuid5(NAMESPACE_URL, f"chunk:{chunk.id}")
             metadata = dict(chunk.metadata)
             metadata.update(
@@ -1174,6 +1254,23 @@ class IngestionWorker:
                     token_count=token_count,
                     metadata=_json_safe_mapping(metadata),
                     embedding=chunk.embedding,
+                    parent=_parent_persistence_payload(chunk.metadata),
+                    projection=_retrieval_projection_payload(chunk),
+                    document_metadata_assertions=(
+                        tuple(
+                            _json_safe_mapping(assertion.as_dict())
+                            for assertion in getattr(
+                                result, "document_metadata_assertions", ()
+                            )
+                        )
+                        if position == 0
+                        else ()
+                    ),
+                    version_artifact=(
+                        _version_artifact_payload(result, chunk)
+                        if position == 0
+                        else None
+                    ),
                 )
             )
         return tuple(persisted)
@@ -1191,6 +1288,138 @@ def _json_safe_mapping(value: Mapping[str, Any]) -> dict[str, object]:
     if not isinstance(normalized, dict):
         raise TypeError("Chunk metadata must normalize to an object")
     return normalized
+
+
+def _retrieval_metadata_fill_statistics(
+    chunks: Sequence[PersistedChunk],
+) -> dict[str, dict[str, int | float]]:
+    """Return value-free metadata coverage suitable for ingestion telemetry."""
+
+    total = len(chunks)
+    statistics: dict[str, dict[str, int | float]] = {}
+    for field_name in _KEY_RETRIEVAL_METADATA_FIELDS:
+        filled = 0
+        for chunk in chunks:
+            nested = chunk.metadata.get("retrieval_metadata")
+            if isinstance(nested, Mapping) and nested.get(field_name) not in (None, ""):
+                filled += 1
+        statistics[field_name] = {
+            "filled": filled,
+            "total": total,
+            "rate": round(filled / total, 4) if total else 0.0,
+        }
+    return statistics
+
+
+def _parent_persistence_payload(metadata: Mapping[str, object]) -> dict[str, object] | None:
+    parent = metadata.get("parent_context")
+    parent_id = str(metadata.get("parent_chunk_id") or "").strip()
+    if not parent_id or not isinstance(parent, Mapping):
+        return None
+    content = str(parent.get("content") or "").strip()
+    if not content:
+        return None
+    persisted_parent_id = str(uuid5(NAMESPACE_URL, f"parent:{parent_id}"))
+    return _json_safe_mapping(
+        {
+            "parent_id": persisted_parent_id,
+            "heading": parent.get("section_title"),
+            "section_path": parent.get("section_path") or [],
+            "content": content,
+            "content_summary": None,
+            "page_start": parent.get("page_start"),
+            "page_end": parent.get("page_end"),
+            "source_block_ids": parent.get("source_block_ids") or [],
+            "token_count": parent.get("token_count") or len(content.split()),
+            "content_hash": parent.get("content_checksum")
+            or compute_checksum_text(content),
+            "parent_index": metadata.get("parent_section_id"),
+        }
+    )
+
+
+def _retrieval_projection_payload(chunk: EmbeddedChunk) -> dict[str, object]:
+    retrieval = chunk.retrieval_metadata
+    section_path = retrieval.get("section_path")
+    if isinstance(section_path, Sequence) and not isinstance(section_path, str | bytes):
+        section_path_text = " > ".join(
+            str(item).strip() for item in section_path if str(item).strip()
+        )
+    else:
+        section_path_text = str(section_path or "").strip()
+    table_header = str(retrieval.get("table_header") or "").strip()
+    section_title = str(retrieval.get("section_title") or chunk.section_title or "").strip()
+    document_title = str(retrieval.get("title") or "").strip()
+    contextual_summary = str(retrieval.get("contextual_summary") or "").strip()
+    verified_aliases = retrieval.get("verified_aliases")
+    alias_values = (
+        [str(item).strip() for item in verified_aliases if str(item).strip()]
+        if isinstance(verified_aliases, Sequence)
+        and not isinstance(verified_aliases, str | bytes)
+        else []
+    )
+    identity_text = str(retrieval.get("document_number") or "").strip()
+    structure_text = " ".join(value for value in (section_title, table_header) if value)
+    context_text = " ".join(
+        value for value in (section_path_text, document_title, contextual_summary) if value
+    )
+    raw_parent_id = str(chunk.metadata.get("parent_chunk_id") or "").strip()
+    parent_id = str(uuid5(NAMESPACE_URL, f"parent:{raw_parent_id}")) if raw_parent_id else None
+    return _json_safe_mapping(
+        {
+            "projection_version": chunk.retrieval_projection_version,
+            "identity_text": identity_text,
+            "structure_text": structure_text,
+            "content_text": chunk.text,
+            "context_text": context_text,
+            "alias_text": " ".join(alias_values),
+            "embedding_text": chunk.embedding_text or chunk.text,
+            "embedding_model": chunk.embedding_model,
+            "embedding_dimensions": chunk.vector_size,
+            "source_content_hash": chunk.checksum,
+            "normalization_version": str(
+                chunk.metadata.get("normalization_version") or "unknown"
+            ),
+            "parent_id": parent_id,
+            "parent_child_index": chunk.metadata.get("parent_child_index"),
+        }
+    )
+
+
+def _version_artifact_payload(
+    result: IngestionEmbeddingResult,
+    chunk: EmbeddedChunk,
+) -> dict[str, object] | None:
+    parsed = getattr(result, "parsed_document", None)
+    if parsed is None:
+        return None
+    document_metadata = getattr(parsed, "document_metadata", {})
+    ocr_used = bool(getattr(parsed, "ocr_used", False))
+    parser_name = str(getattr(result, "parser_name", "") or "")
+    return _json_safe_mapping(
+        {
+            "parser_name": parser_name,
+            "parser_version": str(getattr(result, "parser_version", "") or ""),
+            "ocr_engine": (
+                str(document_metadata.get("ocr_provider") or parser_name)
+                if ocr_used
+                else None
+            ),
+            "ocr_version": str(document_metadata.get("ocr_version") or "") or None,
+            "chunker_name": str(chunk.metadata.get("strategy") or ""),
+            "chunker_version": str(chunk.metadata.get("strategy_version") or ""),
+            "embedding_model": str(getattr(result, "embedding_model", "") or ""),
+            "embedding_dimensions": chunk.vector_size,
+            "page_count": len(parsed.pages),
+            "language": parsed.detected_language,
+            "canonical_content_hash": compute_checksum_text(
+                parsed.content_markdown or parsed.text
+            ),
+            "metadata_enrichment_profile": dict(
+                getattr(result, "document_metadata_profile", None) or {}
+            ),
+        }
+    )
 
 
 def _json_safe(value: Any) -> object:

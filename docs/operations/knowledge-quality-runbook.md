@@ -102,6 +102,11 @@ For every pending relation, the reviewer should inspect:
 - effective dates and source authority;
 - prior decisions in the audit history.
 
+For `temporal_series`, verify that entity/project identity matches and that both
+period anchors are source-explicit. Prefer `mark_version` when the newer period
+supersedes the older document; otherwise use `keep_separate`. Do not confirm a
+conflict solely because values differ across years, quarters, or months.
+
 Decision policy:
 
 - **Duplicate:** only when the meaning and critical claims match. Keep the
@@ -179,6 +184,12 @@ remain independently reviewable operations.
    jobs were accepted; it does not mean those asynchronous jobs have completed.
 6. Find ready/current documents without a normalization version or fingerprint.
 7. Find pending relations whose detector version is obsolete.
+   Detector upgrades are intentionally non-retroactive: migration 26 does not
+   rewrite existing reviewed or pending relations. The reconciliation repair
+   path also skips relation detection, so do not use `--requeue-repairs` as a
+   re-detection mechanism. Re-submit selected documents through normal ingestion
+   only after inventorying obsolete `conflict_candidate` rows and preserving the
+   existing audit history.
 8. Verify every canonical target and supersedes target belongs to the same
    owner/notebook.
 9. Verify each version family has at most one current canonical document.

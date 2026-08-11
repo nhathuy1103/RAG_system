@@ -131,6 +131,15 @@ The detector combines:
 - scoped negation;
 - policy modality such as permission, obligation, and prohibition.
 
+Detector v4 also extracts explicit reference year, quarter, month/range labels,
+and persisted effective dates into `ClaimScope`. A matching entity with
+non-overlapping reference periods is `temporal_divergence`, not `same_scope`.
+Per-claim temporal qualifiers prevent values from different periods from being
+aligned as one claim. The analysis layer emits `temporal_series` for explicit
+historical periods, or `version_candidate` for effective dates at least one
+calendar year apart. Both pre-embedding and ANN aggregation apply a temporal
+majority guard before promoting any document pair to `conflict_candidate`.
+
 Structured claim conflicts belong in `signals.claim_conflicts`. A review client
 should show both claims, normalized values/units, source chunk/page, reason
 codes, confidence, and detector version. A score alone is not sufficient

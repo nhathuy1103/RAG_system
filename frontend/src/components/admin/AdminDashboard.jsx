@@ -76,7 +76,7 @@ export default function AdminDashboard() {
         setError(null);
       })
       .catch((err) => {
-        if (!cancelled) setError(err.message || 'Không thể tải số liệu admin');
+        if (!cancelled) setError(err.message || 'Không thể tải số liệu quản trị');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
     <div className="flex-1 overflow-y-auto px-8 py-8">
       <div className="mx-auto max-w-[1000px]">
         <div className="mb-7">
-          <div className="font-heading text-2xl font-bold text-foreground">Admin Dashboard</div>
+          <div className="font-heading text-2xl font-bold text-foreground">Bảng điều khiển quản trị</div>
           <div className="mt-1 text-sm text-dim">Thống kê người dùng và hoạt động đăng nhập/đăng ký.</div>
         </div>
 
@@ -114,7 +114,7 @@ export default function AdminDashboard() {
         )}
 
         <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard icon="lucide:users" label="Tổng số user" value={userCount ?? '—'} index={0} />
+          <StatCard icon="lucide:users" label="Tổng số người dùng" value={userCount ?? '—'} index={0} />
           <StatCard icon="lucide:user-plus" label={`Đăng ký (${authEvents.length} ngày gần nhất)`} value={totalSignups} index={1} />
           <StatCard icon="lucide:log-in" label={`Đăng nhập (${authEvents.length} ngày gần nhất)`} value={totalLogins} index={2} />
           <StatCard icon="lucide:log-out" label={`Đăng xuất (${authEvents.length} ngày gần nhất)`} value={totalLogouts} index={3} />

@@ -225,6 +225,31 @@ def test_different_scope_value_change_aggregates_as_template_variant() -> None:
     assert plan.relations[0].signals["validated_conflict_count"] == 0
 
 
+def test_different_reference_year_aggregates_as_temporal_series() -> None:
+    probe = _probe(
+        "The reimbursement limit in 2024 is 5 million VND for each request.",
+        scope=ClaimScope(project_id="project-a", reference_year="2024"),
+    )
+    candidate = _candidate(
+        probe,
+        text="The reimbursement limit in 2026 is 7 million VND for each request.",
+        scope=ClaimScope(project_id="project-a", reference_year="2026"),
+    )
+
+    plan = plan_chunk_deduplication(
+        (probe,),
+        (candidate,),
+        embedding_model="embedding-v1",
+        enable_exact_reuse=True,
+    )
+
+    assert plan.conflict_candidate_count == 0
+    assert plan.temporal_series_count == 1
+    assert plan.metadata_by_chunk_index[0]["relation_type"] == "temporal_series"
+    assert plan.relations[0].relation_type is RelationType.TEMPORAL_SERIES
+    assert plan.relations[0].detector_version == "chunk-preembedding-v3"
+
+
 def test_same_batch_exact_chunks_share_the_representative_vector() -> None:
     first = _probe(
         "Company registration number 0123456789.",

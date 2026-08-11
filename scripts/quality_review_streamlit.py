@@ -35,7 +35,9 @@ RELATION_LABELS = {
     RelationType.EXACT_CONTENT.value: "Exact duplicate",
     RelationType.NEAR_DUPLICATE.value: "Near duplicate",
     RelationType.VERSION_CANDIDATE.value: "Version / thêm-sửa",
+    RelationType.TEMPORAL_SERIES.value: "Chuỗi dữ liệu theo thời kỳ",
     RelationType.CONFLICT_CANDIDATE.value: "Conflict",
+    RelationType.TEMPLATE_VARIANT.value: "Cùng mẫu, khác phạm vi",
     RelationType.DISTINCT.value: "Distinct",
     RelationType.RELATED.value: "Related",
 }
@@ -44,7 +46,9 @@ RELATION_TONES = {
     RelationType.EXACT_CONTENT.value: "#d9f99d",
     RelationType.NEAR_DUPLICATE.value: "#fde68a",
     RelationType.VERSION_CANDIDATE.value: "#bae6fd",
+    RelationType.TEMPORAL_SERIES.value: "#c7d2fe",
     RelationType.CONFLICT_CANDIDATE.value: "#fecaca",
+    RelationType.TEMPLATE_VARIANT.value: "#e9d5ff",
     RelationType.DISTINCT.value: "#e5e7eb",
     RelationType.RELATED.value: "#ddd6fe",
 }
@@ -401,16 +405,20 @@ def _chunk_pair_evidence(
 
 def _relation_priority(relation_type: str) -> int:
     if "conflict" in relation_type:
-        return 5
+        return 6
     if relation_type in {RelationType.VERSION_CANDIDATE.value, "version"}:
+        return 5
+    if relation_type == RelationType.TEMPORAL_SERIES.value:
         return 4
     if relation_type == RelationType.NEAR_DUPLICATE.value:
         return 3
-    if relation_type == RelationType.EXACT_CONTENT.value:
+    if relation_type == RelationType.TEMPLATE_VARIANT.value:
         return 2
-    if relation_type == RelationType.RELATED.value:
+    if relation_type == RelationType.EXACT_CONTENT.value:
         return 1
-    return 0
+    if relation_type == RelationType.RELATED.value:
+        return 0
+    return -1
 
 
 def _feedback_sidebar(

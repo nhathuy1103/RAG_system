@@ -246,6 +246,7 @@ class GovernanceServiceStub:
             content="Grounded answer [SRC-1]",
             created_at=NOW,
             answer_status="COMPLETED",
+            error_code="CITATION_RETRY_RECOVERED",
             citations=(
                 EnterpriseCitation(
                     id=CITATION_ID,
@@ -275,10 +276,12 @@ class QuestionServiceStub:
         *,
         filters: dict[str, object],
         trace_id: str | None = None,
+        user_id: UUID | None = None,
     ) -> AskQuestionResult:
         assert conversation_id == CONVERSATION_ID
         assert question == "What is the policy?"
         assert filters == {}
+        assert user_id == USER_ID
         user_message = EnterpriseMessage(
             id=USER_MESSAGE_ID,
             conversation_id=conversation_id,
@@ -313,6 +316,7 @@ class QuestionServiceStub:
             citations=(citation,),
             retrieval_strategy="secure_keyword",
             evidence_count=1,
+            candidate_count=3,
             trace_id=trace_id,
         )
 
@@ -462,7 +466,13 @@ async def test_question_endpoint_returns_frontend_answer_contract() -> None:
     payload = response.json()
     assert payload["message_id"] == str(ANSWER_MESSAGE_ID)
     assert payload["answer_status"] == "ANSWERED"
-    assert payload["retrieval"] == {"strategy": "secure_keyword", "evidence_count": 1}
+    assert payload["retrieval"] == {
+        "strategy": "secure_keyword",
+        "candidate_count": 3,
+        "evidence_count": 1,
+        "gate_reason": None,
+    }
+    assert payload["error_code"] is None
     assert payload["citations"][0] == {
         "document_id": str(DOCUMENT_ID),
         "document_version_id": str(VERSION_ID),
@@ -484,6 +494,7 @@ async def test_conversation_history_normalizes_internal_answer_statuses() -> Non
     messages = response.json()["messages"]
     assert messages[0]["answer_status"] is None
     assert messages[1]["answer_status"] == "ANSWERED"
+    assert messages[1]["error_code"] == "CITATION_RETRY_RECOVERED"
     assert messages[1]["citations"][0]["document_version_id"] == str(VERSION_ID)
 
 

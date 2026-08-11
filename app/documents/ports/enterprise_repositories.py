@@ -9,6 +9,8 @@ from uuid import UUID
 
 from app.documents.domain.enterprise_models import (
     AccessDecision,
+    DocumentMetadataAssertion,
+    DocumentSearchability,
     DocumentVersion,
     DocumentVersionReviewContext,
     InitialDocumentUpload,
@@ -83,6 +85,10 @@ class EnterpriseDocumentRepository(Protocol):
 
     async def get_document(self, document_id: UUID) -> KnowledgeDocument | None: ...
 
+    async def list_searchability(
+        self, *, document_id: UUID | None
+    ) -> list[DocumentSearchability]: ...
+
     async def create_document(self, value: NewKnowledgeDocument) -> KnowledgeDocument: ...
 
     async def update_document(
@@ -105,6 +111,18 @@ class EnterpriseDocumentRepository(Protocol):
         note: str | None,
         rejection_reason: str | None,
     ) -> DocumentVersion: ...
+
+    async def list_metadata_assertions(
+        self, version_id: UUID, *, verification_status: str | None
+    ) -> list[DocumentMetadataAssertion]: ...
+
+    async def review_metadata_assertion(
+        self,
+        assertion_id: UUID,
+        *,
+        decision: str,
+        rejection_reason: str | None,
+    ) -> DocumentMetadataAssertion: ...
 
     async def publish_version(self, version_id: UUID) -> DocumentVersion: ...
 

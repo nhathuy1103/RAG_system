@@ -21,6 +21,10 @@ _SOURCE_MARKER_PATTERN = re.compile(r"\[(SRC-[^\[\]]+)\]")
 class CitationValidationError(RuntimeError):
     """Raised when an answer's citations cannot be traced to supplied evidence."""
 
+    def __init__(self, message: str, *, code: str = "INVALID_CITATION") -> None:
+        super().__init__(message)
+        self.code = code
+
 
 def build_evidence_aliases(
     evidence: tuple[RetrievalCandidate, ...],
@@ -44,20 +48,28 @@ def validate_citation_hit(
 
     expected = evidence_by_alias.get(hit.source_id)
     if expected is None:
-        raise CitationValidationError(f"Unknown citation source: {hit.source_id}")
+        raise CitationValidationError(
+            f"Unknown citation source: {hit.source_id}",
+            code="UNKNOWN_CITATION_SOURCE",
+        )
     if hit.source_id in accepted_source_ids:
-        raise CitationValidationError(f"Duplicate citation event: {hit.source_id}")
+        raise CitationValidationError(
+            f"Duplicate citation event: {hit.source_id}",
+            code="DUPLICATE_CITATION_EVENT",
+        )
     expected_ordinal = len(accepted_source_ids) + 1
     if hit.ordinal != expected_ordinal:
         raise CitationValidationError(
-            f"Citation {hit.source_id} has ordinal {hit.ordinal}; expected {expected_ordinal}"
+            f"Citation {hit.source_id} has ordinal {hit.ordinal}; expected {expected_ordinal}",
+            code="INVALID_CITATION_ORDER",
         )
     if (
         hit.candidate.chunk.id != expected.chunk.id
         or hit.candidate.chunk.document_id != expected.chunk.document_id
     ):
         raise CitationValidationError(
-            f"Citation {hit.source_id} is attached to evidence outside its alias"
+            f"Citation {hit.source_id} is attached to evidence outside its alias",
+            code="CITATION_EVIDENCE_MISMATCH",
         )
     return expected
 
@@ -71,21 +83,32 @@ def validate_answer_citations(
 ) -> tuple[str, ...]:
     """Validate final marker/event consistency in first-appearance order."""
 
+    if require_citation and not answer.strip():
+        raise CitationValidationError(
+            "Grounded answer is empty",
+            code="EMPTY_GROUNDED_ANSWER",
+        )
+
     referenced = tuple(
         dict.fromkeys(match.group(1) for match in _SOURCE_MARKER_PATTERN.finditer(answer))
     )
     unknown = tuple(source_id for source_id in referenced if source_id not in evidence_by_alias)
     if unknown:
         raise CitationValidationError(
-            "Answer contains unknown citation source(s): " + ", ".join(unknown)
+            "Answer contains unknown citation source(s): " + ", ".join(unknown),
+            code="UNKNOWN_CITATION_SOURCE",
         )
     accepted = tuple(accepted_source_ids)
     if accepted != referenced:
         raise CitationValidationError(
-            "Citation events do not match the markers present in the answer"
+            "Citation events do not match the markers present in the answer",
+            code="CITATION_MARKER_EVENT_MISMATCH",
         )
-    if require_citation and answer.strip() and not referenced:
-        raise CitationValidationError("Grounded answer contains no citation marker")
+    if require_citation and not referenced:
+        raise CitationValidationError(
+            "Grounded answer contains no citation marker",
+            code="MISSING_CITATION_MARKER",
+        )
     return referenced
 
 

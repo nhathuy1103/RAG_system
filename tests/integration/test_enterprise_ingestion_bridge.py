@@ -61,7 +61,7 @@ async def test_enterprise_queue_claim_and_completion_use_version_scoped_rpcs() -
             assert body["p_stage"] == "EXTRACTION"
             assert body["p_status"] == "STARTED"
             return httpx.Response(200, json={"id": 1})
-        if request.url.path.endswith("/complete_processing_job"):
+        if request.url.path.endswith("/complete_processing_job_v3"):
             body = json.loads(request.content)
             assert body["p_job_id"] == str(JOB_ID)
             assert body["p_chunks"][0]["id"] == str(CHUNK_ID)
@@ -115,7 +115,7 @@ async def test_enterprise_queue_claim_and_completion_use_version_scoped_rpcs() -
     assert requests == [
         "/rest/v1/rpc/claim_enterprise_ingestion_job",
         "/rest/v1/rpc/record_processing_stage",
-        "/rest/v1/rpc/complete_processing_job",
+        "/rest/v1/rpc/complete_processing_job_v3",
     ]
 
 

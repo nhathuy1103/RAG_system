@@ -9,6 +9,7 @@ export const RELATION_LABELS = {
   related: 'Có liên quan',
   distinct: 'Tách biệt',
   template_variant: 'Cùng mẫu, khác phạm vi',
+  temporal_series: 'Chuỗi dữ liệu theo thời kỳ',
 };
 
 export const STATUS_LABELS = {
@@ -46,6 +47,14 @@ export const REASON_CODE_LABELS = {
   structural_numbers_ignored: 'Đã bỏ qua số tham chiếu cấu trúc',
   template_overlap_without_claim_alignment: 'Mẫu giống nhưng không cùng claim',
   scope_unknown_conflict_suppressed: 'Chưa đủ scope để xác nhận mâu thuẫn',
+  temporal_period_difference: 'Khác kỳ tham chiếu',
+  different_reference_year: 'Khác năm tham chiếu',
+  different_reference_quarter: 'Khác quý tham chiếu',
+  effective_date_gap: 'Khác xa thời điểm hiệu lực',
+  historical_series_not_conflict: 'Dữ liệu lịch sử theo kỳ, không phải mâu thuẫn',
+  effective_period_version_difference: 'Khác phiên bản theo thời điểm hiệu lực',
+  value_difference_across_temporal_periods: 'Giá trị khác nhau giữa các kỳ',
+  temporal_similarity_below_threshold: 'Khác kỳ nhưng chưa đủ tương đồng nội dung',
 };
 
 export const SCORE_SIGNAL_LABELS = {
@@ -54,6 +63,7 @@ export const SCORE_SIGNAL_LABELS = {
   containment: 'Mức bao phủ nội dung',
   document_probe_coverage: 'Độ phủ tài liệu',
   template_similarity: 'Tương đồng mẫu',
+  temporal_divergence_ratio: 'Tỷ lệ bằng chứng khác kỳ',
 };
 
 export const BOOLEAN_SIGNAL_LABELS = {
@@ -64,6 +74,10 @@ export const BOOLEAN_SIGNAL_LABELS = {
   policy_modality_mismatch: [
     'Khác mức độ chính sách',
     'Không khác mức độ chính sách',
+  ],
+  temporal_majority_guard_applied: [
+    'Đã chặn nâng cấp conflict vì đa số bằng chứng khác kỳ',
+    'Không cần áp dụng chặn conflict theo thời kỳ',
   ],
 };
 

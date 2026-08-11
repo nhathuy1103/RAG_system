@@ -319,7 +319,10 @@ begin
         from public.source_files
         join public.document_versions
           on document_versions.source_file_id = source_files.id
+        join public.knowledge_documents as registered_documents
+          on registered_documents.id = document_versions.document_id
         where source_files.sha256 = normalized_sha
+          and registered_documents.status <> 'ARCHIVED'
     ) then
         raise exception 'An identical source is already registered'
             using errcode = '23505';

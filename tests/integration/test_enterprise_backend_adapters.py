@@ -92,8 +92,11 @@ JOB_ROW = {
 @pytest.mark.anyio
 async def test_publish_calls_atomic_rpc_and_parses_version() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
-        assert request.url.path.endswith("/rpc/publish_document_version")
-        assert json.loads(request.content) == {"p_version_id": str(VERSION_ID)}
+        assert request.url.path.endswith("/rpc/approve_and_publish_document_version")
+        assert json.loads(request.content) == {
+            "p_version_id": str(VERSION_ID),
+            "p_note": "Approved and published through the guided admin workflow",
+        }
         return httpx.Response(200, json=VERSION_ROW)
 
     async with httpx.AsyncClient(
@@ -254,7 +257,7 @@ async def test_user_membership_projections_include_related_organizations() -> No
 @pytest.mark.anyio
 async def test_enterprise_search_uses_security_rpc_and_preserves_version_id() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
-        assert request.url.path.endswith("/rpc/search_enterprise_knowledge")
+        assert request.url.path.endswith("/rpc/search_enterprise_retrieval_projection")
         assert json.loads(request.content)["p_query"] == "leave policy"
         return httpx.Response(
             200,
@@ -285,7 +288,7 @@ async def test_enterprise_search_uses_security_rpc_and_preserves_version_id() ->
 @pytest.mark.anyio
 async def test_enterprise_dense_search_uses_acl_gated_pgvector_rpc() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
-        assert request.url.path.endswith("/rpc/match_enterprise_document_chunks")
+        assert request.url.path.endswith("/rpc/match_enterprise_retrieval_projection")
         body = json.loads(request.content)
         assert len(body["p_query_embedding"]) == 1536
         assert body["p_filters"] == {"category": "HR"}
@@ -316,6 +319,57 @@ async def test_enterprise_dense_search_uses_acl_gated_pgvector_rpc() -> None:
 
     assert hits[0].chunk_id == CHUNK_ID
     assert hits[0].document_version_id == VERSION_ID
+
+
+@pytest.mark.anyio
+async def test_exact_document_route_and_context_expansion_use_acl_gated_rpcs() -> None:
+    sibling_id = UUID("60000000-0000-0000-0000-000000000016")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        if request.url.path.endswith("/rpc/resolve_enterprise_document_number"):
+            assert body == {"p_document_number": "QĐ-116/2025"}
+            return httpx.Response(
+                200,
+                json=[
+                    {
+                        "document_id": str(DOCUMENT_ID),
+                        "document_version_id": str(VERSION_ID),
+                        "title": "Leave policy",
+                    }
+                ],
+            )
+        assert request.url.path.endswith("/rpc/expand_enterprise_chunk_context")
+        assert body["p_chunk_ids"] == [str(CHUNK_ID)]
+        assert body["p_sibling_window"] == 1
+        return httpx.Response(
+            200,
+            json=[
+                {
+                    "chunk_id": str(sibling_id),
+                    "document_id": str(DOCUMENT_ID),
+                    "document_version_id": str(VERSION_ID),
+                    "title": "Leave policy",
+                    "content": "The next step records the review.",
+                    "score": 0.5,
+                    "metadata": {"expansion_kind": "sibling"},
+                }
+            ],
+        )
+
+    async with httpx.AsyncClient(
+        base_url="https://example.test/rest/v1",
+        transport=httpx.MockTransport(handler),
+    ) as client:
+        repository = PostgrestGovernanceRepository(client)
+        routes = await repository.resolve_document_number("QĐ-116/2025")
+        expanded = await repository.expand_context(
+            (CHUNK_ID,), sibling_window=1, limit=10
+        )
+
+    assert routes == [DOCUMENT_ID]
+    assert expanded[0].chunk_id == sibling_id
+    assert expanded[0].metadata["expansion_kind"] == "sibling"
 
 
 @pytest.mark.anyio

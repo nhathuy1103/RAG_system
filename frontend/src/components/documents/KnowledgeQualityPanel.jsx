@@ -38,6 +38,7 @@ const EVIDENCE_TYPE_LABELS = {
   version_candidate: 'Có thể là nội dung thêm/sửa',
   conflict_candidate: 'Có thể mâu thuẫn',
   template_variant: 'Cùng mẫu, khác phạm vi',
+  temporal_series: 'Cùng chủ đề, khác thời kỳ',
   source_only: 'Chỉ có trong tài liệu mới',
   target_only: 'Chỉ có trong tài liệu cũ',
   distinct: 'Khác nội dung',
@@ -1353,6 +1354,7 @@ export default function KnowledgeQualityPanel({
                 const signals = isRecord(relation.signals) ? relation.signals : {};
                 const summary = signalSummary(signals);
                 const isConflict = relation.relation_type.includes('conflict');
+                const isTemporalSeries = relation.relation_type === 'temporal_series';
                 const expanded = expandedRelationId === relation.id;
                 const decisionOpen = draft?.kind === 'resolve'
                   && draft.relationId === relation.id;
@@ -1461,7 +1463,7 @@ export default function KnowledgeQualityPanel({
                             onClick={() => beginDraft('resolve', relation.id, 'confirm_conflict')}
                           />
                         </>
-                      ) : (
+                      ) : isTemporalSeries ? null : (
                         <>
                           <ReviewAction
                             icon="lucide:copy-check"

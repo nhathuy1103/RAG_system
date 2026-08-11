@@ -14,6 +14,9 @@ from app.pipeline.documents.application.validation import (
     DocumentValidationConfig,
 )
 from app.pipeline.indexing.adapters.context_enrichers import OpenAIChunkContextEnricherConfig
+from app.pipeline.indexing.adapters.document_metadata_enrichers import (
+    OpenAIDocumentMetadataEnricherConfig,
+)
 from app.pipeline.indexing.adapters.embedding_providers import EmbeddingProviderConfig
 
 
@@ -79,6 +82,11 @@ class Settings:
     contextual_enrichment_max_retries: int = 2
     contextual_enrichment_retry_backoff_ms: int = 500
     contextual_enrichment_strict: bool = False
+    document_metadata_enrichment_enabled: bool = True
+    document_metadata_enrichment_model: str = "gpt-4o-mini"
+    document_metadata_enrichment_max_chars: int = 16000
+    document_metadata_enrichment_max_output_tokens: int = 1200
+    document_metadata_enrichment_strict: bool = False
     qdrant_url: str | None = None
     qdrant_port: int = 6333
     qdrant_api_key: str | None = None
@@ -128,6 +136,15 @@ class Settings:
             max_retries=self.contextual_enrichment_max_retries,
             retry_backoff_seconds=self.contextual_enrichment_retry_backoff_ms / 1000,
             strict=self.contextual_enrichment_strict,
+        )
+
+    @property
+    def document_metadata_enrichment_config(self) -> OpenAIDocumentMetadataEnricherConfig:
+        return OpenAIDocumentMetadataEnricherConfig(
+            model=self.document_metadata_enrichment_model,
+            max_document_chars=self.document_metadata_enrichment_max_chars,
+            max_output_tokens=self.document_metadata_enrichment_max_output_tokens,
+            strict=self.document_metadata_enrichment_strict,
         )
 
 
@@ -243,6 +260,26 @@ def _load_settings() -> Settings:
             os.getenv("CONTEXTUAL_ENRICHMENT_STRICT"),
             False,
         ),
+        document_metadata_enrichment_enabled=_as_bool(
+            os.getenv("DOCUMENT_METADATA_ENRICHMENT_ENABLED"),
+            True,
+        ),
+        document_metadata_enrichment_model=os.getenv(
+            "DOCUMENT_METADATA_ENRICHMENT_MODEL",
+            os.getenv("OPENAI_CHAT_MODEL", "gpt-4o-mini"),
+        ).strip(),
+        document_metadata_enrichment_max_chars=_as_int(
+            os.getenv("DOCUMENT_METADATA_ENRICHMENT_MAX_CHARS"),
+            16000,
+        ),
+        document_metadata_enrichment_max_output_tokens=_as_int(
+            os.getenv("DOCUMENT_METADATA_ENRICHMENT_MAX_OUTPUT_TOKENS"),
+            1200,
+        ),
+        document_metadata_enrichment_strict=_as_bool(
+            os.getenv("DOCUMENT_METADATA_ENRICHMENT_STRICT"),
+            False,
+        ),
         qdrant_url=os.getenv("QDRANT_URL") or None,
         qdrant_port=_as_int(os.getenv("QDRANT_PORT"), 6333),
         qdrant_api_key=os.getenv("QDRANT_API_KEY") or None,
@@ -280,8 +317,15 @@ def _validate(settings: Settings) -> None:
         raise ValueError("EXTRACTION_QUALITY_MODE must be rag or structured.")
     if settings.max_extraction_provider_attempts <= 0:
         raise ValueError("MAX_EXTRACTION_PROVIDER_ATTEMPTS must be > 0.")
-    if settings.chunking_strategy not in {"structure_recursive", "content_aware"}:
-        raise ValueError("CHUNKING_STRATEGY must be structure_recursive or content_aware.")
+    if settings.chunking_strategy not in {
+        "structure_recursive",
+        "content_aware",
+        "parent_child_structure",
+    }:
+        raise ValueError(
+            "CHUNKING_STRATEGY must be structure_recursive, content_aware, "
+            "or parent_child_structure."
+        )
     if settings.chunk_size <= 0:
         raise ValueError("CHUNK_SIZE must be > 0.")
     if settings.chunk_overlap < 0:
@@ -318,11 +362,28 @@ def _validate(settings: Settings) -> None:
     if settings.contextual_enrichment_retry_backoff_ms < 0:
         raise ValueError("CONTEXTUAL_ENRICHMENT_RETRY_BACKOFF_MS must be >= 0.")
     if (
+        settings.document_metadata_enrichment_enabled
+        and not settings.document_metadata_enrichment_model
+    ):
+        raise ValueError("DOCUMENT_METADATA_ENRICHMENT_MODEL must not be empty when enabled.")
+    if settings.document_metadata_enrichment_max_chars <= 0:
+        raise ValueError("DOCUMENT_METADATA_ENRICHMENT_MAX_CHARS must be > 0.")
+    if settings.document_metadata_enrichment_max_output_tokens <= 0:
+        raise ValueError("DOCUMENT_METADATA_ENRICHMENT_MAX_OUTPUT_TOKENS must be > 0.")
+    if (
         settings.app_env == "production"
         and settings.contextual_enrichment_enabled
         and not settings.openai_api_key
     ):
         raise ValueError("OPENAI_API_KEY is required for contextual enrichment in production.")
+    if (
+        settings.app_env == "production"
+        and settings.document_metadata_enrichment_enabled
+        and not settings.openai_api_key
+    ):
+        raise ValueError(
+            "OPENAI_API_KEY is required for document metadata enrichment in production."
+        )
     if settings.qdrant_upsert_batch_size <= 0:
         raise ValueError("QDRANT_UPSERT_BATCH_SIZE must be > 0.")
     if settings.qdrant_max_retries < 0:

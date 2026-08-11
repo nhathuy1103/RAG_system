@@ -13,8 +13,8 @@ DOCUMENT_NORMALIZATION_VERSION = "knowledge-document-identity-v2"
 CHUNK_NORMALIZATION_VERSION = "knowledge-chunk-identity-v1"
 # Backwards-compatible import name for callers that mean document identity.
 NORMALIZATION_VERSION = DOCUMENT_NORMALIZATION_VERSION
-DETECTOR_VERSION = "knowledge-quality-v3"
-CHUNK_PREEMBEDDING_DETECTOR_VERSION = "chunk-preembedding-v2"
+DETECTOR_VERSION = "knowledge-quality-v4"
+CHUNK_PREEMBEDDING_DETECTOR_VERSION = "chunk-preembedding-v3"
 CLAIM_COMPARISON_VERSION = "claim-comparison-v2"
 
 
@@ -29,11 +29,13 @@ class RelationType(StrEnum):
     DISTINCT = "distinct"
     TECHNICAL_DUPLICATE = "technical_duplicate"
     TEMPLATE_VARIANT = "template_variant"
+    TEMPORAL_SERIES = "temporal_series"
 
 
 class ScopeComparison(StrEnum):
     SAME_SCOPE = "same_scope"
     DIFFERENT_SCOPE = "different_scope"
+    TEMPORAL_DIVERGENCE = "temporal_divergence"
     UNKNOWN_SCOPE = "unknown_scope"
 
 
@@ -81,6 +83,9 @@ class ClaimScope:
     contract_type: str | None = None
     subject_entities: tuple[str, ...] = ()
     effective_date: str | None = None
+    reference_year: str | None = None
+    reference_quarter: str | None = None
+    reference_period_label: str | None = None
     version_id: str | None = None
 
     def to_metadata(self) -> dict[str, object]:
@@ -93,6 +98,9 @@ class ClaimScope:
             "contract_type": self.contract_type,
             "subject_entities": list(self.subject_entities),
             "effective_date": self.effective_date,
+            "reference_year": self.reference_year,
+            "reference_quarter": self.reference_quarter,
+            "reference_period_label": self.reference_period_label,
             "version_id": self.version_id,
         }
 
@@ -123,6 +131,9 @@ class ClaimScope:
             contract_type=optional_text("contract_type"),
             subject_entities=entities,
             effective_date=optional_text("effective_date"),
+            reference_year=optional_text("reference_year"),
+            reference_quarter=optional_text("reference_quarter"),
+            reference_period_label=optional_text("reference_period_label"),
             version_id=optional_text("version_id"),
         )
 

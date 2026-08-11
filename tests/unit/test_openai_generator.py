@@ -2,7 +2,15 @@
 
 import pytest
 
-from app.generation.adapters.openai_generator import OpenAIAnswerGenerator
+from app.generation.adapters.openai_generator import (
+    OpenAIAnswerGenerator,
+    _evidence_trace_metadata,
+)
+from app.generation.application.citation_validation import (
+    CitationValidationError,
+    build_evidence_aliases,
+    validate_answer_citations,
+)
 from app.generation.domain import CitationHit, TokenChunk, UsageInfo
 from app.retrieval.domain.models import EvidenceChunk, RetrievalCandidate
 
@@ -28,6 +36,72 @@ def _candidate(
         rank=1,
         source="hybrid",
     )
+
+
+def test_evidence_trace_metadata_contains_source_identity_and_canonical_fields() -> None:
+    evidence = (
+        _candidate(
+            CHUNK_ID_A,
+            "Policy content",
+            document_id="doc-a",
+            metadata={
+                "document_version_id": "version-a",
+                "retrieval_metadata": {
+                    "project_code": "P16",
+                    "year": 2026,
+                    "content_kind": "table",
+                },
+            },
+        ),
+        _candidate(
+            CHUNK_ID_B,
+            "More policy content",
+            document_id="doc-b",
+            metadata={
+                "document_version_id": "version-b",
+                "retrieval_metadata": {
+                    "project_code": "P16",
+                    "language": "vi",
+                },
+            },
+        ),
+    )
+
+    metadata = _evidence_trace_metadata(evidence)
+
+    assert metadata["evidence_document_ids"] == "doc-a,doc-b"
+    assert metadata["evidence_document_version_ids"] == "version-a,version-b"
+    assert metadata["evidence_chunk_ids"] == "chunk-a,chunk-b"
+    assert metadata["evidence_project_code"] == "P16"
+    assert metadata["evidence_year"] == "2026"
+    assert metadata["evidence_content_kind"] == "table"
+    assert metadata["evidence_language"] == "vi"
+
+
+def test_missing_citation_has_retriable_validation_code() -> None:
+    evidence = (_candidate(CHUNK_ID_A, "Grounded policy content"),)
+
+    with pytest.raises(CitationValidationError) as captured:
+        validate_answer_citations(
+            "A grounded answer without a marker.",
+            evidence_by_alias=build_evidence_aliases(evidence),
+            accepted_source_ids=(),
+        )
+
+    assert captured.value.code == "MISSING_CITATION_MARKER"
+
+
+def test_unknown_citation_remains_an_integrity_failure() -> None:
+    evidence = (_candidate(CHUNK_ID_A, "Grounded policy content"),)
+
+    with pytest.raises(CitationValidationError) as captured:
+        validate_answer_citations(
+            "Fabricated source [SRC-999].",
+            evidence_by_alias=build_evidence_aliases(evidence),
+            accepted_source_ids=(),
+        )
+
+    assert captured.value.code == "UNKNOWN_CITATION_SOURCE"
 
 
 class _Delta:

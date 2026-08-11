@@ -96,6 +96,10 @@ class PersistedChunk:
     token_count: int
     metadata: dict[str, object]
     embedding: tuple[float, ...] = ()
+    parent: dict[str, object] | None = None
+    projection: dict[str, object] = field(default_factory=dict)
+    document_metadata_assertions: tuple[dict[str, object], ...] = ()
+    version_artifact: dict[str, object] | None = None
 
 
 @dataclass(frozen=True, slots=True)

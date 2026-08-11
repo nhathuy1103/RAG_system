@@ -5,7 +5,9 @@ from __future__ import annotations
 import asyncio
 import logging
 import math
-from dataclasses import replace
+import re
+from dataclasses import dataclass, replace
+from datetime import date
 from typing import Final
 from uuid import UUID
 
@@ -30,6 +32,7 @@ from app.governance.domain.models import (
     SearchHit,
 )
 from app.governance.ports.repositories import GovernanceRepository, NewEnterpriseCitation
+from app.infrastructure.telemetry import Observation, Telemetry
 from app.pipeline.indexing.ports.embedding_provider import EmbeddingProvider
 from app.retrieval.adapters.local_sufficiency import KeywordOverlapSufficiencyChecker
 from app.retrieval.adapters.mmr_reranker import MaximalMarginalRelevanceReranker
@@ -43,10 +46,41 @@ CONTROLLED_NO_ANSWER: Final = (
     "để trả lời câu hỏi này."
 )
 GENERATION_FAILED_ANSWER: Final = "Không thể tạo câu trả lời vào lúc này. Vui lòng thử lại."
-_ALLOWED_FILTERS: Final = frozenset({"document_type", "category", "document_id", "metadata"})
+_CITATION_RETRY_INSTRUCTION: Final = (
+    "\n\nYÊU CẦU SỬA TRÍCH DẪN: Hãy trả lời lại toàn bộ câu hỏi chỉ từ "
+    "các nguồn đã cung cấp. Mọi nhận định dùng thông tin từ nguồn phải "
+    "có ít nhất một marker [SRC-<số>] hợp lệ ngay sau nhận định. "
+    "Không được tự tạo nhãn nguồn mới."
+)
+_RETRIABLE_CITATION_CODES: Final = frozenset(
+    {"EMPTY_GROUNDED_ANSWER", "MISSING_CITATION_MARKER"}
+)
+_FALLBACK_EXCERPT_CHARS: Final = 1800
+_CANONICAL_BUSINESS_FILTERS: Final = frozenset(
+    {
+        "document_type",
+        "category",
+        "domain",
+        "department_code",
+        "project_code",
+        "year",
+        "effective_at",
+    }
+)
+_ALLOWED_FILTERS: Final = _CANONICAL_BUSINESS_FILTERS | {"document_id", "metadata"}
 _ENTERPRISE_EMBEDDING_DIMENSIONS: Final = 1536
 _MAX_CONTEXTUAL_QUERY_CHARS: Final = 4000
 _MAX_HISTORY_QUESTION_CHARS: Final = 1000
+_DOCUMENT_NUMBER = re.compile(
+    r"(?<!\w)[A-ZÀ-ỸĐ]{1,10}(?:[-\s][A-ZÀ-ỸĐ]{1,10})*"
+    r"[-\s]?\d{1,6}/\d{4}(?:/[A-ZÀ-ỸĐ0-9.-]{1,20})?(?!\w)",
+    re.IGNORECASE,
+)
+_BROAD_CONTEXT_TERMS = re.compile(
+    r"\b(toàn bộ|đầy đủ|quy trình|các bước|điều kiện|ngoại lệ|"
+    r"complete|entire|process|steps|conditions|exceptions)\b",
+    re.IGNORECASE,
+)
 
 
 class GovernanceValidationError(ValueError):
@@ -54,6 +88,14 @@ class GovernanceValidationError(ValueError):
         super().__init__(message)
         self.code = code
         self.message = message
+
+
+@dataclass(frozen=True)
+class _GenerationAttempt:
+    answer: str
+    citations: tuple[NewEnterpriseCitation, ...]
+    accepted_source_ids: tuple[str, ...]
+    usage: UsageInfo | None
 
 
 class GovernanceService:
@@ -66,10 +108,15 @@ class GovernanceService:
         normalized = query.strip()
         if not normalized:
             raise GovernanceValidationError("EMPTY_QUERY", "Search query must not be empty")
+        safe_filters = await _route_exact_document_number(
+            self._repository,
+            normalized,
+            _validated_filters(filters),
+        )
         return await self._repository.search(
             normalized,
             limit=limit,
-            filters=_validated_filters(filters),
+            filters=safe_filters,
         )
 
     async def create_conversation(self, title: str | None) -> EnterpriseConversation:
@@ -164,6 +211,7 @@ class EnterpriseQuestionService:
         mmr_lambda: float = 0.7,
         max_chunks_per_document: int = 2,
         history_limit: int = 6,
+        telemetry: Telemetry | None = None,
     ) -> None:
         if not model_name.strip():
             raise ValueError("model_name must not be blank")
@@ -191,6 +239,7 @@ class EnterpriseQuestionService:
         self._rrf_rank_constant = rrf_rank_constant
         self._max_chunks_per_document = max_chunks_per_document
         self._history_limit = history_limit
+        self._telemetry = telemetry or Telemetry()
         self._reranker = MaximalMarginalRelevanceReranker(lambda_param=mmr_lambda)
         self._sufficiency_checker = sufficiency_checker or KeywordOverlapSufficiencyChecker(
             min_overlap_ratio=0.3
@@ -203,6 +252,82 @@ class EnterpriseQuestionService:
         *,
         filters: dict[str, object],
         trace_id: str | None = None,
+        user_id: UUID | None = None,
+    ) -> AskQuestionResult:
+        langfuse_trace_id = self._telemetry.create_trace_id(
+            seed=f"enterprise-question:{trace_id}"
+        ) if trace_id else self._telemetry.create_trace_id()
+        with self._telemetry.observe(
+            "enterprise.answer_question",
+            as_type="chain",
+            trace_id=langfuse_trace_id,
+            input={
+                "question": self._telemetry.content(question),
+                "conversation_id": str(conversation_id),
+                "requested_filter_fields": sorted(filters),
+            },
+            metadata={
+                "request_id": trace_id or "",
+                "conversation_id": str(conversation_id),
+                "requested_filter_fields": ",".join(sorted(filters)) or "none",
+                "retrieval_top_k": self._retrieval_top_k,
+                "sparse_top_k": self._sparse_top_k,
+                "dense_top_k": self._dense_top_k,
+                "chat_model": self._model_name,
+            },
+            user_id=str(user_id) if user_id else None,
+            session_id=str(conversation_id),
+            tags=("rag", "enterprise", "chat"),
+            trace_name="enterprise-rag-chat",
+        ) as observation:
+            result = await self._ask_question(
+                conversation_id,
+                question,
+                filters=filters,
+                trace_id=trace_id,
+                root_observation=observation,
+            )
+            cited_document_ids = sorted(
+                {str(item.document_id) for item in result.citations}
+            )
+            cited_version_ids = sorted(
+                {str(item.document_version_id) for item in result.citations}
+            )
+            observation.update(
+                metadata={
+                    "answer_status": result.assistant_message.answer_status,
+                    "retrieval_strategy": result.retrieval_strategy,
+                    "candidate_count": result.candidate_count,
+                    "evidence_count": result.evidence_count,
+                    "gate_reason": result.gate_reason or "none",
+                    "error_code": result.error_code or "none",
+                    "citation_count": len(result.citations),
+                    "cited_document_ids": ",".join(cited_document_ids) or "none",
+                    "cited_document_version_ids": ",".join(cited_version_ids) or "none",
+                },
+                output={
+                    "answer": self._telemetry.content(result.assistant_message.content),
+                    "answer_status": result.assistant_message.answer_status,
+                    "retrieval_strategy": result.retrieval_strategy,
+                    "candidate_count": result.candidate_count,
+                    "evidence_count": result.evidence_count,
+                    "gate_reason": result.gate_reason,
+                    "error_code": result.error_code,
+                    "citation_count": len(result.citations),
+                    "document_ids": cited_document_ids,
+                    "document_version_ids": cited_version_ids,
+                },
+            )
+            return result
+
+    async def _ask_question(
+        self,
+        conversation_id: UUID,
+        question: str,
+        *,
+        filters: dict[str, object],
+        trace_id: str | None,
+        root_observation: Observation,
     ) -> AskQuestionResult:
         normalized = question.strip()
         if not normalized:
@@ -212,7 +337,12 @@ class EnterpriseQuestionService:
                 "MESSAGE_TOO_LONG",
                 "Message content must not exceed 4000 characters",
             )
-        safe_filters = _validated_filters(filters)
+        safe_filters = await _route_exact_document_number(
+            self._repository,
+            normalized,
+            _validated_filters(filters),
+        )
+        root_observation.update(metadata=_filter_trace_metadata(safe_filters))
         conversation = await self._repository.get_conversation(conversation_id)
         if conversation is None:
             raise GovernanceValidationError(
@@ -229,11 +359,66 @@ class EnterpriseQuestionService:
             normalized,
         )
         try:
-            hits, retrieval_strategy = await self._retrieve_hits(
-                contextual_query,
-                sparse_query=sparse_query,
-                filters=safe_filters,
-            )
+            metadata_before_retrieval = {
+                **_filter_trace_metadata(safe_filters),
+                "metadata_stage": "before_retrieval",
+                "query_mode": (
+                    "contextual" if contextual_query != normalized else "direct"
+                ),
+                "history_message_count": min(
+                    len(conversation.messages),
+                    self._history_limit,
+                ),
+                "retrieval_top_k": self._retrieval_top_k,
+                "sparse_top_k": self._sparse_top_k,
+                "dense_top_k": self._dense_top_k,
+                "dense_enabled": self._embedding_provider is not None,
+                "embedding_model": (
+                    getattr(self._embedding_provider, "model_name", "unknown")
+                    if self._embedding_provider is not None
+                    else "disabled"
+                ),
+                "acl_scope": "published_active_readable_documents",
+            }
+            with self._telemetry.observe(
+                "retrieve-enterprise-context",
+                as_type="retriever",
+                input={
+                    "query": self._telemetry.content(contextual_query),
+                    "sparse_query": self._telemetry.content(sparse_query),
+                    "metadata_before_retrieval": {
+                        "effective_filters": dict(safe_filters),
+                        "effective_filter_fields": sorted(safe_filters),
+                        "available_filter_fields": sorted(
+                            _CANONICAL_BUSINESS_FILTERS | {"document_id"}
+                        ),
+                    },
+                },
+                metadata=metadata_before_retrieval,
+            ) as retrieval_observation:
+                hits, retrieval_strategy = await self._retrieve_hits(
+                    contextual_query,
+                    sparse_query=sparse_query,
+                    filters=safe_filters,
+                )
+                retrieval_observation.update(
+                    metadata={
+                        "metadata_stage": "after_retrieval",
+                        "retrieval_strategy": retrieval_strategy,
+                        "candidate_count": len(hits),
+                        "candidate_document_count": len(
+                            {hit.document_id for hit in hits}
+                        ),
+                    },
+                    output={
+                        "retrieval_strategy": retrieval_strategy,
+                        "candidate_count": len(hits),
+                        "candidate_document_count": len(
+                            {hit.document_id for hit in hits}
+                        ),
+                        "candidate_chunk_ids": [str(hit.chunk_id) for hit in hits],
+                    },
+                )
         except Exception:
             LOGGER.exception(
                 "Enterprise retrieval failed",
@@ -243,14 +428,17 @@ class EnterpriseQuestionService:
                 conversation_id,
                 user_message=user_message,
                 evidence_count=0,
+                candidate_count=0,
                 trace_id=trace_id,
                 error_code="RETRIEVAL_FAILED",
                 retrieval_strategy="secure_retrieval_failed",
             )
+        candidate_count = len(hits)
         evidence, hits_by_chunk, gate_reason = _build_enterprise_evidence(
             hits,
             minimum_score=None,
         )
+        sufficiency_verdict = None
         if gate_reason is None:
             reranked = self._reranker.rerank(
                 contextual_query,
@@ -266,9 +454,49 @@ class EnterpriseQuestionService:
                 UUID(candidate.chunk.id): hits_by_chunk[UUID(candidate.chunk.id)]
                 for candidate in evidence
             }
+            expanded_hits = await self._expand_context_if_needed(
+                normalized,
+                list(hits_by_chunk.values()),
+            )
+            if expanded_hits is not None:
+                evidence, hits_by_chunk, gate_reason = _build_enterprise_evidence(
+                    expanded_hits,
+                    minimum_score=None,
+                )
             verdict = self._sufficiency_checker.check(sufficiency_query, evidence)
+            sufficiency_verdict = verdict
             if not verdict.sufficient:
-                gate_reason = "insufficient_evidence"
+                LOGGER.info(
+                    "Enterprise keyword sufficiency shadow check would have rejected evidence",
+                    extra={
+                        "conversation_id": str(conversation_id),
+                        "evidence_count": len(evidence),
+                        "missing_keywords": verdict.missing or "",
+                    },
+                )
+
+        evidence_document_count = len(
+            {candidate.chunk.document_id for candidate in evidence}
+        )
+        root_observation.update(
+            metadata={
+                "retrieval_candidate_count": candidate_count,
+                "evidence_count_after_selection": len(evidence),
+                "evidence_document_count": evidence_document_count,
+                "evidence_gate_reason": gate_reason or "passed",
+                "keyword_sufficiency_mode": "shadow",
+                "keyword_sufficiency_sufficient": (
+                    sufficiency_verdict.sufficient
+                    if sufficiency_verdict is not None
+                    else None
+                ),
+                "keyword_sufficiency_missing": (
+                    (sufficiency_verdict.missing or "")[:500]
+                    if sufficiency_verdict is not None
+                    else ""
+                ),
+            }
+        )
 
         if gate_reason is not None:
             LOGGER.info(
@@ -293,62 +521,88 @@ class EnterpriseQuestionService:
                 citations=citations,
                 retrieval_strategy=retrieval_strategy,
                 evidence_count=len(evidence),
+                candidate_count=candidate_count,
+                gate_reason=gate_reason,
+                error_code=gate_reason.upper(),
                 trace_id=trace_id,
             )
 
         aliases = build_evidence_aliases(evidence)
-        text_parts: list[str] = []
-        accepted_source_ids: list[str] = []
-        pending_citations: list[NewEnterpriseCitation] = []
         usage: UsageInfo | None = None
+        completion_error_code: str | None = None
+        generation_outcome = "generated"
+        citation_attempt_count = 1
         try:
-            async for event in self._answer_generator.stream(
-                question=contextual_query,
+            attempt = await self._collect_generation_attempt(
+                contextual_query,
                 evidence=evidence,
-            ):
-                if isinstance(event, TokenChunk):
-                    text_parts.append(event.text)
-                elif isinstance(event, CitationHit):
-                    candidate = validate_citation_hit(
-                        event,
-                        evidence_by_alias=aliases,
-                        accepted_source_ids=accepted_source_ids,
-                    )
-                    accepted_source_ids.append(event.source_id)
-                    hit = hits_by_chunk[UUID(candidate.chunk.id)]
-                    pending_citations.append(
-                        NewEnterpriseCitation(
-                            document_id=hit.document_id,
-                            document_version_id=hit.document_version_id,
-                            chunk_id=hit.chunk_id,
-                            quote_text=hit.content,
-                            citation_order=event.ordinal,
-                            page_number=(
-                                hit.page_start
-                                if hit.page_start is not None and hit.page_start > 0
-                                else None
-                            ),
-                            retrieval_score=hit.score,
-                        )
-                    )
-                elif isinstance(event, UsageInfo):
-                    usage = event
-            answer = "".join(text_parts)
-            validate_answer_citations(
-                answer,
                 evidence_by_alias=aliases,
-                accepted_source_ids=accepted_source_ids,
+                hits_by_chunk=hits_by_chunk,
             )
-        except CitationValidationError:
+            usage = attempt.usage
+            try:
+                _validate_generation_attempt(attempt, evidence_by_alias=aliases)
+            except CitationValidationError as first_error:
+                if first_error.code not in _RETRIABLE_CITATION_CODES:
+                    raise
+                citation_attempt_count = 2
+                LOGGER.info(
+                    "Enterprise generated answer had no usable citation; retrying once",
+                    extra={
+                        "conversation_id": str(conversation_id),
+                        "citation_error_code": first_error.code,
+                    },
+                )
+                retry_attempt = await self._collect_generation_attempt(
+                    contextual_query + _CITATION_RETRY_INSTRUCTION,
+                    evidence=evidence,
+                    evidence_by_alias=aliases,
+                    hits_by_chunk=hits_by_chunk,
+                )
+                usage = _merge_usage(attempt.usage, retry_attempt.usage)
+                try:
+                    _validate_generation_attempt(
+                        retry_attempt,
+                        evidence_by_alias=aliases,
+                    )
+                except CitationValidationError as retry_error:
+                    if retry_error.code not in _RETRIABLE_CITATION_CODES:
+                        raise
+                    answer, pending_citations = _grounded_evidence_fallback(
+                        evidence,
+                        hits_by_chunk=hits_by_chunk,
+                    )
+                    completion_error_code = "CITATION_FALLBACK_USED"
+                    generation_outcome = "citation_fallback_used"
+                else:
+                    answer = retry_attempt.answer
+                    pending_citations = retry_attempt.citations
+                    completion_error_code = "CITATION_RETRY_RECOVERED"
+                    generation_outcome = "citation_retry_recovered"
+            else:
+                answer = attempt.answer
+                pending_citations = attempt.citations
+        except CitationValidationError as exc:
             LOGGER.warning(
                 "Enterprise citation validation rejected generated output",
-                extra={"conversation_id": str(conversation_id)},
+                extra={
+                    "conversation_id": str(conversation_id),
+                    "citation_error_code": exc.code,
+                },
                 exc_info=True,
+            )
+            root_observation.update(
+                metadata={
+                    "generation_outcome": "citation_integrity_failed",
+                    "citation_error_code": exc.code,
+                    "citation_attempt_count": citation_attempt_count,
+                }
             )
             return await self._complete_failed(
                 conversation_id,
                 user_message=user_message,
                 evidence_count=len(evidence),
+                candidate_count=candidate_count,
                 trace_id=trace_id,
                 error_code="CITATION_VALIDATION_FAILED",
                 retrieval_strategy=retrieval_strategy,
@@ -362,10 +616,19 @@ class EnterpriseQuestionService:
                 conversation_id,
                 user_message=user_message,
                 evidence_count=len(evidence),
+                candidate_count=candidate_count,
                 trace_id=trace_id,
                 error_code="GENERATION_FAILED",
                 retrieval_strategy=retrieval_strategy,
             )
+
+        root_observation.update(
+            metadata={
+                "generation_outcome": generation_outcome,
+                "citation_attempt_count": citation_attempt_count,
+                "persisted_citation_count": len(pending_citations),
+            }
+        )
 
         assistant, persisted = await self._answer_repository.complete_answer(
             conversation_id,
@@ -374,7 +637,7 @@ class EnterpriseQuestionService:
             model=self._model_name,
             input_tokens=usage.input_tokens if usage else None,
             output_tokens=usage.output_tokens if usage else None,
-            error_code=None,
+            error_code=completion_error_code,
             trace_id=trace_id,
             citations=tuple(pending_citations),
         )
@@ -387,7 +650,48 @@ class EnterpriseQuestionService:
             citations=enriched,
             retrieval_strategy=retrieval_strategy,
             evidence_count=len(evidence),
+            candidate_count=candidate_count,
+            gate_reason=None,
+            error_code=completion_error_code,
             trace_id=trace_id,
+        )
+
+    async def _collect_generation_attempt(
+        self,
+        question: str,
+        *,
+        evidence: tuple[RetrievalCandidate, ...],
+        evidence_by_alias: dict[str, RetrievalCandidate],
+        hits_by_chunk: dict[UUID, SearchHit],
+    ) -> _GenerationAttempt:
+        text_parts: list[str] = []
+        accepted_source_ids: list[str] = []
+        pending_citations: list[NewEnterpriseCitation] = []
+        usage: UsageInfo | None = None
+        async for event in self._answer_generator.stream(
+            question=question,
+            evidence=evidence,
+        ):
+            if isinstance(event, TokenChunk):
+                text_parts.append(event.text)
+            elif isinstance(event, CitationHit):
+                candidate = validate_citation_hit(
+                    event,
+                    evidence_by_alias=evidence_by_alias,
+                    accepted_source_ids=accepted_source_ids,
+                )
+                accepted_source_ids.append(event.source_id)
+                hit = hits_by_chunk[UUID(candidate.chunk.id)]
+                pending_citations.append(
+                    _new_enterprise_citation(hit, ordinal=event.ordinal)
+                )
+            elif isinstance(event, UsageInfo):
+                usage = event
+        return _GenerationAttempt(
+            answer="".join(text_parts),
+            citations=tuple(pending_citations),
+            accepted_source_ids=tuple(accepted_source_ids),
+            usage=usage,
         )
 
     async def _complete_failed(
@@ -396,6 +700,7 @@ class EnterpriseQuestionService:
         *,
         user_message: EnterpriseMessage,
         evidence_count: int,
+        candidate_count: int,
         trace_id: str | None,
         error_code: str,
         retrieval_strategy: str,
@@ -417,6 +722,9 @@ class EnterpriseQuestionService:
             citations=citations,
             retrieval_strategy=retrieval_strategy,
             evidence_count=evidence_count,
+            candidate_count=candidate_count,
+            gate_reason=None,
+            error_code=error_code,
             trace_id=trace_id,
         )
 
@@ -495,6 +803,111 @@ class EnterpriseQuestionService:
         )
         return fused, "secure_hybrid_rrf_mmr"
 
+    async def _expand_context_if_needed(
+        self,
+        query: str,
+        primary_hits: list[SearchHit],
+    ) -> list[SearchHit] | None:
+        if not primary_hits or not _should_expand_context(query, primary_hits):
+            return None
+        expand = getattr(self._repository, "expand_context", None)
+        if expand is None:
+            return None
+        try:
+            expanded = await expand(
+                tuple(hit.chunk_id for hit in primary_hits),
+                sibling_window=1,
+                limit=min(self._retrieval_top_k * 3, 30),
+            )
+        except Exception:
+            LOGGER.warning("Enterprise parent/sibling expansion failed", exc_info=True)
+            return None
+        return _pack_expanded_hits(
+            primary_hits,
+            expanded,
+            top_k=self._retrieval_top_k,
+            broad_intent=bool(_BROAD_CONTEXT_TERMS.search(query)),
+        )
+
+
+async def _route_exact_document_number(
+    repository: GovernanceRepository,
+    query: str,
+    filters: dict[str, object],
+) -> dict[str, object]:
+    if "document_id" in filters:
+        return filters
+    matched = _DOCUMENT_NUMBER.search(query)
+    resolver = getattr(repository, "resolve_document_number", None)
+    if matched is None or resolver is None:
+        return filters
+    try:
+        document_ids = await resolver(matched.group(0))
+    except Exception:
+        LOGGER.warning("Enterprise exact document-number routing failed", exc_info=True)
+        return filters
+    unique_ids = tuple(dict.fromkeys(document_ids))
+    if len(unique_ids) != 1:
+        return filters
+    return {**filters, "document_id": str(unique_ids[0])}
+
+
+def _should_expand_context(query: str, hits: list[SearchHit]) -> bool:
+    if _BROAD_CONTEXT_TERMS.search(query):
+        return True
+    parent_counts: dict[str, int] = {}
+    for hit in hits:
+        parent_id = str(hit.metadata.get("parent_id") or "").strip()
+        if parent_id:
+            parent_counts[parent_id] = parent_counts.get(parent_id, 0) + 1
+    return any(count >= 2 for count in parent_counts.values())
+
+
+def _pack_expanded_hits(
+    primary_hits: list[SearchHit],
+    expanded_hits: list[SearchHit],
+    *,
+    top_k: int,
+    broad_intent: bool,
+) -> list[SearchHit]:
+    expanded_by_id = {hit.chunk_id: hit for hit in expanded_hits}
+    refreshed: list[SearchHit] = []
+    primary_ids = {hit.chunk_id for hit in primary_hits}
+    for primary in primary_hits:
+        candidate = expanded_by_id.get(primary.chunk_id)
+        if (
+            candidate is not None
+            and candidate.document_id == primary.document_id
+            and candidate.document_version_id == primary.document_version_id
+            and candidate.content == primary.content
+        ):
+            refreshed.append(replace(candidate, score=primary.score))
+        else:
+            refreshed.append(primary)
+
+    sibling_budget = min(2 if broad_intent else 1, max(top_k - 1, 0))
+    siblings = [
+        hit
+        for hit in expanded_hits
+        if hit.chunk_id not in primary_ids
+        and str(hit.metadata.get("expansion_kind") or "") == "sibling"
+    ][:sibling_budget]
+    if not siblings:
+        return refreshed[:top_k]
+
+    room = max(top_k - len(refreshed), 0)
+    append_count = min(room, len(siblings))
+    packed = [*refreshed, *siblings[:append_count]]
+    remaining = siblings[append_count:]
+    if remaining:
+        keep_count = max(top_k - len(remaining), 1)
+        packed = [*refreshed[:keep_count], *remaining]
+    floor_score = min((hit.score for hit in primary_hits), default=0.0)
+    return [
+        replace(hit, score=floor_score * 0.95) if hit.chunk_id not in primary_ids else hit
+        for hit in packed[:top_k]
+    ]
+
 
 def _contextual_queries(
     question: str,
@@ -567,17 +980,109 @@ def _limit_chunks_per_document(
     top_k: int,
     max_chunks_per_document: int,
 ) -> tuple[RetrievalCandidate, ...]:
+    """Prefer document diversity, then backfill so the cap never drops evidence.
+
+    ``max_chunks_per_document`` is a diversity target rather than a hard gate.
+    A query whose useful evidence lives in one document can therefore still
+    use the full ``top_k`` context budget.
+    """
+
+    if top_k <= 0 or not candidates:
+        return ()
+    if len({candidate.chunk.document_id for candidate in candidates}) <= 1:
+        return candidates[:top_k]
+
     selected: list[RetrievalCandidate] = []
+    deferred: list[RetrievalCandidate] = []
     counts: dict[str, int] = {}
     for candidate in candidates:
         document_id = candidate.chunk.document_id
         if counts.get(document_id, 0) >= max_chunks_per_document:
+            deferred.append(candidate)
             continue
         selected.append(candidate)
         counts[document_id] = counts.get(document_id, 0) + 1
         if len(selected) >= top_k:
             break
+    for candidate in deferred:
+        if len(selected) >= top_k:
+            break
+        selected.append(candidate)
     return tuple(selected)
+
+
+def _validate_generation_attempt(
+    attempt: _GenerationAttempt,
+    *,
+    evidence_by_alias: dict[str, RetrievalCandidate],
+) -> None:
+    validate_answer_citations(
+        attempt.answer,
+        evidence_by_alias=evidence_by_alias,
+        accepted_source_ids=attempt.accepted_source_ids,
+    )
+
+
+def _new_enterprise_citation(
+    hit: SearchHit,
+    *,
+    ordinal: int,
+) -> NewEnterpriseCitation:
+    return NewEnterpriseCitation(
+        document_id=hit.document_id,
+        document_version_id=hit.document_version_id,
+        chunk_id=hit.chunk_id,
+        quote_text=hit.content,
+        citation_order=ordinal,
+        page_number=(
+            hit.page_start
+            if hit.page_start is not None and hit.page_start > 0
+            else None
+        ),
+        retrieval_score=hit.score,
+    )
+
+
+def _merge_usage(left: UsageInfo | None, right: UsageInfo | None) -> UsageInfo | None:
+    if left is None and right is None:
+        return None
+
+    def total(field_name: str) -> int | None:
+        values = [
+            value
+            for usage in (left, right)
+            if usage is not None
+            for value in (getattr(usage, field_name),)
+            if value is not None
+        ]
+        return sum(values) if values else None
+
+    return UsageInfo(
+        input_tokens=total("input_tokens"),
+        output_tokens=total("output_tokens"),
+    )
+
+
+def _grounded_evidence_fallback(
+    evidence: tuple[RetrievalCandidate, ...],
+    *,
+    hits_by_chunk: dict[UUID, SearchHit],
+) -> tuple[str, tuple[NewEnterpriseCitation, ...]]:
+    """Return a deterministic, cited excerpt when citation repair still fails."""
+
+    candidate = evidence[0]
+    hit = hits_by_chunk[UUID(candidate.chunk.id)]
+    excerpt = re.sub(r"\[SRC-[^\[\]]+\]", "[nhãn nguồn trong tài liệu]", hit.content)
+    excerpt = re.sub(r"\s+", " ", excerpt).strip()
+    if len(excerpt) > _FALLBACK_EXCERPT_CHARS:
+        excerpt = excerpt[:_FALLBACK_EXCERPT_CHARS].rsplit(" ", 1)[0].rstrip() + "…"
+    answer = (
+        "Hệ thống đã tìm thấy bằng chứng liên quan nhưng chưa thể tổng hợp "
+        "câu trả lời có trích dẫn một cách an toàn. Dưới đây là trích đoạn "
+        "liên quan nhất để bạn kiểm tra:\n\n"
+        f"> {excerpt}\n\nNguồn: [SRC-1]"
+    )
+    return answer, (_new_enterprise_citation(hit, ordinal=1),)
 
 
 def _validated_filters(filters: dict[str, object]) -> dict[str, object]:
@@ -587,23 +1092,91 @@ def _validated_filters(filters: dict[str, object]) -> dict[str, object]:
             "UNSUPPORTED_SEARCH_FILTER",
             "Unsupported search filter: " + ", ".join(sorted(unknown)),
         )
-    normalized = dict(filters)
-    document_id = normalized.get("document_id")
-    if document_id is not None:
-        try:
-            normalized["document_id"] = str(UUID(str(document_id)))
-        except ValueError as exc:
-            raise GovernanceValidationError(
-                "INVALID_DOCUMENT_FILTER",
-                "document_id filter must be a UUID",
-            ) from exc
-    metadata = normalized.get("metadata")
+    normalized = {key: value for key, value in filters.items() if key != "metadata"}
+    metadata = filters.get("metadata")
     if metadata is not None and not isinstance(metadata, dict):
         raise GovernanceValidationError(
             "INVALID_METADATA_FILTER",
             "metadata filter must be an object",
         )
+    if isinstance(metadata, dict):
+        unsupported_metadata = set(metadata) - _CANONICAL_BUSINESS_FILTERS
+        if unsupported_metadata:
+            raise GovernanceValidationError(
+                "UNSUPPORTED_SEARCH_FILTER",
+                "Unsupported canonical metadata filter: "
+                + ", ".join(sorted(unsupported_metadata)),
+            )
+        conflicts = set(metadata).intersection(normalized)
+        if conflicts:
+            raise GovernanceValidationError(
+                "CONFLICTING_SEARCH_FILTER",
+                "Search filter is specified twice: " + ", ".join(sorted(conflicts)),
+            )
+        normalized.update(metadata)
+    document_id = normalized.get("document_id")
+    if document_id is not None:
+        try:
+            normalized["document_id"] = str(UUID(str(document_id)))
+        except (TypeError, ValueError) as exc:
+            raise GovernanceValidationError(
+                "INVALID_DOCUMENT_FILTER",
+                "document_id filter must be a UUID",
+            ) from exc
+    for field_name in ("document_type", "department_code", "project_code"):
+        if field_name in normalized:
+            value = str(normalized[field_name]).strip().upper()
+            if not value:
+                raise GovernanceValidationError(
+                    "INVALID_METADATA_FILTER", f"{field_name} must not be blank"
+                )
+            normalized[field_name] = value
+    for field_name in ("category", "domain"):
+        if field_name in normalized:
+            value = str(normalized[field_name]).strip()
+            if not value:
+                raise GovernanceValidationError(
+                    "INVALID_METADATA_FILTER", f"{field_name} must not be blank"
+                )
+            normalized[field_name] = value
+    if "year" in normalized:
+        raw_year = normalized["year"]
+        if isinstance(raw_year, bool):
+            year = 0
+        else:
+            try:
+                year = int(str(raw_year))
+            except (TypeError, ValueError):
+                year = 0
+        if not 1900 <= year <= 2100:
+            raise GovernanceValidationError(
+                "INVALID_METADATA_FILTER", "year must be between 1900 and 2100"
+            )
+        normalized["year"] = year
+    if "effective_at" in normalized:
+        try:
+            normalized["effective_at"] = date.fromisoformat(
+                str(normalized["effective_at"])
+            ).isoformat()
+        except ValueError as exc:
+            raise GovernanceValidationError(
+                "INVALID_METADATA_FILTER", "effective_at must use YYYY-MM-DD"
+            ) from exc
     return normalized
+
+
+def _filter_trace_metadata(filters: dict[str, object]) -> dict[str, object]:
+    """Return bounded, canonical filter values suitable for Langfuse metadata."""
+
+    metadata: dict[str, object] = {
+        "effective_filter_fields": ",".join(sorted(filters)) or "none",
+        "effective_filter_count": len(filters),
+    }
+    for field_name, value in filters.items():
+        if value is None or isinstance(value, dict | list | tuple | set):
+            continue
+        metadata[f"filter_{field_name}"] = str(value)[:200]
+    return metadata
 
 
 def _build_enterprise_evidence(

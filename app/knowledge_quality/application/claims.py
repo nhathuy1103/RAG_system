@@ -8,7 +8,10 @@ from decimal import Decimal, InvalidOperation
 from difflib import SequenceMatcher
 from functools import lru_cache
 
-from app.knowledge_quality.application.scope import compare_claim_scopes
+from app.knowledge_quality.application.scope import (
+    compare_claim_scopes,
+    extract_temporal_scope_qualifiers,
+)
 from app.knowledge_quality.domain.models import (
     ClaimConflict,
     ClaimKey,
@@ -357,7 +360,12 @@ def extract_claims(text: str) -> tuple[ExtractedClaim, ...]:
                     modality=modality,
                     negated=negated,
                     values=values,
-                    claim_key=_extract_claim_key(comparison_text, alignment_key, values),
+                    claim_key=_extract_claim_key(
+                        comparison_text,
+                        alignment_key,
+                        values,
+                        scope_qualifiers=extract_temporal_scope_qualifiers(claim_text),
+                    ),
                     comparison_text=comparison_text,
                 )
             )
@@ -373,7 +381,10 @@ def detect_claim_conflicts(
 ) -> tuple[ClaimConflict, ...]:
     """Align claims one-to-one and report only explicit critical differences."""
     scope_comparison = compare_claim_scopes(left_scope, right_scope)
-    if scope_comparison is ScopeComparison.DIFFERENT_SCOPE:
+    if scope_comparison in {
+        ScopeComparison.DIFFERENT_SCOPE,
+        ScopeComparison.TEMPORAL_DIVERGENCE,
+    }:
         return ()
     left_claims = extract_claims(left)
     right_claims = extract_claims(right)
@@ -740,6 +751,8 @@ def _extract_claim_key(
     comparison_text: str,
     alignment_key: str,
     values: tuple[ClaimValue, ...],
+    *,
+    scope_qualifiers: tuple[str, ...],
 ) -> ClaimKey:
     predicate: str | None = None
     predicate_span: tuple[int, int] | None = None
@@ -772,6 +785,7 @@ def _extract_claim_key(
         attribute=attribute,
         object_type=object_type,
         unit_family=unit_family,
+        scope_qualifiers=scope_qualifiers,
     )
 
 
@@ -795,9 +809,17 @@ def _claim_keys_align(
 ) -> bool:
     if alignment_score < MIN_VALIDATED_CLAIM_ALIGNMENT:
         return False
+    left_key, right_key = left.claim_key, right.claim_key
+    if (
+        left_key is not None
+        and right_key is not None
+        and left_key.scope_qualifiers
+        and right_key.scope_qualifiers
+        and left_key.scope_qualifiers != right_key.scope_qualifiers
+    ):
+        return False
     if left.alignment_key and left.alignment_key == right.alignment_key:
         return True
-    left_key, right_key = left.claim_key, right.claim_key
     if left_key is None or right_key is None:
         return False
     if (

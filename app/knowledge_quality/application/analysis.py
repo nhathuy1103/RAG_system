@@ -21,6 +21,7 @@ from app.knowledge_quality.application.claims import (
 from app.knowledge_quality.application.scope import (
     compare_claim_scopes,
     extract_claim_scope,
+    has_explicit_reference_period,
     merge_claim_scopes,
     scope_reason_codes,
 )
@@ -200,11 +201,11 @@ def analyze_text_relation(
 
     effective_left_scope = merge_claim_scopes(
         left_scope,
-        extract_claim_scope(left_strict),
+        extract_claim_scope(left),
     )
     effective_right_scope = merge_claim_scopes(
         right_scope,
-        extract_claim_scope(right_strict),
+        extract_claim_scope(right),
     )
     scope_comparison = compare_claim_scopes(effective_left_scope, effective_right_scope)
     left_tokens = tuple(_tokens(left_strict.casefold()))
@@ -263,6 +264,55 @@ def analyze_text_relation(
         or not unit_agreement
         or policy_modality_mismatch
     )
+
+    temporal_support = max(template_similarity, semantic)
+    if scope_comparison is ScopeComparison.TEMPORAL_DIVERGENCE and temporal_support >= 0.35:
+        explicit_periods = has_explicit_reference_period(
+            effective_left_scope
+        ) and has_explicit_reference_period(effective_right_scope)
+        relation_type = (
+            RelationType.TEMPORAL_SERIES if explicit_periods else RelationType.VERSION_CANDIDATE
+        )
+        reasons = list(scope_reason_codes(effective_left_scope, effective_right_scope))
+        reasons.append(
+            "historical_series_not_conflict"
+            if relation_type is RelationType.TEMPORAL_SERIES
+            else "effective_period_version_difference"
+        )
+        if structured_reasons or not number_agreement or not date_agreement:
+            reasons.append("value_difference_across_temporal_periods")
+        if structural_numbers_ignored:
+            reasons.append("structural_numbers_ignored")
+        confidence = (
+            min(0.49, 0.25 + 0.24 * temporal_support)
+            if relation_type is RelationType.TEMPORAL_SERIES
+            else min(0.89, 0.45 + 0.40 * temporal_support)
+        )
+        return TextRelationAnalysis(
+            relation_type=relation_type,
+            confidence=confidence,
+            lexical_similarity=lexical,
+            containment=containment,
+            semantic_similarity=semantic_similarity,
+            number_agreement=number_agreement,
+            date_agreement=date_agreement,
+            negation_mismatch=negation_mismatch,
+            reason_codes=tuple(dict.fromkeys(reasons)),
+            unit_agreement=unit_agreement,
+            policy_modality_mismatch=policy_modality_mismatch,
+            claim_conflicts=(),
+            scope_comparison=scope_comparison,
+            template_similarity=template_similarity,
+            validated_conflict_count=0,
+            confidence_components={
+                "temporal_alignment": 1.0,
+                "semantic_alignment": temporal_support,
+                "template_similarity": template_similarity,
+            },
+            exact_line_overlap_count=exact_line_count,
+            exact_line_overlap_ratio=exact_line_ratio,
+            structural_numbers_ignored=structural_numbers_ignored,
+        )
 
     validated_conflicts = _deduplicate_claim_conflicts(claim_conflicts)
     if validated_conflicts and critical_difference:
@@ -432,6 +482,9 @@ def analyze_text_relation(
         )
     if critical_difference and scope_comparison is ScopeComparison.UNKNOWN_SCOPE:
         distinct_reasons.append("scope_unknown_conflict_suppressed")
+    if scope_comparison is ScopeComparison.TEMPORAL_DIVERGENCE:
+        distinct_reasons.extend(scope_reason_codes(effective_left_scope, effective_right_scope))
+        distinct_reasons.append("temporal_similarity_below_threshold")
     return TextRelationAnalysis(
         relation_type=RelationType.DISTINCT,
         confidence=max(0.0, 1.0 - max(semantic, lexical, containment)),

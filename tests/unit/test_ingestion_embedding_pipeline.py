@@ -118,8 +118,10 @@ def test_pipeline_preserves_validate_parse_chunk_embed_order() -> None:
         "normalized_content_hash": fingerprint.strict_hash,
         "loose_content_signature": fingerprint.loose_signature,
         "normalization_version": fingerprint.normalization_version,
-        "exact_duplicate_group_id": str(exact_group_id),
-        "table_atomic": False,
+            "exact_duplicate_group_id": str(exact_group_id),
+            "char_start": result.chunks[0].offset_start,
+            "char_end": result.chunks[0].offset_end,
+            "table_atomic": False,
     }
 
 

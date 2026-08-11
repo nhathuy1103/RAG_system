@@ -32,9 +32,8 @@ NORMALIZED_FIXTURE = " ".join(BEHAVIOR_FIXTURE.lower().split())
 
 
 def test_reset_script_contains_all_canonical_migrations_as_exact_ordered_segments() -> None:
-    assert tuple(path.name[:2] for path in CANONICAL_MIGRATION_PATHS) == tuple(
-        f"{index:02d}" for index in range(1, 24)
-    )
+    migration_numbers = tuple(int(path.name[:2]) for path in CANONICAL_MIGRATION_PATHS)
+    assert migration_numbers == tuple(range(1, migration_numbers[-1] + 1))
 
     suffix_start = len(RESET_NONEMPTY_LINES) - len(ALL_CANONICAL_MIGRATION_LINES)
     assert suffix_start > 0

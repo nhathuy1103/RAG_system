@@ -163,6 +163,28 @@ export interface KnowledgeDocument {
   archive_reason: string | null;
 }
 
+export interface DocumentSearchability {
+  document_id: string;
+  title: string;
+  document_status: string;
+  visibility: string;
+  current_version_id: string | null;
+  version_status: string | null;
+  metadata_revision: number;
+  chunk_count: number;
+  ready_projection_count: number;
+  lexical_ready_projection_count: number;
+  lexical_stale_count: number;
+  embedding_stale_count: number;
+  refresh_requested_revision: number | null;
+  refresh_processed_at: string | null;
+  refresh_error: string | null;
+  searchable_for_actor: boolean;
+  fully_indexed: boolean;
+  blocking_reasons: string[];
+  warnings: string[];
+}
+
 export interface DocumentVersion {
   id: string;
   document_id: string;
@@ -313,12 +335,31 @@ export interface EnterpriseCitation {
   section: string | null;
 }
 
-export interface ConversationMessage {
+export type PublicAnswerStatus = "ANSWERED" | "INSUFFICIENT_EVIDENCE" | "FAILED";
+
+/**
+ * Retrieval/generation diagnostics are optional for backward compatibility.
+ * Newer backend responses expose them both for a freshly-created answer and
+ * when conversation history is loaded again.
+ */
+export interface AnswerDiagnostics {
+  error_code?: string | null;
+  gate_reason?: string | null;
+  candidate_count?: number | null;
+  evidence_count?: number | null;
+}
+
+export interface AnswerRetrievalDiagnostics extends AnswerDiagnostics {
+  strategy: string;
+}
+
+export interface ConversationMessage extends AnswerDiagnostics {
   id: string;
   role: "USER" | "ASSISTANT" | "SYSTEM";
   content: string;
-  answer_status?: "ANSWERED" | "INSUFFICIENT_EVIDENCE" | "FAILED";
+  answer_status?: PublicAnswerStatus | null;
   citations?: EnterpriseCitation[];
+  retrieval?: AnswerRetrievalDiagnostics | null;
   created_at: string;
 }
 
@@ -330,13 +371,13 @@ export interface EnterpriseConversation {
   updated_at: string;
 }
 
-export interface AnswerResponse {
+export interface AnswerResponse extends AnswerDiagnostics {
   conversation_id: string;
   message_id: string;
   answer: string;
-  answer_status: "ANSWERED" | "INSUFFICIENT_EVIDENCE" | "FAILED";
+  answer_status: PublicAnswerStatus;
   citations: EnterpriseCitation[];
-  retrieval: { strategy: string };
+  retrieval: AnswerRetrievalDiagnostics;
   trace_id?: string;
 }
 
@@ -344,14 +385,37 @@ export class EnterpriseApiError extends Error {
   readonly code: string;
   readonly status: number;
   readonly traceId: string | null;
+  readonly gateReason: string | null;
+  readonly candidateCount: number | null;
+  readonly evidenceCount: number | null;
 
-  constructor(message: string, code: string, status: number, traceId: string | null) {
+  constructor(
+    message: string,
+    code: string,
+    status: number,
+    traceId: string | null,
+    diagnostics: AnswerDiagnostics = {},
+  ) {
     super(message);
     this.name = "EnterpriseApiError";
     this.code = code;
     this.status = status;
     this.traceId = traceId;
+    this.gateReason = diagnostics.gate_reason ?? null;
+    this.candidateCount = diagnostics.candidate_count ?? null;
+    this.evidenceCount = diagnostics.evidence_count ?? null;
   }
+}
+
+const ENTERPRISE_ERROR_MESSAGE_TRANSLATIONS: Record<string, string> = {
+  "An identical source is already registered":
+    "Tệp này đã được tải lên trước đó. Vui lòng sử dụng tài liệu hiện có hoặc tải tệp dưới dạng phiên bản mới.",
+  "An identical source file is already registered":
+    "Tệp này đã được tải lên trước đó. Vui lòng sử dụng tài liệu hiện có hoặc tải tệp dưới dạng phiên bản mới.",
+};
+
+function translateEnterpriseErrorMessage(message: string): string {
+  return ENTERPRISE_ERROR_MESSAGE_TRANSLATIONS[message] || message;
 }
 
 async function enterpriseFetch<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -375,11 +439,19 @@ async function enterpriseFetch<T>(path: string, init: RequestInit = {}): Promise
   const payload = response.status === 204 ? null : await response.json().catch(() => null);
   if (!response.ok) {
     const error = payload?.error;
+    const diagnostics = error?.diagnostics || error || payload || {};
+    const message =
+      error?.message || payload?.detail || `Yêu cầu thất bại (${response.status})`;
     throw new EnterpriseApiError(
-      error?.message || payload?.detail || `Yêu cầu thất bại (${response.status})`,
+      translateEnterpriseErrorMessage(message),
       error?.code || "REQUEST_FAILED",
       response.status,
       error?.trace_id || response.headers.get("x-request-id"),
+      {
+        gate_reason: diagnostics?.gate_reason ?? null,
+        candidate_count: diagnostics?.candidate_count ?? null,
+        evidence_count: diagnostics?.evidence_count ?? null,
+      },
     );
   }
   return payload as T;
@@ -529,11 +601,19 @@ export const listKnowledgeDocuments = (options: {
     `/api/v1/documents${queryString({ limit: 50, offset: 0, ...options })}`,
   );
 
+export const getKnowledgeDocument = (documentId: string) =>
+  enterpriseFetch<KnowledgeDocument>(`/api/v1/documents/${documentId}`);
+
 export const createKnowledgeDocument = (body: Partial<KnowledgeDocument> & { title: string }) =>
   enterpriseFetch<KnowledgeDocument>("/api/v1/documents", {
     method: "POST",
     body: JSON.stringify(body),
   });
+
+export const listDocumentSearchability = (documentId?: string) =>
+  enterpriseFetch<DocumentSearchability[]>(
+    "/api/v1/documents/searchability" + queryString({ document_id: documentId }),
+  );
 
 export const uploadEnterpriseSourceFile = (file: File) => {
   const body = new FormData();
@@ -713,7 +793,27 @@ export const createEnterpriseConversation = (title?: string) =>
 export const getEnterpriseConversation = (conversationId: string) =>
   enterpriseFetch<{ conversation: EnterpriseConversation; messages: ConversationMessage[] }>(
     `/api/v1/conversations/${conversationId}`,
-  ).then((response) => ({ ...response.conversation, messages: response.messages }));
+  ).then((response) => ({
+    ...response.conversation,
+    messages: response.messages.map((message) => normalizeConversationMessage(message)),
+  }));
+
+function normalizeAnswerDiagnostics<T extends AnswerDiagnostics & {
+  retrieval?: AnswerRetrievalDiagnostics | null;
+}>(value: T): T {
+  const retrieval = value.retrieval;
+  return {
+    ...value,
+    error_code: value.error_code ?? retrieval?.error_code ?? null,
+    gate_reason: value.gate_reason ?? retrieval?.gate_reason ?? null,
+    candidate_count: value.candidate_count ?? retrieval?.candidate_count ?? null,
+    evidence_count: value.evidence_count ?? retrieval?.evidence_count ?? null,
+  };
+}
+
+function normalizeConversationMessage(message: ConversationMessage): ConversationMessage {
+  return normalizeAnswerDiagnostics(message);
+}
 
 export const askEnterpriseQuestion = (
   conversationId: string,
@@ -723,7 +823,7 @@ export const askEnterpriseQuestion = (
   enterpriseFetch<AnswerResponse>(`/api/v1/conversations/${conversationId}/messages`, {
     method: "POST",
     body: JSON.stringify({ content: question, filters }),
-  });
+  }).then((response) => normalizeAnswerDiagnostics(response));
 
 export const getDocumentVersionSource = (documentId: string, versionId: string) =>
   enterpriseFetch<{ signed_url: string; expires_at: string; original_file_name: string; mime_type: string }>(
@@ -741,3 +841,225 @@ export const reportAnswer = (messageId: string, reasonCode: string, details?: st
     method: "POST",
     body: JSON.stringify({ reason_code: reasonCode, details }),
   });
+
+export type EnterpriseDocumentRelationType =
+  | "exact_content"
+  | "near_duplicate"
+  | "version_candidate"
+  | "version"
+  | "conflict_candidate"
+  | "conflict"
+  | "related"
+  | "distinct"
+  | "technical_duplicate"
+  | "template_variant"
+  | "temporal_series";
+
+export type EnterpriseDocumentRelationStatus =
+  | "pending"
+  | "deferred"
+  | "auto_confirmed"
+  | "confirmed"
+  | "dismissed";
+
+export type EnterpriseDocumentRelationAction =
+  | "confirm_duplicate"
+  | "mark_version"
+  | "confirm_conflict"
+  | "keep_separate"
+  | "prefer_source"
+  | "prefer_target"
+  | "dismiss"
+  | "defer_review";
+
+export interface EnterpriseDocumentRelation {
+  id: string;
+  source_document_id: string;
+  target_document_id: string;
+  relation_type: EnterpriseDocumentRelationType;
+  status: EnterpriseDocumentRelationStatus;
+  confidence: number;
+  reason: string | null;
+  created_at: string;
+  updated_at: string;
+  resolution_action: EnterpriseDocumentRelationAction | null;
+}
+
+export interface EnterpriseDocumentRelationEvidence {
+  relation_id: string;
+  source_document: {
+    id: string;
+    title: string;
+    version_number: number;
+    text_content: string;
+  };
+  target_document: {
+    id: string;
+    title: string;
+    version_number: number;
+    text_content: string;
+  };
+  overlaps: Array<{
+    source_text: string;
+    target_text: string;
+  }>;
+}
+
+const ENTERPRISE_RELATION_STORAGE_KEY = "enterprise-document-relations-demo-v4";
+export const ENTERPRISE_RELATIONS_UPDATED_EVENT = "enterprise-relations-updated";
+
+const enterpriseRelationSeed: EnterpriseDocumentRelation[] = [
+  {
+    id: "mock-rel-1",
+    source_document_id: "doc-1",
+    target_document_id: "doc-2",
+    relation_type: "conflict",
+    status: "pending",
+    confidence: 0.95,
+    reason: null,
+    created_at: "2026-08-10T16:27:28.000Z",
+    updated_at: "2026-08-10T16:27:28.000Z",
+    resolution_action: null,
+  },
+  {
+    id: "mock-rel-2",
+    source_document_id: "doc-3",
+    target_document_id: "doc-4",
+    relation_type: "near_duplicate",
+    status: "pending",
+    confidence: 0.88,
+    reason: null,
+    created_at: "2026-08-09T16:27:28.000Z",
+    updated_at: "2026-08-09T16:27:28.000Z",
+    resolution_action: null,
+  },
+];
+
+let enterpriseRelationMemory = enterpriseRelationSeed.map((item) => ({ ...item }));
+
+function isEnterpriseRelation(value: unknown): value is EnterpriseDocumentRelation {
+  if (!value || typeof value !== "object") return false;
+  const relation = value as Partial<EnterpriseDocumentRelation>;
+  return (
+    typeof relation.id === "string"
+    && typeof relation.source_document_id === "string"
+    && typeof relation.target_document_id === "string"
+    && typeof relation.relation_type === "string"
+    && typeof relation.status === "string"
+    && typeof relation.confidence === "number"
+    && typeof relation.created_at === "string"
+  );
+}
+
+function readEnterpriseRelations(): EnterpriseDocumentRelation[] {
+  if (typeof window === "undefined") {
+    return enterpriseRelationMemory.map((item) => ({ ...item }));
+  }
+  try {
+    const stored = window.localStorage.getItem(ENTERPRISE_RELATION_STORAGE_KEY);
+    if (stored) {
+      const parsed: unknown = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.every(isEnterpriseRelation)) {
+        enterpriseRelationMemory = parsed.map((item) => ({
+          ...item,
+          updated_at: item.updated_at || item.created_at,
+          resolution_action: item.resolution_action || null,
+        }));
+        return enterpriseRelationMemory.map((item) => ({ ...item }));
+      }
+    }
+    window.localStorage.setItem(
+      ENTERPRISE_RELATION_STORAGE_KEY,
+      JSON.stringify(enterpriseRelationMemory),
+    );
+  } catch {
+    // The in-memory copy still keeps the demo usable when storage is blocked.
+  }
+  return enterpriseRelationMemory.map((item) => ({ ...item }));
+}
+
+function writeEnterpriseRelations(relations: EnterpriseDocumentRelation[]) {
+  enterpriseRelationMemory = relations.map((item) => ({ ...item }));
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(
+      ENTERPRISE_RELATION_STORAGE_KEY,
+      JSON.stringify(enterpriseRelationMemory),
+    );
+  } catch {
+    // Keep the decision in memory for storage-restricted browser sessions.
+  }
+  window.dispatchEvent(new Event(ENTERPRISE_RELATIONS_UPDATED_EVENT));
+}
+
+export async function listEnterpriseRelations(): Promise<{ items: EnterpriseDocumentRelation[] }> {
+  return { items: readEnterpriseRelations() };
+}
+
+export async function getEnterpriseRelationEvidence(relationId: string): Promise<EnterpriseDocumentRelationEvidence> {
+  return {
+    relation_id: relationId,
+    source_document: {
+      id: "doc-1",
+      title: "Chính sách nhân sự 2024.pdf",
+      version_number: 2,
+      text_content: "Công ty hỗ trợ 100% chi phí ăn trưa cho nhân viên khối văn phòng. Phụ cấp đi lại là 500k/tháng.",
+    },
+    target_document: {
+      id: "doc-2",
+      title: "Quy định phụ cấp 2024.docx",
+      version_number: 1,
+      text_content: "Công ty hỗ trợ 50% chi phí ăn trưa cho nhân viên khối văn phòng. Phụ cấp đi lại là 300k/tháng.",
+    },
+    overlaps: [
+      {
+        source_text: "100% chi phí ăn trưa ... 500k/tháng",
+        target_text: "50% chi phí ăn trưa ... 300k/tháng",
+      }
+    ]
+  };
+}
+
+export async function resolveEnterpriseRelation(
+  relationId: string,
+  action: EnterpriseDocumentRelationAction,
+  reason: string,
+): Promise<EnterpriseDocumentRelation> {
+  const relations = readEnterpriseRelations();
+  const current = relations.find((relation) => relation.id === relationId);
+  if (!current) throw new Error("Không tìm thấy vấn đề cần xử lý.");
+  if (current.status !== "pending" && current.status !== "deferred") {
+    throw new Error("Vấn đề này đã được xử lý. Hãy tải lại danh sách trước khi quyết định.");
+  }
+
+  const normalizedReason = reason.trim();
+  if (action !== "defer_review" && !normalizedReason) {
+    throw new Error("Vui lòng nhập lý do cho quyết định.");
+  }
+
+  let relationType = current.relation_type;
+  let status: EnterpriseDocumentRelationStatus = "confirmed";
+  if (action === "confirm_duplicate") relationType = "exact_content";
+  if (action === "mark_version") relationType = "version";
+  if (["confirm_conflict", "prefer_source", "prefer_target"].includes(action)) {
+    relationType = "conflict";
+  }
+  if (action === "keep_separate") relationType = "distinct";
+  if (action === "dismiss") status = "dismissed";
+  if (action === "defer_review") status = "deferred";
+
+  const updated: EnterpriseDocumentRelation = {
+    ...current,
+    relation_type: relationType,
+    status,
+    reason: action === "defer_review"
+      ? normalizedReason || "Người dùng chọn xử lý sau."
+      : normalizedReason,
+    updated_at: new Date().toISOString(),
+    resolution_action: action,
+  };
+  writeEnterpriseRelations(
+    relations.map((relation) => (relation.id === relationId ? updated : relation)),
+  );
+  return { ...updated };
+}
