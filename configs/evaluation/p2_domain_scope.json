@@ -1,0 +1,38 @@
+{
+  "version": "p2-domain-entity-business-scope-v1",
+  "status": "frozen",
+  "gold_schema_version": "duplicate-conflict-gold-v1",
+  "p1_config": "configs/evaluation/p1_candidate_generation.json",
+  "p1_candidate_behavior": {
+    "channel_candidate_k": 30,
+    "final_candidate_k": 50,
+    "channel_reservation": 4,
+    "rrf_k": 60,
+    "retuned_in_p2": false
+  },
+  "entity_normalization_version": "p2-entity-normalization-v1",
+  "business_scope_version": "p2-business-scope-v1",
+  "conflict_admission_version": "p2-conflict-admission-v1",
+  "registries": [
+    "configs/domain_entities/vinhomes_entities.json",
+    "configs/domain_entities/vinfast_entities.json"
+  ],
+  "gold_admission_policy": {
+    "version": "p2-gold-admission-v1",
+    "requires": [
+      "same_entity",
+      "same_business_scope",
+      "same_temporal_scope",
+      "same_claim",
+      "scope_evidence_reliable"
+    ],
+    "scope_evidence_reliable": "both extraction sides are high, except value-only OCR corruption does not invalidate scope"
+  },
+  "targets": {
+    "entity_precision": 0.99,
+    "entity_recall": 0.97,
+    "admission_precision": 0.99,
+    "admission_recall": 0.97,
+    "false_auto_reuse": 0
+  }
+}

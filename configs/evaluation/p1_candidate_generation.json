@@ -1,0 +1,17 @@
+{
+  "version": "p1-candidate-generation-v1",
+  "gold_schema_version": "duplicate-conflict-gold-v1",
+  "selected_binary_strategy": "simhash-multilayout-8x8-v1",
+  "binary_max_hamming_distance": 24,
+  "channel_candidate_k": 30,
+  "final_candidate_k": 50,
+  "channel_reservation": 4,
+  "rrf_k": 60,
+  "fts_term_limit": 16,
+  "deterministic_ann_fixture": {
+    "version": "hashed-char-word-bigram-v1",
+    "dimensions": 1024,
+    "hash": "sha256",
+    "network_calls": false
+  }
+}

@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from difflib import SequenceMatcher
 from itertools import combinations
 
+from app.knowledge_quality.application.business_scope import load_or_resolve_business_context
 from app.knowledge_quality.application.claims import (
     classify_numeric_mentions,
     detect_claim_conflicts,
@@ -18,6 +19,7 @@ from app.knowledge_quality.application.claims import (
     normalized_number_literal,
     normalized_quantities,
 )
+from app.knowledge_quality.application.conflict_admission import decide_conflict_admission
 from app.knowledge_quality.application.scope import (
     compare_claim_scopes,
     extract_claim_scope,
@@ -36,6 +38,7 @@ from app.knowledge_quality.domain.models import (
     ScopeComparison,
     TextRelationAnalysis,
 )
+from app.knowledge_quality.domain.scope_models import ConflictAdmissionDisposition
 
 _AUTHORITATIVE_IGNORABLE = dict.fromkeys(map(ord, "\u00ad\u200b\u2060\ufeff"), None)
 _CANDIDATE_IGNORABLE = dict.fromkeys(map(ord, "\u00ad\u200b\u200c\u200d\u2060\ufeff"), None)
@@ -181,8 +184,13 @@ def analyze_text_relation(
     semantic_similarity: float | None = None,
     left_scope: ClaimScope | None = None,
     right_scope: ClaimScope | None = None,
+    left_entity_scope_metadata: object = None,
+    right_entity_scope_metadata: object = None,
+    domain_scope_mode: str = "shadow",
 ) -> TextRelationAnalysis:
     """Classify text only after scope and aligned-claim validation."""
+    if domain_scope_mode not in {"off", "shadow", "on"}:
+        raise ValueError("domain_scope_mode must be off, shadow, or on")
     left_strict = strict_normalize_text(left)
     right_strict = strict_normalize_text(right)
     if left_strict == right_strict and left_strict:
@@ -207,7 +215,35 @@ def analyze_text_relation(
         right_scope,
         extract_claim_scope(right),
     )
-    scope_comparison = compare_claim_scopes(effective_left_scope, effective_right_scope)
+    legacy_scope_comparison = compare_claim_scopes(effective_left_scope, effective_right_scope)
+    scope_comparison = legacy_scope_comparison
+    p2_decision = None
+    p2_signals: dict[str, object] = {}
+    if domain_scope_mode != "off":
+        p2_left = load_or_resolve_business_context(
+            left,
+            persisted_metadata=left_entity_scope_metadata,
+        )
+        p2_right = load_or_resolve_business_context(
+            right,
+            persisted_metadata=right_entity_scope_metadata,
+        )
+        p2_decision = decide_conflict_admission(
+            p2_left,
+            p2_right,
+            legacy_scope=legacy_scope_comparison.value,
+        )
+        p2_signals = {**p2_decision.to_payload(), "mode": domain_scope_mode}
+        if domain_scope_mode == "on" and not p2_decision.allows_conflict_analysis:
+            if p2_decision.disposition in {
+                ConflictAdmissionDisposition.DISTINCT_ENTITY,
+                ConflictAdmissionDisposition.CONDITIONAL_VARIANT,
+            }:
+                scope_comparison = ScopeComparison.DIFFERENT_SCOPE
+            elif p2_decision.disposition is ConflictAdmissionDisposition.TEMPORAL_VARIANT:
+                scope_comparison = ScopeComparison.TEMPORAL_DIVERGENCE
+            else:
+                scope_comparison = ScopeComparison.UNKNOWN_SCOPE
     left_tokens = tuple(_tokens(left_strict.casefold()))
     right_tokens = tuple(_tokens(right_strict.casefold()))
     left_shingles = _shingles(left_tokens, 3)
@@ -233,11 +269,15 @@ def analyze_text_relation(
     left_numbers = normalized_quantities(left_strict)
     right_numbers = normalized_quantities(right_strict)
     left_dates, right_dates = _dates(left_strict), _dates(right_strict)
-    claim_conflicts = detect_claim_conflicts(
-        left_strict,
-        right_strict,
-        left_scope=effective_left_scope,
-        right_scope=effective_right_scope,
+    claim_conflicts = (
+        detect_claim_conflicts(
+            left_strict,
+            right_strict,
+            left_scope=effective_left_scope,
+            right_scope=effective_right_scope,
+        )
+        if p2_decision is None or domain_scope_mode != "on" or p2_decision.allows_conflict_analysis
+        else ()
     )
     structured_reasons = {
         reason for conflict in claim_conflicts for reason in conflict.reason_codes
@@ -274,6 +314,8 @@ def analyze_text_relation(
             RelationType.TEMPORAL_SERIES if explicit_periods else RelationType.VERSION_CANDIDATE
         )
         reasons = list(scope_reason_codes(effective_left_scope, effective_right_scope))
+        if p2_decision is not None and domain_scope_mode == "on":
+            reasons.extend(p2_decision.reason_codes)
         reasons.append(
             "historical_series_not_conflict"
             if relation_type is RelationType.TEMPORAL_SERIES
@@ -312,6 +354,7 @@ def analyze_text_relation(
             exact_line_overlap_count=exact_line_count,
             exact_line_overlap_ratio=exact_line_ratio,
             structural_numbers_ignored=structural_numbers_ignored,
+            domain_scope_decision=p2_signals,
         )
 
     validated_conflicts = _deduplicate_claim_conflicts(claim_conflicts)
@@ -360,10 +403,13 @@ def analyze_text_relation(
             exact_line_overlap_count=exact_line_count,
             exact_line_overlap_ratio=exact_line_ratio,
             structural_numbers_ignored=structural_numbers_ignored,
+            domain_scope_decision=p2_signals,
         )
 
     if scope_comparison is ScopeComparison.DIFFERENT_SCOPE:
         reasons = list(scope_reason_codes(effective_left_scope, effective_right_scope))
+        if p2_decision is not None and domain_scope_mode == "on":
+            reasons.extend(p2_decision.reason_codes)
         if structural_numbers_ignored:
             reasons.append("structural_numbers_ignored")
         if template_similarity >= 0.45:
@@ -391,6 +437,7 @@ def analyze_text_relation(
             exact_line_overlap_count=exact_line_count,
             exact_line_overlap_ratio=exact_line_ratio,
             structural_numbers_ignored=structural_numbers_ignored,
+            domain_scope_decision=p2_signals,
         )
 
     length_ratio = (
@@ -427,6 +474,7 @@ def analyze_text_relation(
             exact_line_overlap_count=exact_line_count,
             exact_line_overlap_ratio=exact_line_ratio,
             structural_numbers_ignored=structural_numbers_ignored,
+            domain_scope_decision=p2_signals,
         )
 
     if not critical_difference and containment >= 0.72 and projection_similarity >= 0.52:
@@ -449,6 +497,7 @@ def analyze_text_relation(
             exact_line_overlap_count=exact_line_count,
             exact_line_overlap_ratio=exact_line_ratio,
             structural_numbers_ignored=structural_numbers_ignored,
+            domain_scope_decision=p2_signals,
         )
 
     if not critical_difference and (
@@ -473,6 +522,7 @@ def analyze_text_relation(
             exact_line_overlap_count=exact_line_count,
             exact_line_overlap_ratio=exact_line_ratio,
             structural_numbers_ignored=structural_numbers_ignored,
+            domain_scope_decision=p2_signals,
         )
 
     distinct_reasons = ["insufficient_duplicate_evidence"]
@@ -482,6 +532,8 @@ def analyze_text_relation(
         )
     if critical_difference and scope_comparison is ScopeComparison.UNKNOWN_SCOPE:
         distinct_reasons.append("scope_unknown_conflict_suppressed")
+    if p2_decision is not None and domain_scope_mode == "on":
+        distinct_reasons.extend(p2_decision.reason_codes)
     if scope_comparison is ScopeComparison.TEMPORAL_DIVERGENCE:
         distinct_reasons.extend(scope_reason_codes(effective_left_scope, effective_right_scope))
         distinct_reasons.append("temporal_similarity_below_threshold")
@@ -503,6 +555,7 @@ def analyze_text_relation(
         exact_line_overlap_count=exact_line_count,
         exact_line_overlap_ratio=exact_line_ratio,
         structural_numbers_ignored=structural_numbers_ignored,
+        domain_scope_decision=p2_signals,
     )
 
 

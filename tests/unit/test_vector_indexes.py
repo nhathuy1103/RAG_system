@@ -98,6 +98,39 @@ def test_qdrant_payload_falls_back_to_chunk_strategy_name() -> None:
     }
 
 
+def test_qdrant_payload_preserves_versioned_entity_scope() -> None:
+    entity_scope = {
+        "version": "p2-entity-scope-metadata-v1",
+        "entities": [{"canonical_id": "vinfast_vf8"}],
+    }
+    chunk = EmbeddedChunk(
+        id="chunk-entity-scope",
+        document_id="document-1",
+        document_version=1,
+        owner_id="owner-1",
+        tenant_id="tenant-1",
+        chunk_index=0,
+        page_number=None,
+        section_title=None,
+        checksum="checksum",
+        text="VF 8 Eco range is 450 km WLTP.",
+        canonical_text="VF 8 Eco range is 450 km WLTP.",
+        token_count=8,
+        embedding=(0.1,),
+        embedding_model="test-model",
+        metadata={"entity_scope": entity_scope, "ignored": "large-value"},
+    )
+
+    payload = QdrantVectorIndex._chunk_payload(chunk)
+
+    assert payload["metadata"] == {
+        "source_block_ids": [],
+        "strategy": "",
+        "strategy_version": "",
+        "entity_scope": entity_scope,
+    }
+
+
 def test_qdrant_search_hit_uses_point_id_instead_of_legacy_payload_chunk_id() -> None:
     canonical_id = QdrantVectorIndex._point_id("source:chunk:1")
     point = SimpleNamespace(

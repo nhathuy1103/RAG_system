@@ -34,14 +34,17 @@ def test_different_buildings_in_same_project_are_disjoint() -> None:
 
 
 def test_scope_relation_is_directional_for_broad_and_narrow_scope() -> None:
-    project = BusinessScope(location=LocationScope(project="Ocean Park"))
+    project = BusinessScope(
+        location=LocationScope(project="Ocean Park"),
+        explicit_breadth=("location.building",),
+    )
     building = BusinessScope(location=LocationScope(project="ocean park", building="S1"))
 
     assert compare_business_scopes(project, building) is ScopeRelation.LEFT_CONTAINS_RIGHT
     assert compare_business_scopes(building, project) is ScopeRelation.RIGHT_CONTAINS_LEFT
 
 
-def test_orthogonal_constraints_with_shared_anchor_overlap() -> None:
+def test_missing_orthogonal_constraints_are_unknown_not_wildcards() -> None:
     left = BusinessScope(
         location=LocationScope(project="Ocean Park", building="S1"),
     )
@@ -50,7 +53,7 @@ def test_orthogonal_constraints_with_shared_anchor_overlap() -> None:
         product=ProductScope(bedrooms=2),
     )
 
-    assert compare_business_scopes(left, right) is ScopeRelation.OVERLAPS
+    assert compare_business_scopes(left, right) is ScopeRelation.UNKNOWN
 
 
 def test_partially_overlapping_allowed_values_are_scope_overlap() -> None:

@@ -13,6 +13,7 @@ from app.api.dependencies.enterprise import (
     require_ask_knowledge,
     require_governance_access,
     require_manage_report,
+    require_review_workspace,
     require_view_analytics,
 )
 from app.api.enterprise_errors import request_trace_id
@@ -37,12 +38,52 @@ from app.api.schemas.enterprise import (
     SearchHitResponse,
     SearchRequest,
     SearchResponse,
+    TextComparisonRequest,
+    TextComparisonResponse,
 )
 from app.governance.application.services import EnterpriseQuestionService, GovernanceService
 from app.governance.domain.models import EnterpriseMessage
 from app.identity.domain.models import PrincipalContext
+from app.knowledge_quality.application.analysis import analyze_text_relation
+from app.knowledge_quality.domain.models import RelationType
 
 router = APIRouter(prefix="/api/v1", tags=["enterprise-knowledge"])
+
+
+@router.post("/quality/compare-texts", response_model=TextComparisonResponse)
+async def compare_quality_texts(
+    payload: TextComparisonRequest,
+    _principal: Annotated[PrincipalContext, Depends(require_review_workspace)],
+) -> TextComparisonResponse:
+    """Preview duplicate/conflict classification without persisting either text."""
+
+    analysis = analyze_text_relation(payload.left_text, payload.right_text)
+    signals = analysis.to_signals()
+    review_recommended = analysis.relation_type not in {
+        RelationType.EXACT_CONTENT,
+        RelationType.DISTINCT,
+    }
+    return TextComparisonResponse(
+        relation_type=analysis.relation_type.value,
+        confidence=round(analysis.confidence, 6),
+        review_recommended=review_recommended,
+        lexical_similarity=float(signals["lexical_similarity"]),
+        containment=float(signals["containment"]),
+        semantic_similarity=signals["semantic_similarity"],
+        template_similarity=float(signals["template_similarity"]),
+        number_agreement=analysis.number_agreement,
+        date_agreement=analysis.date_agreement,
+        negation_mismatch=analysis.negation_mismatch,
+        unit_agreement=analysis.unit_agreement,
+        policy_modality_mismatch=analysis.policy_modality_mismatch,
+        scope_comparison=analysis.scope_comparison.value,
+        reason_codes=list(analysis.reason_codes),
+        claim_conflicts=[conflict.to_signal() for conflict in analysis.claim_conflicts],
+        validated_conflict_count=analysis.validated_conflict_count,
+        exact_line_overlap_count=analysis.exact_line_overlap_count,
+        exact_line_overlap_ratio=analysis.exact_line_overlap_ratio,
+        structural_numbers_ignored=analysis.structural_numbers_ignored,
+    )
 
 
 @router.post("/search", response_model=SearchResponse)

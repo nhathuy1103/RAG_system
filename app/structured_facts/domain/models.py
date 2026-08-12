@@ -67,6 +67,158 @@ class ClaimRelationType(StrEnum):
     UNCERTAIN = "uncertain"
 
 
+class EntityEvidenceSource(StrEnum):
+    """Ordered provenance classes used by deterministic entity resolution."""
+
+    CLAIM_TEXT = "claim_text"
+    TABLE_CELL = "table_cell"
+    TABLE_HEADER = "table_header"
+    SECTION_HEADING = "section_heading"
+    PARENT_CONTEXT = "parent_context"
+    DOCUMENT_METADATA = "document_metadata"
+    REGISTRY_FALLBACK = "registry_fallback"
+
+
+class EntityMatchMethod(StrEnum):
+    """Auditable registry match method; fuzzy merging is intentionally absent."""
+
+    EXACT_CODE = "exact_code"
+    EXACT_ALIAS = "exact_alias"
+    CANONICAL_NAME = "canonical_name"
+    NORMALIZED_ALIAS = "normalized_alias"
+    CONTEXT_FALLBACK = "context_fallback"
+
+
+@dataclass(frozen=True, slots=True)
+class EntityEvidence:
+    """One source-backed explanation for a canonical entity assignment."""
+
+    raw_text: str
+    match_method: EntityMatchMethod
+    source: EntityEvidenceSource
+    confidence: float
+    registry_version: str
+    span_start: int | None = None
+    span_end: int | None = None
+    source_id: str | None = None
+
+    def __post_init__(self) -> None:
+        if not self.raw_text.strip():
+            raise ValueError("entity evidence raw_text cannot be blank")
+        _validate_confidence(self.confidence, field_name="entity evidence confidence")
+        if not self.registry_version.strip():
+            raise ValueError("entity evidence registry_version cannot be blank")
+        if (self.span_start is None) != (self.span_end is None):
+            raise ValueError("entity evidence span requires both start and end")
+        if self.span_start is not None and (
+            self.span_start < 0 or self.span_end is None or self.span_end < self.span_start
+        ):
+            raise ValueError("entity evidence span must be ordered and non-negative")
+
+    def to_payload(self) -> dict[str, object]:
+        return {
+            "raw_text": self.raw_text,
+            "match_method": self.match_method.value,
+            "source": self.source.value,
+            "confidence": self.confidence,
+            "registry_version": self.registry_version,
+            "span": (
+                {"start": self.span_start, "end": self.span_end}
+                if self.span_start is not None
+                else None
+            ),
+            "source_id": self.source_id,
+        }
+
+    @classmethod
+    def from_payload(cls, value: object) -> EntityEvidence:
+        payload = _require_mapping(value, field_name="entity_evidence")
+        span = payload.get("span")
+        parsed_span = _payload_source_span(span) if span is not None else None
+        return cls(
+            raw_text=_payload_required_text(payload.get("raw_text"), "entity_evidence.raw_text"),
+            match_method=EntityMatchMethod(
+                _payload_required_text(payload.get("match_method"), "entity_evidence.match_method")
+            ),
+            source=EntityEvidenceSource(
+                _payload_required_text(payload.get("source"), "entity_evidence.source")
+            ),
+            confidence=_payload_required_float(
+                payload.get("confidence"), "entity_evidence.confidence"
+            ),
+            registry_version=_payload_required_text(
+                payload.get("registry_version"), "entity_evidence.registry_version"
+            ),
+            span_start=parsed_span[0] if parsed_span is not None else None,
+            span_end=parsed_span[1] if parsed_span is not None else None,
+            source_id=_payload_optional_text(payload.get("source_id"), "entity_evidence.source_id"),
+        )
+
+
+@dataclass(frozen=True, slots=True)
+class EntityRef:
+    """Deterministic canonical entity plus all evidence used to resolve it."""
+
+    domain: str
+    entity_type: str
+    canonical_id: str
+    canonical_name: str
+    confidence: float
+    registry_version: str
+    parent_id: str | None = None
+    evidence: tuple[EntityEvidence, ...] = ()
+
+    def __post_init__(self) -> None:
+        for field_name, value in (
+            ("domain", self.domain),
+            ("entity_type", self.entity_type),
+            ("canonical_id", self.canonical_id),
+            ("canonical_name", self.canonical_name),
+            ("registry_version", self.registry_version),
+        ):
+            if not value.strip():
+                raise ValueError(f"entity {field_name} cannot be blank")
+        _validate_confidence(self.confidence, field_name="entity confidence")
+
+    @property
+    def raw_mentions(self) -> tuple[str, ...]:
+        return tuple(dict.fromkeys(item.raw_text for item in self.evidence))
+
+    def to_payload(self) -> dict[str, object]:
+        return {
+            "domain": self.domain,
+            "entity_type": self.entity_type,
+            "canonical_id": self.canonical_id,
+            "canonical_name": self.canonical_name,
+            "parent_id": self.parent_id,
+            "raw_mentions": list(self.raw_mentions),
+            "confidence": self.confidence,
+            "registry_version": self.registry_version,
+            "evidence": [item.to_payload() for item in self.evidence],
+        }
+
+    @classmethod
+    def from_payload(cls, value: object) -> EntityRef:
+        payload = _require_mapping(value, field_name="entity")
+        raw_evidence = payload.get("evidence", [])
+        if not isinstance(raw_evidence, list | tuple):
+            raise ValueError("entity.evidence must be a list")
+        return cls(
+            domain=_payload_required_text(payload.get("domain"), "entity.domain"),
+            entity_type=_payload_required_text(payload.get("entity_type"), "entity.entity_type"),
+            canonical_id=_payload_required_text(payload.get("canonical_id"), "entity.canonical_id"),
+            canonical_name=_payload_required_text(
+                payload.get("canonical_name"), "entity.canonical_name"
+            ),
+            parent_id=_payload_optional_text(payload.get("parent_id"), "entity.parent_id"),
+            confidence=_payload_required_float(payload.get("confidence"), "entity.confidence"),
+            registry_version=_payload_required_text(
+                payload.get("registry_version"), "entity.registry_version"
+            ),
+            evidence=tuple(EntityEvidence.from_payload(item) for item in raw_evidence),
+        )
+
+
 @dataclass(frozen=True, slots=True)
 class LocationScope:
     """Hierarchical location constraints, from broadest to narrowest."""
@@ -153,6 +305,45 @@ class CommercialScope:
 
 
 @dataclass(frozen=True, slots=True)
+class VehicleScope:
+    """Vehicle applicability facets shared by table and prose claims."""
+
+    manufacturer: ConstraintValue | None = None
+    model: ConstraintValue | None = None
+    trim: ConstraintValue | None = None
+    model_year: ConstraintValue | None = None
+    battery_variant: ConstraintValue | None = None
+    drivetrain: ConstraintValue | None = None
+    market: ConstraintValue | None = None
+    test_protocol: ConstraintValue | None = None
+    charging_variant: ConstraintValue | None = None
+
+    def to_payload(self) -> dict[str, object]:
+        return _dataclass_constraints_payload(self)
+
+    @classmethod
+    def from_payload(cls, value: object) -> VehicleScope:
+        payload = _require_mapping(value, field_name="vehicle")
+        return cls(
+            manufacturer=_payload_optional_constraint(payload.get("manufacturer"), "manufacturer"),
+            model=_payload_optional_constraint(payload.get("model"), "model"),
+            trim=_payload_optional_constraint(payload.get("trim"), "trim"),
+            model_year=_payload_optional_constraint(payload.get("model_year"), "model_year"),
+            battery_variant=_payload_optional_constraint(
+                payload.get("battery_variant"), "battery_variant"
+            ),
+            drivetrain=_payload_optional_constraint(payload.get("drivetrain"), "drivetrain"),
+            market=_payload_optional_constraint(payload.get("market"), "market"),
+            test_protocol=_payload_optional_constraint(
+                payload.get("test_protocol"), "test_protocol"
+            ),
+            charging_variant=_payload_optional_constraint(
+                payload.get("charging_variant"), "charging_variant"
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class BusinessScope:
     """Facet-based business scope.
 
@@ -164,14 +355,29 @@ class BusinessScope:
     location: LocationScope = field(default_factory=LocationScope)
     product: ProductScope = field(default_factory=ProductScope)
     commercial: CommercialScope = field(default_factory=CommercialScope)
+    vehicle: VehicleScope = field(default_factory=VehicleScope)
+    entities: tuple[EntityRef, ...] = ()
+    explicit_breadth: tuple[str, ...] = ()
     document_type: str | None = None
 
+    def __post_init__(self) -> None:
+        breadth = tuple(sorted({item.strip() for item in self.explicit_breadth if item.strip()}))
+        object.__setattr__(self, "explicit_breadth", breadth)
+
     def stable_identity(self) -> tuple[tuple[str, tuple[str, ...]], ...]:
-        return tuple(
+        facets = tuple(
             (name, _constraint_atoms(value))
             for name, value in _business_scope_items(self)
             if value is not None
         )
+        entity_identity = tuple(
+            (f"entity.{item.entity_type}", (item.canonical_id,))
+            for item in sorted(
+                self.entities, key=lambda item: (item.entity_type, item.canonical_id)
+            )
+        )
+        breadth_identity = tuple(("explicit_breadth", (item,)) for item in self.explicit_breadth)
+        return (*entity_identity, *facets, *breadth_identity)
 
     @property
     def scope_identity_hash(self) -> str:
@@ -182,6 +388,9 @@ class BusinessScope:
             "location": self.location.to_payload(),
             "product": self.product.to_payload(),
             "commercial": self.commercial.to_payload(),
+            "vehicle": self.vehicle.to_payload(),
+            "entities": [item.to_payload() for item in self.entities],
+            "explicit_breadth": list(self.explicit_breadth),
             "document_type": self.document_type,
             "scope_identity_hash": self.scope_identity_hash,
         }
@@ -189,10 +398,21 @@ class BusinessScope:
     @classmethod
     def from_payload(cls, value: object) -> BusinessScope:
         payload = _require_mapping(value, field_name="scope")
+        raw_entities = payload.get("entities", [])
+        raw_breadth = payload.get("explicit_breadth", [])
+        if not isinstance(raw_entities, list | tuple):
+            raise ValueError("scope.entities must be a list")
+        if not isinstance(raw_breadth, list | tuple) or not all(
+            isinstance(item, str) for item in raw_breadth
+        ):
+            raise ValueError("scope.explicit_breadth must be a list of strings")
         return cls(
             location=LocationScope.from_payload(payload.get("location", {})),
             product=ProductScope.from_payload(payload.get("product", {})),
             commercial=CommercialScope.from_payload(payload.get("commercial", {})),
+            vehicle=VehicleScope.from_payload(payload.get("vehicle", {})),
+            entities=tuple(EntityRef.from_payload(item) for item in raw_entities),
+            explicit_breadth=tuple(raw_breadth),
             document_type=_payload_optional_text(payload.get("document_type"), "document_type"),
         )
 
@@ -270,6 +490,8 @@ class TemporalContext:
     effective_to: TemporalPoint | None = None
     observed_at: TemporalPoint | None = None
     ingested_at: TemporalPoint | None = None
+    reference_period: str | None = None
+    claim_periods: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         if (
@@ -284,23 +506,37 @@ class TemporalContext:
         return self.effective_from is not None or self.effective_to is not None
 
     def to_payload(self) -> dict[str, object]:
-        return {
+        payload: dict[str, object] = {
             "publication_time": _temporal_payload(self.publication_time),
             "effective_from": _temporal_payload(self.effective_from),
             "effective_to": _temporal_payload(self.effective_to),
             "observed_at": _temporal_payload(self.observed_at),
             "ingested_at": _temporal_payload(self.ingested_at),
         }
+        if self.reference_period is not None:
+            payload["reference_period"] = self.reference_period
+        if self.claim_periods:
+            payload["claim_periods"] = list(self.claim_periods)
+        return payload
 
     @classmethod
     def from_payload(cls, value: object) -> TemporalContext:
         payload = _require_mapping(value, field_name="temporal")
+        raw_claim_periods = payload.get("claim_periods", [])
+        if not isinstance(raw_claim_periods, list | tuple) or not all(
+            isinstance(item, str) for item in raw_claim_periods
+        ):
+            raise ValueError("temporal.claim_periods must be a list of strings")
         return cls(
             publication_time=_payload_temporal(payload.get("publication_time"), "publication_time"),
             effective_from=_payload_temporal(payload.get("effective_from"), "effective_from"),
             effective_to=_payload_temporal(payload.get("effective_to"), "effective_to"),
             observed_at=_payload_temporal(payload.get("observed_at"), "observed_at"),
             ingested_at=_payload_temporal(payload.get("ingested_at"), "ingested_at"),
+            reference_period=_payload_optional_text(
+                payload.get("reference_period"), "reference_period"
+            ),
+            claim_periods=tuple(raw_claim_periods),
         )
 
 
@@ -746,6 +982,15 @@ def _business_scope_items(scope: BusinessScope) -> tuple[tuple[str, ConstraintVa
         ("commercial.discount_program", scope.commercial.discount_program),
         ("commercial.vat_included", scope.commercial.vat_included),
         ("commercial.maintenance_fee_included", scope.commercial.maintenance_fee_included),
+        ("vehicle.manufacturer", scope.vehicle.manufacturer),
+        ("vehicle.model", scope.vehicle.model),
+        ("vehicle.trim", scope.vehicle.trim),
+        ("vehicle.model_year", scope.vehicle.model_year),
+        ("vehicle.battery_variant", scope.vehicle.battery_variant),
+        ("vehicle.drivetrain", scope.vehicle.drivetrain),
+        ("vehicle.market", scope.vehicle.market),
+        ("vehicle.test_protocol", scope.vehicle.test_protocol),
+        ("vehicle.charging_variant", scope.vehicle.charging_variant),
     )
 
 
@@ -1067,6 +1312,10 @@ __all__ = [
     "ClaimRelationType",
     "CommercialScope",
     "ConstraintValue",
+    "EntityEvidence",
+    "EntityEvidenceSource",
+    "EntityMatchMethod",
+    "EntityRef",
     "LocationScope",
     "NormalizedValue",
     "ProductScope",
@@ -1078,4 +1327,5 @@ __all__ = [
     "TemporalContext",
     "TemporalPoint",
     "TemporalRelation",
+    "VehicleScope",
 ]

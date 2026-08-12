@@ -32,6 +32,15 @@ class RelationType(StrEnum):
     TEMPORAL_SERIES = "temporal_series"
 
 
+class CandidateChannel(StrEnum):
+    """Independent retrieval channels contributing chunk candidates."""
+
+    EXACT = "exact"
+    BINARY = "binary"
+    FTS = "fts"
+    ANN = "ann"
+
+
 class ScopeComparison(StrEnum):
     SAME_SCOPE = "same_scope"
     DIFFERENT_SCOPE = "different_scope"
@@ -321,6 +330,7 @@ class TextRelationAnalysis:
     exact_line_overlap_count: int = 0
     exact_line_overlap_ratio: float = 0.0
     structural_numbers_ignored: int = 0
+    domain_scope_decision: dict[str, object] = field(default_factory=dict)
 
     def to_signals(self) -> dict[str, object]:
         return {
@@ -345,6 +355,7 @@ class TextRelationAnalysis:
             "exact_line_overlap_count": self.exact_line_overlap_count,
             "exact_line_overlap_ratio": round(self.exact_line_overlap_ratio, 6),
             "structural_numbers_ignored": self.structural_numbers_ignored,
+            "domain_scope_decision": self.domain_scope_decision,
         }
 
 
@@ -359,6 +370,8 @@ class ChunkDedupProbe:
     fingerprint: DocumentFingerprint
     include_fuzzy_candidates: bool = False
     scope: ClaimScope | None = None
+    binary_keys: tuple[str, ...] = ()
+    fts_terms: tuple[str, ...] = ()
 
     def to_payload(self) -> dict[str, object]:
         return {
@@ -367,7 +380,19 @@ class ChunkDedupProbe:
             "normalization_version": self.fingerprint.normalization_version,
             "loose_content_signature": self.fingerprint.loose_signature,
             "include_fuzzy": self.include_fuzzy_candidates,
+            "binary_keys": list(self.binary_keys),
+            "fts_terms": list(self.fts_terms),
         }
+
+
+@dataclass(frozen=True, slots=True)
+class CandidateChannelEvidence:
+    """Rank/score retained from one candidate-generation channel."""
+
+    channel: CandidateChannel
+    rank: int
+    score: float = 0.0
+    matched_key_count: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -387,6 +412,8 @@ class ChunkDedupCandidate:
     embedding_model: str
     lsh_band_matches: int = 0
     scope: ClaimScope | None = None
+    channel_evidence: tuple[CandidateChannelEvidence, ...] = ()
+    fused_score: float = 0.0
 
 
 @dataclass(frozen=True, slots=True)
@@ -527,6 +554,8 @@ __all__ = [
     "ClaimKey",
     "ClaimScope",
     "ClaimValue",
+    "CandidateChannel",
+    "CandidateChannelEvidence",
     "ChunkDedupCandidate",
     "ChunkDedupProbe",
     "DocumentFingerprint",

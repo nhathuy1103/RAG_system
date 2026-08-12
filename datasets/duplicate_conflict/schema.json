@@ -1,0 +1,180 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rag-notebook:duplicate-conflict-gold-v1",
+  "title": "Chunk-level duplicate/conflict gold pair",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "pair_id",
+    "split",
+    "domain",
+    "category",
+    "text_a",
+    "text_b",
+    "expected_relation",
+    "variation_type",
+    "same_entity",
+    "same_business_scope",
+    "same_temporal_scope",
+    "same_claim",
+    "same_value",
+    "critical_conflict",
+    "entity_a",
+    "entity_b",
+    "scope_a",
+    "scope_b",
+    "expected_claims_a",
+    "expected_claims_b",
+    "expected_claim_relations",
+    "conflict_fields",
+    "source_form_a",
+    "source_form_b",
+    "table_a",
+    "table_b",
+    "context_a",
+    "context_b",
+    "ocr_noise_level_a",
+    "ocr_noise_level_b",
+    "extraction_reliability_a",
+    "extraction_reliability_b",
+    "difficulty",
+    "is_synthetic",
+    "annotation_reason",
+    "review_status",
+    "diagnostic_hints",
+    "source_documents",
+    "candidate_retrieval_required",
+    "expected_auto_reuse",
+    "seed_index",
+    "distinct_justification",
+    "temporal_overlap_justification"
+  ],
+  "properties": {
+    "schema_version": {"const": "duplicate-conflict-gold-v1"},
+    "pair_id": {"type": "string", "pattern": "^(VH|VF)_[A-Z_]+_[0-9]{4}$"},
+    "split": {"enum": ["dev", "test"]},
+    "domain": {"enum": ["vinhomes", "vinfast"]},
+    "category": {"type": "string", "minLength": 1},
+    "text_a": {"type": "string", "minLength": 1},
+    "text_b": {"type": "string", "minLength": 1},
+    "expected_relation": {
+      "enum": [
+        "EXACT_DUPLICATE",
+        "NEAR_DUPLICATE",
+        "VERSION_UPDATE",
+        "TEMPORAL_VARIANT",
+        "CONDITIONAL_VARIANT",
+        "TEMPLATE_VARIANT",
+        "CONFLICT",
+        "DISTINCT",
+        "UNCERTAIN"
+      ]
+    },
+    "variation_type": {"type": "string", "minLength": 1},
+    "same_entity": {"type": "boolean"},
+    "same_business_scope": {"type": "boolean"},
+    "same_temporal_scope": {"type": "boolean"},
+    "same_claim": {"type": "boolean"},
+    "same_value": {"type": "boolean"},
+    "critical_conflict": {"type": "boolean"},
+    "entity_a": {"type": "object"},
+    "entity_b": {"type": "object"},
+    "scope_a": {"type": "object"},
+    "scope_b": {"type": "object"},
+    "expected_claims_a": {"type": "array", "items": {"type": "object"}},
+    "expected_claims_b": {"type": "array", "items": {"type": "object"}},
+    "expected_claim_relations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["claim", "scope", "expected_relation", "conflict_field"],
+        "properties": {
+          "claim": {"type": "string", "minLength": 1},
+          "scope": {"type": "object"},
+          "expected_relation": {"type": "string", "minLength": 1},
+          "conflict_field": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "conflict_fields": {"type": "array", "items": {"type": "string"}},
+    "source_form_a": {"enum": ["prose", "table"]},
+    "source_form_b": {"enum": ["prose", "table"]},
+    "table_a": {"$ref": "#/$defs/table_or_null"},
+    "table_b": {"$ref": "#/$defs/table_or_null"},
+    "context_a": {"type": "array", "items": {"type": "string"}},
+    "context_b": {"type": "array", "items": {"type": "string"}},
+    "ocr_noise_level_a": {"enum": ["none", "light", "medium", "severe"]},
+    "ocr_noise_level_b": {"enum": ["none", "light", "medium", "severe"]},
+    "extraction_reliability_a": {"enum": ["high", "medium", "low"]},
+    "extraction_reliability_b": {"enum": ["high", "medium", "low"]},
+    "difficulty": {"enum": ["easy", "medium", "hard"]},
+    "is_synthetic": {"const": true},
+    "annotation_reason": {"type": "string", "minLength": 1},
+    "review_status": {"const": "gold"},
+    "diagnostic_hints": {
+      "type": "array",
+      "items": {"$ref": "#/$defs/failure_category"},
+      "uniqueItems": true
+    },
+    "source_documents": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "candidate_retrieval_required": {"type": "boolean"},
+    "expected_auto_reuse": {"type": "boolean"},
+    "seed_index": {"type": "integer", "minimum": 0},
+    "distinct_justification": {"type": ["string", "null"]},
+    "temporal_overlap_justification": {"type": ["string", "null"]}
+  },
+  "$defs": {
+    "table_or_null": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["headers", "rows"],
+          "properties": {
+            "headers": {
+              "type": "array",
+              "minItems": 1,
+              "items": {"type": "string", "minLength": 1}
+            },
+            "rows": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "array",
+                "items": {"type": "string"}
+              }
+            }
+          }
+        }
+      ]
+    },
+    "failure_category": {
+      "enum": [
+        "CANDIDATE_MISS",
+        "ENTITY_RESOLUTION_ERROR",
+        "SCOPE_ERROR",
+        "TEMPORAL_SCOPE_ERROR",
+        "CLAIM_EXTRACTION_ERROR",
+        "CLAIM_ALIGNMENT_ERROR",
+        "VALUE_NORMALIZATION_ERROR",
+        "UNIT_NORMALIZATION_ERROR",
+        "OPERATOR_RANGE_ERROR",
+        "NEGATION_ERROR",
+        "TABLE_PROSE_GAP",
+        "CROSS_CHUNK_CONTEXT_MISSING",
+        "OCR_EXTRACTION_ERROR",
+        "CLASSIFIER_THRESHOLD_ERROR",
+        "DOCUMENT_AGGREGATION_ERROR",
+        "OTHER"
+      ]
+    }
+  }
+}

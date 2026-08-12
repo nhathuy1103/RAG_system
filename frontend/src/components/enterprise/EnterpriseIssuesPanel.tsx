@@ -1,10 +1,12 @@
 import { Icon } from "@iconify/react";
 import { useEffect, useMemo, useState } from "react";
 import {
+  compareEnterpriseTexts,
   EnterpriseDocumentRelation,
   EnterpriseDocumentRelationAction,
   EnterpriseDocumentRelationEvidence,
   EnterpriseDocumentRelationStatus,
+  EnterpriseTextComparison,
   getEnterpriseRelationEvidence,
   listEnterpriseRelations,
   resolveEnterpriseRelation,
@@ -91,6 +93,190 @@ function RelationTypeBadge({ type }: { type: string }) {
     >
       {labels[type] || type}
     </span>
+  );
+}
+
+const COMPARISON_DESCRIPTIONS: Record<string, string> = {
+  exact_content: "Hai nội dung giống nhau sau khi chuẩn hóa. Có thể coi là duplicate và không cần tạo thêm bản ghi.",
+  near_duplicate: "Hai nội dung gần như trùng nhau. Nên review phần khác biệt trước khi quyết định gộp.",
+  conflict_candidate: "Hai nội dung nói về cùng một vấn đề nhưng có dữ kiện hoặc quy định không nhất quán.",
+  conflict: "Đã xác định có mâu thuẫn nội dung giữa hai phía.",
+  version_candidate: "Nội dung có vẻ là các phiên bản khác nhau của cùng một tài liệu.",
+  version: "Hai nội dung thuộc cùng một dòng phiên bản.",
+  template_variant: "Hai nội dung dùng cùng cấu trúc mẫu nhưng có thể áp dụng cho phạm vi khác nhau.",
+  temporal_series: "Dữ kiện khác nhau theo thời kỳ; đây có thể là chuỗi lịch sử thay vì mâu thuẫn.",
+  related: "Hai nội dung có liên quan nhưng chưa đủ bằng chứng để coi là trùng hoặc mâu thuẫn.",
+  distinct: "Chưa thấy bằng chứng đủ mạnh cho trùng lặp hoặc mâu thuẫn.",
+};
+
+const REASON_LABELS: Record<string, string> = {
+  strict_content_match: "Nội dung khớp hoàn toàn sau chuẩn hóa",
+  high_content_containment: "Một nội dung bao phủ phần lớn nội dung còn lại",
+  high_semantic_lexical_overlap: "Mức độ tương đồng từ ngữ cao",
+  insufficient_duplicate_evidence: "Chưa đủ bằng chứng trùng lặp",
+  number_mismatch: "Có số liệu khác nhau",
+  date_value_mismatch: "Có ngày hoặc thời điểm khác nhau",
+  unit_value_mismatch: "Có đơn vị đo khác nhau",
+  negation_mismatch: "Một bên có ý phủ định, bên còn lại không",
+  policy_modality_mismatch: "Mức độ bắt buộc/cho phép của quy định khác nhau",
+  semantic_quantity_mismatch: "Cùng một phát biểu nhưng giá trị định lượng khác nhau",
+  validated_same_scope_conflict: "Mâu thuẫn được phát hiện trong cùng phạm vi",
+  scope_unknown_strong_claim_conflict: "Có mâu thuẫn mạnh nhưng chưa xác định rõ phạm vi",
+  different_claim_scope: "Hai phát biểu thuộc phạm vi khác nhau",
+  different_claim_key: "Hai phát biểu đang nói về đối tượng khác nhau",
+  temporal_period_difference: "Hai nội dung thuộc các thời kỳ khác nhau",
+  historical_series_not_conflict: "Được nhận diện là dữ liệu lịch sử, không phải mâu thuẫn",
+  value_difference_across_temporal_periods: "Giá trị thay đổi giữa các thời kỳ",
+  template_overlap_without_claim_alignment: "Cùng mẫu trình bày nhưng phát biểu không cùng đối tượng",
+  structural_reference_difference_only: "Chỉ khác số mục hoặc tham chiếu cấu trúc",
+};
+
+const COMPARISON_EXAMPLES = {
+  duplicate: {
+    left: "Vinhomes Grand Park có giá bán căn hộ năm 2025 từ 70 triệu đồng/m².",
+    right: "Vinhomes Grand Park có giá bán căn hộ năm 2025 từ 70 triệu đồng/m².",
+  },
+  conflict: {
+    left: "Vinhomes Grand Park có giá bán căn hộ năm 2025 là 70 triệu đồng/m².",
+    right: "Vinhomes Grand Park có giá bán căn hộ năm 2025 là 82 triệu đồng/m².",
+  },
+};
+
+function ComparisonMetric({ label, value }: { label: string; value: number }) {
+  const percentage = Math.max(0, Math.min(100, value * 100));
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between text-[11px]">
+        <span className="text-dim">{label}</span>
+        <span className="font-semibold text-foreground">{percentage.toFixed(1)}%</span>
+      </div>
+      <div className="h-1.5 overflow-hidden rounded-full bg-inset">
+        <div className="h-full rounded-full bg-accent" style={{ width: `${percentage}%` }} />
+      </div>
+    </div>
+  );
+}
+
+function TextComparisonLab() {
+  const [leftText, setLeftText] = useState("");
+  const [rightText, setRightText] = useState("");
+  const [comparison, setComparison] = useState<EnterpriseTextComparison | null>(null);
+  const [comparing, setComparing] = useState(false);
+  const [comparisonError, setComparisonError] = useState<string | null>(null);
+
+  function useExample(type: keyof typeof COMPARISON_EXAMPLES) {
+    setLeftText(COMPARISON_EXAMPLES[type].left);
+    setRightText(COMPARISON_EXAMPLES[type].right);
+    setComparison(null);
+    setComparisonError(null);
+  }
+
+  async function compare() {
+    if (!leftText.trim() || !rightText.trim()) {
+      setComparisonError("Vui lòng nhập đủ cả hai nội dung trước khi so sánh.");
+      return;
+    }
+    setComparing(true);
+    setComparisonError(null);
+    try {
+      setComparison(await compareEnterpriseTexts(leftText, rightText));
+    } catch (error: unknown) {
+      setComparison(null);
+      setComparisonError(error instanceof Error ? error.message : "Không thể phân tích hai nội dung.");
+    } finally {
+      setComparing(false);
+    }
+  }
+
+  return (
+    <section className="mt-6 overflow-hidden rounded-2xl border border-border bg-panel" aria-labelledby="comparison-lab-title">
+      <div className="border-b border-border bg-inset/50 px-5 py-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <Icon icon="lucide:flask-conical" width={18} className="text-accent" />
+              <h2 id="comparison-lab-title" className="font-heading text-base font-semibold">Phòng thử nghiệm Duplicate / Conflict</h2>
+            </div>
+            <p className="mt-1 text-xs leading-5 text-dim">Dán hai đoạn văn để chạy thử bộ phân tích hiện tại. Nội dung thử nghiệm không được lưu.</p>
+          </div>
+          <div className="flex gap-2">
+            <button type="button" onClick={() => useExample("duplicate")} className="rounded-lg border border-border bg-background px-3 py-2 text-[11px] font-semibold text-dim hover:bg-inset">Ví dụ duplicate</button>
+            <button type="button" onClick={() => useExample("conflict")} className="rounded-lg border border-border bg-background px-3 py-2 text-[11px] font-semibold text-dim hover:bg-inset">Ví dụ conflict</button>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-5">
+        <div className="grid gap-4 lg:grid-cols-2">
+          <label className="block">
+            <span className="mb-2 flex items-center justify-between text-xs font-semibold"><span>Nội dung A</span><span className="font-normal text-faint">{leftText.length.toLocaleString("vi-VN")} / 50.000 ký tự</span></span>
+            <textarea value={leftText} maxLength={50000} onChange={(event) => { setLeftText(event.target.value); setComparison(null); }} placeholder="Dán nội dung tài liệu thứ nhất..." className="min-h-44 w-full resize-y rounded-xl border border-border bg-background p-3 text-sm leading-6 outline-none transition focus:border-accent focus:ring-1 focus:ring-accent" />
+          </label>
+          <label className="block">
+            <span className="mb-2 flex items-center justify-between text-xs font-semibold"><span>Nội dung B</span><span className="font-normal text-faint">{rightText.length.toLocaleString("vi-VN")} / 50.000 ký tự</span></span>
+            <textarea value={rightText} maxLength={50000} onChange={(event) => { setRightText(event.target.value); setComparison(null); }} placeholder="Dán nội dung tài liệu thứ hai..." className="min-h-44 w-full resize-y rounded-xl border border-border bg-background p-3 text-sm leading-6 outline-none transition focus:border-accent focus:ring-1 focus:ring-accent" />
+          </label>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <button type="button" disabled={comparing || !leftText.trim() || !rightText.trim()} onClick={() => void compare()} className="inline-flex items-center gap-2 rounded-lg bg-accent px-4 py-2.5 text-xs font-semibold text-accent-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50">
+            <Icon icon={comparing ? "lucide:loader-circle" : "lucide:scan-search"} width={15} className={comparing ? "animate-spin" : ""} />
+            {comparing ? "Đang phân tích..." : "So sánh nội dung"}
+          </button>
+          <button type="button" disabled={comparing || (!leftText && !rightText)} onClick={() => { setLeftText(rightText); setRightText(leftText); setComparison(null); }} className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2.5 text-xs font-semibold text-dim hover:bg-inset disabled:opacity-50">
+            <Icon icon="lucide:arrow-left-right" width={14} /> Đổi vị trí
+          </button>
+          <span className="text-[10px] text-faint">Phân tích từ ngữ, số liệu, ngày tháng, phủ định và phạm vi phát biểu.</span>
+        </div>
+
+        {comparisonError && <div className="mt-4 rounded-xl border border-red/30 bg-red/10 px-4 py-3 text-xs text-red">{comparisonError}</div>}
+
+        {comparison && (
+          <div className="mt-5 rounded-2xl border border-border bg-background p-5" aria-live="polite">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <div className="mb-2 text-[10px] font-bold uppercase tracking-wider text-faint">Kết quả phân loại</div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <RelationTypeBadge type={comparison.relation_type} />
+                  <span className={`rounded-full border px-2 py-1 text-[10px] font-semibold ${comparison.review_recommended ? "border-yellow/30 bg-yellow/10 text-yellow" : "border-green/30 bg-green/10 text-green"}`}>
+                    {comparison.review_recommended ? "Nên có người review" : "Không bắt buộc review"}
+                  </span>
+                </div>
+                <p className="mt-3 max-w-3xl text-xs leading-5 text-dim">{COMPARISON_DESCRIPTIONS[comparison.relation_type] || "Bộ phân tích đã hoàn tất việc đánh giá quan hệ giữa hai nội dung."}</p>
+              </div>
+              <div className="rounded-xl border border-border bg-panel px-5 py-3 text-center">
+                <div className="text-[10px] uppercase tracking-wider text-faint">Độ tin cậy</div>
+                <div className="mt-1 font-heading text-2xl font-bold text-foreground">{(comparison.confidence * 100).toFixed(1)}%</div>
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-4 sm:grid-cols-3">
+              <ComparisonMetric label="Tương đồng từ ngữ" value={comparison.lexical_similarity} />
+              <ComparisonMetric label="Mức độ bao phủ" value={comparison.containment} />
+              <ComparisonMetric label="Tương đồng cấu trúc" value={comparison.template_similarity} />
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-2 text-[10px]">
+              <span className={`rounded-full border px-2 py-1 ${comparison.number_agreement ? "border-green/30 bg-green/10 text-green" : "border-red/30 bg-red/10 text-red"}`}>Số liệu {comparison.number_agreement ? "khớp" : "không khớp"}</span>
+              <span className={`rounded-full border px-2 py-1 ${comparison.date_agreement ? "border-green/30 bg-green/10 text-green" : "border-red/30 bg-red/10 text-red"}`}>Ngày tháng {comparison.date_agreement ? "khớp" : "không khớp"}</span>
+              {comparison.negation_mismatch && <span className="rounded-full border border-red/30 bg-red/10 px-2 py-1 text-red">Khác biệt phủ định</span>}
+              {comparison.policy_modality_mismatch && <span className="rounded-full border border-red/30 bg-red/10 px-2 py-1 text-red">Khác mức độ bắt buộc</span>}
+              {comparison.validated_conflict_count > 0 && <span className="rounded-full border border-red/30 bg-red/10 px-2 py-1 text-red">{comparison.validated_conflict_count} phát biểu mâu thuẫn</span>}
+            </div>
+
+            {comparison.reason_codes.length > 0 && (
+              <div className="mt-5 border-t border-border pt-4">
+                <div className="text-xs font-semibold">Vì sao có kết quả này?</div>
+                <ul className="mt-2 grid gap-2 text-xs text-dim sm:grid-cols-2">
+                  {comparison.reason_codes.map((reasonCode) => <li key={reasonCode} className="flex items-start gap-2"><Icon icon="lucide:check-circle-2" width={14} className="mt-0.5 shrink-0 text-accent" /><span>{REASON_LABELS[reasonCode] || reasonCode.replaceAll("_", " ")}</span></li>)}
+                </ul>
+              </div>
+            )}
+            <p className="mt-4 text-[10px] leading-4 text-faint">Đây là kết quả hỗ trợ quyết định. Bản thử nghiệm chưa dùng embedding ngữ nghĩa và không tự ghi nhận quyết định vào hàng đợi review.</p>
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -217,6 +403,8 @@ export default function EnterpriseIssuesPanel() {
       <p className="mt-1 text-sm text-dim">
         Theo dõi và giải quyết các lỗi trùng lặp (duplicate) hoặc mâu thuẫn (conflict) nội dung giữa các tài liệu.
       </p>
+
+      <TextComparisonLab />
 
       <div className="mt-5 flex flex-wrap gap-2" aria-label="Lọc theo trạng thái">
         <button

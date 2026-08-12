@@ -27,8 +27,7 @@ class _ConstraintRelation(StrEnum):
     RIGHT_CONTAINS_LEFT = "right_contains_left"
     OVERLAPS = "overlaps"
     DISJOINT = "disjoint"
-    LEFT_ONLY = "left_only"
-    RIGHT_ONLY = "right_only"
+    UNKNOWN = "unknown"
     EMPTY = "empty"
 
 
@@ -40,6 +39,7 @@ class ScopeComparisonResult:
     right_broader_dimensions: tuple[str, ...] = ()
     overlapping_dimensions: tuple[str, ...] = ()
     conflicting_dimensions: tuple[str, ...] = ()
+    unknown_dimensions: tuple[str, ...] = ()
 
     def to_payload(self) -> dict[str, object]:
         return {
@@ -49,6 +49,7 @@ class ScopeComparisonResult:
             "right_broader_dimensions": list(self.right_broader_dimensions),
             "overlapping_dimensions": list(self.overlapping_dimensions),
             "conflicting_dimensions": list(self.conflicting_dimensions),
+            "unknown_dimensions": list(self.unknown_dimensions),
         }
 
 
@@ -87,6 +88,7 @@ def explain_business_scope_relation(
     right_broader: list[str] = []
     overlapping: list[str] = []
     conflicting: list[str] = []
+    unknown: list[str] = []
     explicit_shared_dimension = False
 
     for name in left_values:
@@ -94,26 +96,32 @@ def explain_business_scope_relation(
         right_value = right_values[name]
         if left_value is not None and right_value is not None:
             explicit_shared_dimension = True
-        dimension_relation = _compare_constraints(left_value, right_value)
+        dimension_relation = _compare_constraints(
+            left_value,
+            right_value,
+            left_explicit_breadth=name in left.explicit_breadth,
+            right_explicit_breadth=name in right.explicit_breadth,
+        )
         if dimension_relation is _ConstraintRelation.SAME:
             matching.append(name)
-        elif dimension_relation in {
-            _ConstraintRelation.LEFT_CONTAINS_RIGHT,
-            _ConstraintRelation.RIGHT_ONLY,
-        }:
+        elif dimension_relation is _ConstraintRelation.LEFT_CONTAINS_RIGHT:
             left_broader.append(name)
-        elif dimension_relation in {
-            _ConstraintRelation.RIGHT_CONTAINS_LEFT,
-            _ConstraintRelation.LEFT_ONLY,
-        }:
+        elif dimension_relation is _ConstraintRelation.RIGHT_CONTAINS_LEFT:
             right_broader.append(name)
         elif dimension_relation is _ConstraintRelation.OVERLAPS:
             overlapping.append(name)
         elif dimension_relation is _ConstraintRelation.DISJOINT:
             conflicting.append(name)
+        elif dimension_relation is _ConstraintRelation.UNKNOWN:
+            unknown.append(name)
 
     if conflicting:
         overall_relation = ScopeRelation.DISJOINT
+    elif unknown:
+        # Absence on one side is incomplete evidence, never an implicit wildcard.
+        # A caller must set ``explicit_breadth`` for statements such as
+        # "all VF 8 variants" before containment is allowed.
+        overall_relation = ScopeRelation.UNKNOWN
     elif not explicit_shared_dimension:
         # Missing constraints are unknown evidence, not proof of a global wildcard.
         overall_relation = ScopeRelation.UNKNOWN
@@ -133,6 +141,7 @@ def explain_business_scope_relation(
         right_broader_dimensions=tuple(right_broader),
         overlapping_dimensions=tuple(overlapping),
         conflicting_dimensions=tuple(conflicting),
+        unknown_dimensions=tuple(unknown),
     )
 
 
@@ -232,13 +241,24 @@ def compare_temporal_intervals(
 def _compare_constraints(
     left: ConstraintValue | None,
     right: ConstraintValue | None,
+    *,
+    left_explicit_breadth: bool = False,
+    right_explicit_breadth: bool = False,
 ) -> _ConstraintRelation:
     if left is None and right is None:
         return _ConstraintRelation.EMPTY
     if left is None:
-        return _ConstraintRelation.RIGHT_ONLY
+        return (
+            _ConstraintRelation.LEFT_CONTAINS_RIGHT
+            if left_explicit_breadth
+            else _ConstraintRelation.UNKNOWN
+        )
     if right is None:
-        return _ConstraintRelation.LEFT_ONLY
+        return (
+            _ConstraintRelation.RIGHT_CONTAINS_LEFT
+            if right_explicit_breadth
+            else _ConstraintRelation.UNKNOWN
+        )
     left_values = frozenset(_constraint_atoms(left))
     right_values = frozenset(_constraint_atoms(right))
     if left_values == right_values:

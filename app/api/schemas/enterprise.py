@@ -662,3 +662,41 @@ class AnalyticsSummaryResponse(BaseModel):
     feedback_up: int
     feedback_down: int
     no_answer_rate: float | None = None
+
+
+class TextComparisonRequest(BaseModel):
+    """Two plain-text samples submitted for a non-persistent quality preview."""
+
+    left_text: str = Field(min_length=1, max_length=50_000)
+    right_text: str = Field(min_length=1, max_length=50_000)
+
+    @field_validator("left_text", "right_text")
+    @classmethod
+    def reject_blank_text(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("Text must not be blank")
+        return value
+
+
+class TextComparisonResponse(BaseModel):
+    """Explainable result from the deterministic content-relation analyzer."""
+
+    relation_type: str
+    confidence: float
+    review_recommended: bool
+    lexical_similarity: float
+    containment: float
+    semantic_similarity: float | None = None
+    template_similarity: float
+    number_agreement: bool
+    date_agreement: bool
+    negation_mismatch: bool
+    unit_agreement: bool
+    policy_modality_mismatch: bool
+    scope_comparison: str
+    reason_codes: list[str] = Field(default_factory=list)
+    claim_conflicts: list[dict[str, object]] = Field(default_factory=list)
+    validated_conflict_count: int
+    exact_line_overlap_count: int
+    exact_line_overlap_ratio: float
+    structural_numbers_ignored: int

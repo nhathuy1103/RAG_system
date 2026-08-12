@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections import Counter
 from collections.abc import Mapping, Sequence
 from contextlib import suppress
 from dataclasses import replace
@@ -30,12 +31,18 @@ from app.knowledge_quality.application.analysis import (
     build_legacy_document_fingerprint,
     is_auto_identity_eligible,
 )
+from app.knowledge_quality.application.business_scope import (
+    ScopeTextContext,
+    resolve_business_context,
+)
 from app.knowledge_quality.application.chunk_preembedding import (
     build_chunk_dedup_probes,
     plan_chunk_deduplication,
 )
 from app.knowledge_quality.application.detection import (
+    FusedCandidateDetectionResult,
     detect_document_relation_candidates,
+    detect_fused_document_relation_candidates,
 )
 from app.knowledge_quality.application.scope import extract_claim_scope
 from app.knowledge_quality.domain.models import (
@@ -78,7 +85,11 @@ from app.structured_facts.application.table_analyzer import (
     TableAnalysis,
     analyze_table,
 )
-from app.structured_facts.domain.models import BusinessScope, LocationScope
+from app.structured_facts.domain.models import (
+    BusinessScope,
+    EntityEvidenceSource,
+    LocationScope,
+)
 from app.structured_facts.ports.repositories import (
     StructuredClaimCandidate,
     StructuredFactStore,
@@ -92,6 +103,7 @@ REQUIRED_EMBEDDING_DIMENSIONS = 1536
 REQUIRED_VECTOR_STORES = {"qdrant", "pgvector"}
 KnowledgeQualityMode = Literal["off", "shadow", "on"]
 StructuredFactMode = Literal["off", "shadow", "on"]
+CandidateGenerationMode = Literal["legacy", "shadow", "on"]
 _KEY_RETRIEVAL_METADATA_FIELDS = (
     "document_number",
     "document_type",
@@ -186,6 +198,9 @@ class IngestionWorker:
         structured_fact_store: StructuredFactStore | None = None,
         quality_max_probe_chunks: int = 8,
         quality_candidates_per_probe: int = 5,
+        candidate_generation_mode: CandidateGenerationMode = "legacy",
+        candidate_channel_k: int = 30,
+        candidate_final_top_k: int = 50,
         telemetry: Telemetry | None = None,
     ) -> None:
         if poll_interval_seconds <= 0:
@@ -198,6 +213,12 @@ class IngestionWorker:
             raise ValueError("Structured fact mode must be off, shadow, or on")
         if quality_max_probe_chunks <= 0 or quality_candidates_per_probe <= 0:
             raise ValueError("Knowledge quality candidate limits must be > 0")
+        if candidate_generation_mode not in {"legacy", "shadow", "on"}:
+            raise ValueError("Candidate generation mode must be legacy, shadow, or on")
+        if not 1 <= candidate_channel_k <= 50:
+            raise ValueError("Candidate channel limit must be between 1 and 50")
+        if not 1 <= candidate_final_top_k <= 50:
+            raise ValueError("Final candidate limit must be between 1 and 50")
         self._repository = repository
         self._object_storage = object_storage
         self._pipeline = pipeline
@@ -209,6 +230,9 @@ class IngestionWorker:
         self._structured_fact_store = structured_fact_store
         self._quality_max_probe_chunks = quality_max_probe_chunks
         self._quality_candidates_per_probe = quality_candidates_per_probe
+        self._candidate_generation_mode = candidate_generation_mode
+        self._candidate_channel_k = candidate_channel_k
+        self._candidate_final_top_k = candidate_final_top_k
         self._telemetry = telemetry or Telemetry()
 
     def _structured_mode_for_job(
@@ -492,7 +516,7 @@ class IngestionWorker:
                 else ()
             )
             relations: tuple[QualityRelationCandidate, ...] = ()
-            chunk_dedup_stats: dict[str, int] = {}
+            chunk_dedup_stats: dict[str, object] = {}
             duplicate_id: UUID | None = None
             if (
                 not is_repair_job
@@ -546,27 +570,59 @@ class IngestionWorker:
             )
 
             chunk_embedding_plan: ChunkEmbeddingPlan | None = None
+            high_recall_probes: tuple[ChunkDedupProbe, ...] = ()
+            high_recall_candidates: tuple[ChunkDedupCandidate, ...] = ()
             if not is_repair_job and quality_mode != "off":
                 with self._telemetry.observe(
                     "ingestion.chunk_preembedding_quality",
                     as_type="guardrail",
                     input={"chunk_count": len(prepared.chunks)},
                 ) as observation:
-                    probes = build_chunk_dedup_probes(
-                        prepared.chunks,
-                        max_fuzzy_probes=self._quality_max_probe_chunks,
-                        scope=source_scope,
-                    )
-                    chunk_candidates = await self._safe_find_chunk_dedup_candidates(
-                        job,
-                        probes,
-                    )
-                    dedup_plan = plan_chunk_deduplication(
-                        probes,
-                        chunk_candidates,
-                        embedding_model=self._pipeline.embedding_provider.model_name,
-                        enable_exact_reuse=quality_mode == "on",
-                    )
+                    if self._candidate_generation_mode in {"shadow", "on"}:
+                        high_recall_probes = build_chunk_dedup_probes(
+                            prepared.chunks,
+                            max_fuzzy_probes=None,
+                            scope=source_scope,
+                            high_recall_candidates=True,
+                        )
+                        high_recall_candidates = (
+                            await self._safe_find_chunk_dedup_candidates(
+                                job,
+                                high_recall_probes,
+                                candidates_per_probe=self._candidate_channel_k,
+                            )
+                        )
+                        high_recall_plan = plan_chunk_deduplication(
+                            high_recall_probes,
+                            high_recall_candidates,
+                            embedding_model=self._pipeline.embedding_provider.model_name,
+                            enable_exact_reuse=(
+                                quality_mode == "on"
+                                and self._candidate_generation_mode == "on"
+                            ),
+                        )
+                    else:
+                        high_recall_plan = None
+
+                    if self._candidate_generation_mode in {"legacy", "shadow"}:
+                        probes = build_chunk_dedup_probes(
+                            prepared.chunks,
+                            max_fuzzy_probes=self._quality_max_probe_chunks,
+                            scope=source_scope,
+                        )
+                        chunk_candidates = await self._safe_find_chunk_dedup_candidates(
+                            job,
+                            probes,
+                        )
+                        dedup_plan = plan_chunk_deduplication(
+                            probes,
+                            chunk_candidates,
+                            embedding_model=self._pipeline.embedding_provider.model_name,
+                            enable_exact_reuse=quality_mode == "on",
+                        )
+                    else:
+                        assert high_recall_plan is not None
+                        dedup_plan = high_recall_plan
                     chunk_embedding_plan = ChunkEmbeddingPlan(
                         precomputed_vectors=dedup_plan.precomputed_vectors,
                         reuse_from_chunk_index=dedup_plan.reuse_from_chunk_index,
@@ -576,7 +632,29 @@ class IngestionWorker:
                         relations,
                         dedup_plan.relations,
                     )
-                    chunk_dedup_stats = dedup_plan.to_stats()
+                    chunk_dedup_stats = {
+                        "candidate_generation_mode": self._candidate_generation_mode,
+                        "active": dedup_plan.to_stats(),
+                        "eligible_probe_count": sum(
+                            probe.include_fuzzy_candidates
+                            for probe in (
+                                high_recall_probes
+                                if self._candidate_generation_mode == "on"
+                                else probes
+                            )
+                        ),
+                    }
+                    if (
+                        self._candidate_generation_mode == "shadow"
+                        and high_recall_plan is not None
+                    ):
+                        chunk_dedup_stats["p1_shadow"] = {
+                            **high_recall_plan.to_stats(),
+                            "eligible_probe_count": sum(
+                                probe.include_fuzzy_candidates
+                                for probe in high_recall_probes
+                            ),
+                        }
                     observation.update(output=chunk_dedup_stats)
 
             current_stage = ProcessingStage.EMBEDDING
@@ -603,8 +681,35 @@ class IngestionWorker:
                 and duplicate_id is None
                 and self._pipeline.vector_index is not None
             ):
-                detected = await self._safe_detect_relations(result)
-                relations = self._merge_relation_candidates(relations, detected)
+                if self._candidate_generation_mode == "legacy":
+                    detected = await self._safe_detect_relations(result)
+                    relations = self._merge_relation_candidates(relations, detected)
+                elif high_recall_probes:
+                    fused = await self._safe_detect_fused_relations(
+                        result,
+                        high_recall_probes,
+                        high_recall_candidates,
+                    )
+                    chunk_dedup_stats["post_embedding_fusion"] = {
+                        "probe_count": fused.probe_count,
+                        "ann_candidate_count": fused.ann_candidate_count,
+                        "final_candidate_count": len(fused.candidates),
+                        "relation_count": len(fused.relations),
+                        "channel_candidate_counts": dict(
+                            sorted(
+                                Counter(
+                                    evidence.channel.value
+                                    for candidate in fused.candidates
+                                    for evidence in candidate.channel_evidence
+                                ).items()
+                            )
+                        ),
+                    }
+                    if self._candidate_generation_mode == "on":
+                        relations = self._merge_relation_candidates(
+                            relations,
+                            fused.relations,
+                        )
 
             self._ensure_lease(lease_lost)
             renewed = await self._repository.renew_lease(
@@ -1109,13 +1214,15 @@ class IngestionWorker:
         self,
         job: ClaimedIngestionJob,
         probes: Sequence[ChunkDedupProbe],
+        *,
+        candidates_per_probe: int | None = None,
     ) -> tuple[ChunkDedupCandidate, ...]:
         try:
             return await self._repository.find_chunk_dedup_candidates(
                 job,
                 probes,
                 self._pipeline.embedding_provider.model_name,
-                self._quality_candidates_per_probe,
+                candidates_per_probe or self._quality_candidates_per_probe,
             )
         except Exception:
             LOGGER.exception(
@@ -1126,6 +1233,31 @@ class IngestionWorker:
                 job.document_id,
             )
             return ()
+
+    async def _safe_detect_fused_relations(
+        self,
+        result: IngestionEmbeddingResult,
+        probes: tuple[ChunkDedupProbe, ...],
+        preembedding_candidates: tuple[ChunkDedupCandidate, ...],
+    ) -> FusedCandidateDetectionResult:
+        if self._pipeline.vector_index is None:
+            return FusedCandidateDetectionResult((), (), 0, 0)
+        try:
+            return await asyncio.to_thread(
+                detect_fused_document_relation_candidates,
+                vector_index=self._pipeline.vector_index,
+                chunks=result.embedded_chunks,
+                probes=probes,
+                preembedding_candidates=preembedding_candidates,
+                candidates_per_channel=self._candidate_channel_k,
+                final_candidate_limit=self._candidate_final_top_k,
+            )
+        except Exception:
+            LOGGER.exception(
+                "Fused chunk candidate detection failed for document %s; continuing ingestion",
+                result.source.document_id,
+            )
+            return FusedCandidateDetectionResult((), (), 0, 0)
 
     async def _safe_detect_relations(
         self,
@@ -1193,15 +1325,47 @@ class IngestionWorker:
         scope: ClaimScope,
     ) -> IngestionEmbeddingResult:
         scope_metadata = scope.to_metadata()
-        return replace(
-            result,
-            embedded_chunks=tuple(
+        enriched_chunks: list[EmbeddedChunk] = []
+        for chunk in result.embedded_chunks:
+            contexts: list[ScopeTextContext] = []
+            if chunk.section_title:
+                contexts.append(
+                    ScopeTextContext(
+                        chunk.section_title,
+                        EntityEvidenceSource.SECTION_HEADING,
+                        f"chunk:{chunk.id}:section",
+                    )
+                )
+            for key, source in (
+                ("parent_section_title", EntityEvidenceSource.PARENT_CONTEXT),
+                ("parent_context", EntityEvidenceSource.PARENT_CONTEXT),
+            ):
+                raw_context = chunk.metadata.get(key)
+                if isinstance(raw_context, str) and raw_context.strip():
+                    contexts.append(
+                        ScopeTextContext(
+                            raw_context,
+                            source,
+                            f"chunk:{chunk.id}:{key}",
+                        )
+                    )
+            entity_scope = resolve_business_context(
+                chunk.canonical_text,
+                contexts=tuple(contexts),
+            )
+            enriched_chunks.append(
                 replace(
                     chunk,
-                    metadata={**chunk.metadata, "claim_scope": scope_metadata},
+                    metadata={
+                        **chunk.metadata,
+                        "claim_scope": scope_metadata,
+                        "entity_scope": entity_scope.to_metadata(),
+                    },
                 )
-                for chunk in result.embedded_chunks
-            ),
+            )
+        return replace(
+            result,
+            embedded_chunks=tuple(enriched_chunks),
         )
 
     async def _wait_or_stop(self, stop_event: asyncio.Event) -> None:

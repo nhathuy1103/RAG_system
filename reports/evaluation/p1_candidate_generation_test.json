@@ -1,0 +1,4025 @@
+{
+  "ablations": {
+    "all_channels": {
+      "recall@1": 0.529032,
+      "recall@10": 0.929032,
+      "recall@20": 0.96129,
+      "recall@5": 0.877419,
+      "recall@50": 1.0
+    },
+    "all_minus_ann": {
+      "recall@1": 0.529032,
+      "recall@10": 0.916129,
+      "recall@20": 0.954839,
+      "recall@5": 0.877419,
+      "recall@50": 1.0
+    },
+    "all_minus_binary": {
+      "recall@1": 0.722581,
+      "recall@10": 0.916129,
+      "recall@20": 0.993548,
+      "recall@5": 0.903226,
+      "recall@50": 1.0
+    },
+    "all_minus_exact": {
+      "recall@1": 0.529032,
+      "recall@10": 0.929032,
+      "recall@20": 0.96129,
+      "recall@5": 0.877419,
+      "recall@50": 1.0
+    },
+    "all_minus_fts": {
+      "recall@1": 0.529032,
+      "recall@10": 0.851613,
+      "recall@20": 0.896774,
+      "recall@5": 0.806452,
+      "recall@50": 0.987097
+    },
+    "exact_ann": {
+      "recall@1": 0.670968,
+      "recall@10": 0.819355,
+      "recall@20": 0.877419,
+      "recall@5": 0.819355,
+      "recall@50": 0.974194
+    },
+    "exact_binary": {
+      "recall@1": 0.529032,
+      "recall@10": 0.8,
+      "recall@20": 0.832258,
+      "recall@5": 0.729032,
+      "recall@50": 0.832258
+    },
+    "exact_fts": {
+      "recall@1": 0.722581,
+      "recall@10": 0.909677,
+      "recall@20": 1.0,
+      "recall@5": 0.870968,
+      "recall@50": 1.0
+    },
+    "exact_only": {
+      "recall@1": 0.135484,
+      "recall@10": 0.135484,
+      "recall@20": 0.135484,
+      "recall@5": 0.135484,
+      "recall@50": 0.135484
+    }
+  },
+  "binary_strategies": {
+    "fixed_8x8": {
+      "recall@1": 0.329032,
+      "recall@10": 0.490323,
+      "recall@20": 0.490323,
+      "recall@5": 0.477419,
+      "recall@50": 0.490323
+    },
+    "fixed_8x8_multiprobe_r2": {
+      "recall@1": 0.529032,
+      "recall@10": 0.793548,
+      "recall@20": 0.832258,
+      "recall@5": 0.741935,
+      "recall@50": 0.948387
+    },
+    "simhash-multilayout-8x8-v1": {
+      "recall@1": 0.509677,
+      "recall@10": 0.754839,
+      "recall@20": 0.832258,
+      "recall@5": 0.696774,
+      "recall@50": 0.832258
+    }
+  },
+  "breakdowns": {
+    "difficulty": {
+      "easy": {
+        "population": 21,
+        "recall@1": 1.0,
+        "recall@10": 1.0,
+        "recall@20": 1.0,
+        "recall@5": 1.0,
+        "recall@50": 1.0
+      },
+      "hard": {
+        "population": 58,
+        "recall@1": 0.551724,
+        "recall@10": 0.982759,
+        "recall@20": 1.0,
+        "recall@5": 0.913793,
+        "recall@50": 1.0
+      },
+      "medium": {
+        "population": 76,
+        "recall@1": 0.381579,
+        "recall@10": 0.868421,
+        "recall@20": 0.921053,
+        "recall@5": 0.815789,
+        "recall@50": 1.0
+      }
+    },
+    "domain": {
+      "vinfast": {
+        "population": 73,
+        "recall@1": 0.575342,
+        "recall@10": 0.849315,
+        "recall@20": 0.917808,
+        "recall@5": 0.794521,
+        "recall@50": 1.0
+      },
+      "vinhomes": {
+        "population": 82,
+        "recall@1": 0.487805,
+        "recall@10": 1.0,
+        "recall@20": 1.0,
+        "recall@5": 0.95122,
+        "recall@50": 1.0
+      }
+    },
+    "label": {
+      "CONDITIONAL_VARIANT": {
+        "population": 29,
+        "recall@1": 0.448276,
+        "recall@10": 1.0,
+        "recall@20": 1.0,
+        "recall@5": 1.0,
+        "recall@50": 1.0
+      },
+      "CONFLICT": {
+        "population": 29,
+        "recall@1": 0.655172,
+        "recall@10": 0.965517,
+        "recall@20": 1.0,
+        "recall@5": 0.827586,
+        "recall@50": 1.0
+      },
+      "EXACT_DUPLICATE": {
+        "population": 21,
+        "recall@1": 1.0,
+        "recall@10": 1.0,
+        "recall@20": 1.0,
+        "recall@5": 1.0,
+        "recall@50": 1.0
+      },
+      "NEAR_DUPLICATE": {
+        "population": 28,
+        "recall@1": 0.0,
+        "recall@10": 0.642857,
+        "recall@20": 0.785714,
+        "recall@5": 0.607143,
+        "recall@50": 1.0
+      },
+      "TEMPLATE_VARIANT": {
+        "population": 12,
+        "recall@1": 0.666667,
+        "recall@10": 1.0,
+        "recall@20": 1.0,
+        "recall@5": 1.0,
+        "recall@50": 1.0
+      },
+      "TEMPORAL_VARIANT": {
+        "population": 18,
+        "recall@1": 0.444444,
+        "recall@10": 1.0,
+        "recall@20": 1.0,
+        "recall@5": 0.833333,
+        "recall@50": 1.0
+      },
+      "VERSION_UPDATE": {
+        "population": 18,
+        "recall@1": 0.722222,
+        "recall@10": 1.0,
+        "recall@20": 1.0,
+        "recall@5": 1.0,
+        "recall@50": 1.0
+      }
+    },
+    "ocr_noise": {
+      "light": {
+        "population": 16,
+        "recall@1": 0.8125,
+        "recall@10": 0.875,
+        "recall@20": 0.875,
+        "recall@5": 0.8125,
+        "recall@50": 1.0
+      },
+      "none": {
+        "population": 139,
+        "recall@1": 0.496403,
+        "recall@10": 0.935252,
+        "recall@20": 0.971223,
+        "recall@5": 0.884892,
+        "recall@50": 1.0
+      }
+    },
+    "source_form": {
+      "prose_to_prose": {
+        "population": 145,
+        "recall@1": 0.531034,
+        "recall@10": 0.931034,
+        "recall@20": 0.958621,
+        "recall@5": 0.903448,
+        "recall@50": 1.0
+      },
+      "table_to_prose": {
+        "population": 5,
+        "recall@1": 0.0,
+        "recall@10": 0.8,
+        "recall@20": 1.0,
+        "recall@5": 0.0,
+        "recall@50": 1.0
+      },
+      "table_to_table": {
+        "population": 5,
+        "recall@1": 1.0,
+        "recall@10": 1.0,
+        "recall@20": 1.0,
+        "recall@5": 1.0,
+        "recall@50": 1.0
+      }
+    }
+  },
+  "candidate_generation": {
+    "candidate_count": {
+      "max": 50.0,
+      "mean": 42.593548,
+      "p50": 43.0,
+      "p95": 48.0
+    },
+    "latency_ms": {
+      "max": 171.0189,
+      "mean": 134.949907,
+      "p50": 137.8704,
+      "p95": 162.4938
+    },
+    "recall@1": 0.529032,
+    "recall@10": 0.929032,
+    "recall@20": 0.96129,
+    "recall@5": 0.877419,
+    "recall@50": 1.0
+  },
+  "channels": {
+    "ann": {
+      "recall@1": 0.670968,
+      "recall@10": 0.819355,
+      "recall@20": 0.877419,
+      "recall@5": 0.819355,
+      "recall@50": 0.974194,
+      "unique_recovery_count": 0
+    },
+    "binary": {
+      "recall@1": 0.529032,
+      "recall@10": 0.8,
+      "recall@20": 0.832258,
+      "recall@5": 0.729032,
+      "recall@50": 0.832258,
+      "unique_recovery_count": 0
+    },
+    "exact": {
+      "recall@1": 0.135484,
+      "recall@10": 0.135484,
+      "recall@20": 0.135484,
+      "recall@5": 0.135484,
+      "recall@50": 0.135484,
+      "unique_recovery_count": 0
+    },
+    "fts": {
+      "recall@1": 0.722581,
+      "recall@10": 0.909677,
+      "recall@20": 1.0,
+      "recall@5": 0.870968,
+      "recall@50": 1.0,
+      "unique_recovery_count": 2
+    }
+  },
+  "config": {
+    "binary_max_hamming_distance": 24,
+    "channel_candidate_k": 30,
+    "channel_reservation": 4,
+    "deterministic_ann_fixture": {
+      "dimensions": 1024,
+      "hash": "sha256",
+      "network_calls": false,
+      "version": "hashed-char-word-bigram-v1"
+    },
+    "final_candidate_k": 50,
+    "fts_term_limit": 16,
+    "gold_schema_version": "duplicate-conflict-gold-v1",
+    "rrf_k": 60,
+    "selected_binary_strategy": "simhash-multilayout-8x8-v1",
+    "version": "p1-candidate-generation-v1"
+  },
+  "dataset": {
+    "controlled_corpus_size_per_query": 61,
+    "distinct_pairs_excluded_from_relevant_population": 16,
+    "domain_counts": {
+      "vinfast": 86,
+      "vinhomes": 93
+    },
+    "errors": [],
+    "pair_count": 179,
+    "relation_counts": {
+      "CONDITIONAL_VARIANT": 29,
+      "CONFLICT": 29,
+      "DISTINCT": 16,
+      "EXACT_DUPLICATE": 21,
+      "NEAR_DUPLICATE": 28,
+      "TEMPLATE_VARIANT": 12,
+      "TEMPORAL_VARIANT": 18,
+      "UNCERTAIN": 8,
+      "VERSION_UPDATE": 18
+    },
+    "retrieval_population": 155,
+    "split_counts": {
+      "test": 179
+    },
+    "valid": true,
+    "warnings": []
+  },
+  "frozen_gold_unchanged": true,
+  "pair_results": [
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 47,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 162.4938,
+      "pair_id": "VF_CONDITIONAL_VARIANT_0004",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 3,
+        "all_minus_ann": 3,
+        "all_minus_binary": 1,
+        "all_minus_exact": 3,
+        "all_minus_fts": 3,
+        "exact_ann": 1,
+        "exact_binary": 3,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 45,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 3,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 122.221,
+      "pair_id": "VF_CONDITIONAL_VARIANT_0008",
+      "rank": 3
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 47,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 112.6374,
+      "pair_id": "VF_CONDITIONAL_VARIANT_0012",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 5,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 5,
+        "exact_only": null
+      },
+      "candidate_count": 37,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 5
+      },
+      "latency_ms": 107.7618,
+      "pair_id": "VF_CONDITIONAL_VARIANT_0015",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 2,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 2,
+        "exact_only": null
+      },
+      "candidate_count": 38,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 2
+      },
+      "latency_ms": 127.9498,
+      "pair_id": "VF_CONDITIONAL_VARIANT_0021",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 125.7833,
+      "pair_id": "VF_CONDITIONAL_VARIANT_0023",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 2,
+        "all_minus_ann": 2,
+        "all_minus_binary": 2,
+        "all_minus_exact": 2,
+        "all_minus_fts": 2,
+        "exact_ann": 1,
+        "exact_binary": 2,
+        "exact_fts": 2,
+        "exact_only": null
+      },
+      "candidate_count": 47,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 2,
+        "exact": null,
+        "fts": 2
+      },
+      "latency_ms": 123.2721,
+      "pair_id": "VF_CONDITIONAL_VARIANT_0026",
+      "rank": 2
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 35,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 116.412,
+      "pair_id": "VF_CONDITIONAL_VARIANT_0027",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 2,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 2,
+        "exact_only": null
+      },
+      "candidate_count": 48,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 2
+      },
+      "latency_ms": 117.878,
+      "pair_id": "VF_CONDITIONAL_VARIANT_0029",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 2,
+        "all_minus_ann": 2,
+        "all_minus_binary": 1,
+        "all_minus_exact": 2,
+        "all_minus_fts": 2,
+        "exact_ann": 1,
+        "exact_binary": 2,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 47,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 2,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 113.2075,
+      "pair_id": "VF_CONDITIONAL_VARIANT_0031",
+      "rank": 2
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 3,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 2,
+        "exact_binary": 1,
+        "exact_fts": 3,
+        "exact_only": null
+      },
+      "candidate_count": 50,
+      "channel_ranks": {
+        "ann": 2,
+        "binary": 1,
+        "exact": null,
+        "fts": 3
+      },
+      "latency_ms": 117.9866,
+      "pair_id": "VF_CONDITIONAL_VARIANT_0032",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 5,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 11,
+        "exact_only": null
+      },
+      "candidate_count": 36,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 11
+      },
+      "latency_ms": 116.9611,
+      "pair_id": "VF_CONDITIONAL_VARIANT_0033",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 46,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 112.19,
+      "pair_id": "VF_CONFLICT_0003",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 33,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 113.7678,
+      "pair_id": "VF_CONFLICT_0008",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 45,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 115.2106,
+      "pair_id": "VF_CONFLICT_0013",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 45,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 115.9293,
+      "pair_id": "VF_CONFLICT_0014",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 34,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 110.4853,
+      "pair_id": "VF_CONFLICT_0017",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 3,
+        "all_minus_ann": 3,
+        "all_minus_binary": 1,
+        "all_minus_exact": 3,
+        "all_minus_fts": 3,
+        "exact_ann": 1,
+        "exact_binary": 3,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 37,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 3,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 115.3981,
+      "pair_id": "VF_CONFLICT_0018",
+      "rank": 3
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 5,
+        "exact_ann": 1,
+        "exact_binary": 7,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 7,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 115.2076,
+      "pair_id": "VF_CONFLICT_0021",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 12,
+        "all_minus_ann": 15,
+        "all_minus_binary": 6,
+        "all_minus_exact": 12,
+        "all_minus_fts": 11,
+        "exact_ann": 5,
+        "exact_binary": null,
+        "exact_fts": 8,
+        "exact_only": null
+      },
+      "candidate_count": 34,
+      "channel_ranks": {
+        "ann": 5,
+        "binary": null,
+        "exact": null,
+        "fts": 8
+      },
+      "latency_ms": 117.5892,
+      "pair_id": "VF_CONFLICT_0022",
+      "rank": 12
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 111.9756,
+      "pair_id": "VF_CONFLICT_0026",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 8,
+        "all_minus_ann": 8,
+        "all_minus_binary": 6,
+        "all_minus_exact": 8,
+        "all_minus_fts": 9,
+        "exact_ann": 5,
+        "exact_binary": 18,
+        "exact_fts": 6,
+        "exact_only": null
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": 5,
+        "binary": 18,
+        "exact": null,
+        "fts": 6
+      },
+      "latency_ms": 118.8675,
+      "pair_id": "VF_CONFLICT_0028",
+      "rank": 8
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 39,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 115.4893,
+      "pair_id": "VF_CONFLICT_0029",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 2,
+        "all_minus_exact": 5,
+        "all_minus_fts": 5,
+        "exact_ann": 1,
+        "exact_binary": 5,
+        "exact_fts": 2,
+        "exact_only": null
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 5,
+        "exact": null,
+        "fts": 2
+      },
+      "latency_ms": 115.2424,
+      "pair_id": "VF_CONFLICT_0033",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 43,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 114.8683,
+      "pair_id": "VF_CONFLICT_0039",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 6,
+        "all_minus_ann": 12,
+        "all_minus_binary": 5,
+        "all_minus_exact": 6,
+        "all_minus_fts": 5,
+        "exact_ann": 4,
+        "exact_binary": null,
+        "exact_fts": 6,
+        "exact_only": null
+      },
+      "candidate_count": 36,
+      "channel_ranks": {
+        "ann": 4,
+        "binary": null,
+        "exact": null,
+        "fts": 6
+      },
+      "latency_ms": 134.0942,
+      "pair_id": "VF_CONFLICT_0046",
+      "rank": 6
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 43,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 122.2286,
+      "pair_id": "VF_CONFLICT_0047",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 2,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 2,
+        "exact_only": null
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 2
+      },
+      "latency_ms": 122.7395,
+      "pair_id": "VF_CONFLICT_0048",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 117.1988,
+      "pair_id": "VF_CONFLICT_0049",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 7,
+        "all_minus_ann": 12,
+        "all_minus_binary": 5,
+        "all_minus_exact": 7,
+        "all_minus_fts": 6,
+        "exact_ann": 4,
+        "exact_binary": null,
+        "exact_fts": 6,
+        "exact_only": null
+      },
+      "candidate_count": 37,
+      "channel_ranks": {
+        "ann": 4,
+        "binary": null,
+        "exact": null,
+        "fts": 6
+      },
+      "latency_ms": 112.8787,
+      "pair_id": "VF_CONFLICT_0052",
+      "rank": 7
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 43,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 125.564,
+      "pair_id": "VF_EXACT_DUPLICATE_0001",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 123.5177,
+      "pair_id": "VF_EXACT_DUPLICATE_0003",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 41,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 114.4215,
+      "pair_id": "VF_EXACT_DUPLICATE_0007",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 43,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 115.5684,
+      "pair_id": "VF_EXACT_DUPLICATE_0008",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 122.5081,
+      "pair_id": "VF_EXACT_DUPLICATE_0020",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 39,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 124.6898,
+      "pair_id": "VF_EXACT_DUPLICATE_0022",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 43,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 143.1651,
+      "pair_id": "VF_EXACT_DUPLICATE_0025",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 120.5895,
+      "pair_id": "VF_EXACT_DUPLICATE_0028",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 40,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 124.3366,
+      "pair_id": "VF_EXACT_DUPLICATE_0029",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 128.8133,
+      "pair_id": "VF_EXACT_DUPLICATE_0030",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 2,
+        "all_minus_ann": 2,
+        "all_minus_binary": 29,
+        "all_minus_exact": 2,
+        "all_minus_fts": 2,
+        "exact_ann": null,
+        "exact_binary": 2,
+        "exact_fts": 19,
+        "exact_only": null
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": null,
+        "binary": 2,
+        "exact": null,
+        "fts": 19
+      },
+      "latency_ms": 123.0602,
+      "pair_id": "VF_NEAR_DUPLICATE_0004",
+      "rank": 2
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 10,
+        "all_minus_ann": 10,
+        "all_minus_binary": 14,
+        "all_minus_exact": 10,
+        "all_minus_fts": 12,
+        "exact_ann": 18,
+        "exact_binary": 14,
+        "exact_fts": 14,
+        "exact_only": null
+      },
+      "candidate_count": 39,
+      "channel_ranks": {
+        "ann": 18,
+        "binary": 14,
+        "exact": null,
+        "fts": 14
+      },
+      "latency_ms": 111.0404,
+      "pair_id": "VF_NEAR_DUPLICATE_0011",
+      "rank": 10
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 18,
+        "all_minus_ann": 18,
+        "all_minus_binary": 14,
+        "all_minus_exact": 18,
+        "all_minus_fts": 20,
+        "exact_ann": 15,
+        "exact_binary": null,
+        "exact_fts": 13,
+        "exact_only": null
+      },
+      "candidate_count": 38,
+      "channel_ranks": {
+        "ann": 15,
+        "binary": null,
+        "exact": null,
+        "fts": 13
+      },
+      "latency_ms": 122.19,
+      "pair_id": "VF_NEAR_DUPLICATE_0013",
+      "rank": 18
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 23,
+        "all_minus_ann": 22,
+        "all_minus_binary": 18,
+        "all_minus_exact": 23,
+        "all_minus_fts": 28,
+        "exact_ann": 21,
+        "exact_binary": null,
+        "exact_fts": 15,
+        "exact_only": null
+      },
+      "candidate_count": 36,
+      "channel_ranks": {
+        "ann": 21,
+        "binary": null,
+        "exact": null,
+        "fts": 15
+      },
+      "latency_ms": 124.3007,
+      "pair_id": "VF_NEAR_DUPLICATE_0020",
+      "rank": 23
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 24,
+        "all_minus_ann": 27,
+        "all_minus_binary": 15,
+        "all_minus_exact": 24,
+        "all_minus_fts": 31,
+        "exact_ann": 17,
+        "exact_binary": null,
+        "exact_fts": 13,
+        "exact_only": null
+      },
+      "candidate_count": 41,
+      "channel_ranks": {
+        "ann": 17,
+        "binary": null,
+        "exact": null,
+        "fts": 13
+      },
+      "latency_ms": 142.973,
+      "pair_id": "VF_NEAR_DUPLICATE_0021",
+      "rank": 24
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 3,
+        "all_minus_ann": 3,
+        "all_minus_binary": 13,
+        "all_minus_exact": 3,
+        "all_minus_fts": 3,
+        "exact_ann": 16,
+        "exact_binary": 3,
+        "exact_fts": 13,
+        "exact_only": null
+      },
+      "candidate_count": 41,
+      "channel_ranks": {
+        "ann": 16,
+        "binary": 3,
+        "exact": null,
+        "fts": 13
+      },
+      "latency_ms": 121.9648,
+      "pair_id": "VF_NEAR_DUPLICATE_0025",
+      "rank": 3
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 22,
+        "all_minus_ann": 24,
+        "all_minus_binary": 15,
+        "all_minus_exact": 22,
+        "all_minus_fts": 26,
+        "exact_ann": 19,
+        "exact_binary": null,
+        "exact_fts": 14,
+        "exact_only": null
+      },
+      "candidate_count": 39,
+      "channel_ranks": {
+        "ann": 19,
+        "binary": null,
+        "exact": null,
+        "fts": 14
+      },
+      "latency_ms": 122.9207,
+      "pair_id": "VF_NEAR_DUPLICATE_0030",
+      "rank": 22
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 23,
+        "all_minus_ann": 25,
+        "all_minus_binary": 15,
+        "all_minus_exact": 23,
+        "all_minus_fts": 31,
+        "exact_ann": 16,
+        "exact_binary": null,
+        "exact_fts": 12,
+        "exact_only": null
+      },
+      "candidate_count": 41,
+      "channel_ranks": {
+        "ann": 16,
+        "binary": null,
+        "exact": null,
+        "fts": 12
+      },
+      "latency_ms": 117.1937,
+      "pair_id": "VF_NEAR_DUPLICATE_0031",
+      "rank": 23
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 19,
+        "all_minus_ann": 19,
+        "all_minus_binary": 14,
+        "all_minus_exact": 19,
+        "all_minus_fts": 22,
+        "exact_ann": 15,
+        "exact_binary": null,
+        "exact_fts": 12,
+        "exact_only": null
+      },
+      "candidate_count": 36,
+      "channel_ranks": {
+        "ann": 15,
+        "binary": null,
+        "exact": null,
+        "fts": 12
+      },
+      "latency_ms": 114.268,
+      "pair_id": "VF_NEAR_DUPLICATE_0032",
+      "rank": 19
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 11,
+        "all_minus_ann": 9,
+        "all_minus_binary": 16,
+        "all_minus_exact": 11,
+        "all_minus_fts": 10,
+        "exact_ann": 19,
+        "exact_binary": 13,
+        "exact_fts": 13,
+        "exact_only": null
+      },
+      "candidate_count": 38,
+      "channel_ranks": {
+        "ann": 19,
+        "binary": 13,
+        "exact": null,
+        "fts": 13
+      },
+      "latency_ms": 120.8225,
+      "pair_id": "VF_NEAR_DUPLICATE_0038",
+      "rank": 11
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 20,
+        "all_minus_ann": 21,
+        "all_minus_binary": 14,
+        "all_minus_exact": 20,
+        "all_minus_fts": 23,
+        "exact_ann": 16,
+        "exact_binary": null,
+        "exact_fts": 14,
+        "exact_only": null
+      },
+      "candidate_count": 36,
+      "channel_ranks": {
+        "ann": 16,
+        "binary": null,
+        "exact": null,
+        "fts": 14
+      },
+      "latency_ms": 126.3361,
+      "pair_id": "VF_NEAR_DUPLICATE_0039",
+      "rank": 20
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 25,
+        "all_minus_ann": 27,
+        "all_minus_binary": 19,
+        "all_minus_exact": 25,
+        "all_minus_fts": 33,
+        "exact_ann": 22,
+        "exact_binary": null,
+        "exact_fts": 16,
+        "exact_only": null
+      },
+      "candidate_count": 40,
+      "channel_ranks": {
+        "ann": 22,
+        "binary": null,
+        "exact": null,
+        "fts": 16
+      },
+      "latency_ms": 122.6004,
+      "pair_id": "VF_NEAR_DUPLICATE_0040",
+      "rank": 25
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 24,
+        "all_minus_ann": 25,
+        "all_minus_binary": 19,
+        "all_minus_exact": 24,
+        "all_minus_fts": 35,
+        "exact_ann": 24,
+        "exact_binary": null,
+        "exact_fts": 14,
+        "exact_only": null
+      },
+      "candidate_count": 41,
+      "channel_ranks": {
+        "ann": 24,
+        "binary": null,
+        "exact": null,
+        "fts": 14
+      },
+      "latency_ms": 117.1318,
+      "pair_id": "VF_NEAR_DUPLICATE_0042",
+      "rank": 24
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 41,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 114.6858,
+      "pair_id": "VF_TEMPLATE_VARIANT_0002",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 38,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 122.8394,
+      "pair_id": "VF_TEMPLATE_VARIANT_0003",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 45,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 122.6001,
+      "pair_id": "VF_TEMPLATE_VARIANT_0008",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 2,
+        "all_minus_ann": 2,
+        "all_minus_binary": 1,
+        "all_minus_exact": 2,
+        "all_minus_fts": 2,
+        "exact_ann": 1,
+        "exact_binary": 2,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 2,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 110.6386,
+      "pair_id": "VF_TEMPORAL_VARIANT_0002",
+      "rank": 2
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 39,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 110.0103,
+      "pair_id": "VF_TEMPORAL_VARIANT_0005",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 5,
+        "exact_ann": 1,
+        "exact_binary": 6,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 40,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 6,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 111.7423,
+      "pair_id": "VF_TEMPORAL_VARIANT_0010",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 39,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 114.6357,
+      "pair_id": "VF_TEMPORAL_VARIANT_0018",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 5,
+        "exact_ann": 1,
+        "exact_binary": null,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 39,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": null,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 110.7029,
+      "pair_id": "VF_TEMPORAL_VARIANT_0021",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 2,
+        "all_minus_exact": 5,
+        "all_minus_fts": 5,
+        "exact_ann": 1,
+        "exact_binary": null,
+        "exact_fts": 2,
+        "exact_only": null
+      },
+      "candidate_count": 43,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": null,
+        "exact": null,
+        "fts": 2
+      },
+      "latency_ms": 126.9614,
+      "pair_id": "VF_TEMPORAL_VARIANT_0025",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 109.3745,
+      "pair_id": "VF_TEMPORAL_VARIANT_0027",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 2,
+        "all_minus_ann": 2,
+        "all_minus_binary": 1,
+        "all_minus_exact": 2,
+        "all_minus_fts": 2,
+        "exact_ann": 1,
+        "exact_binary": 2,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 39,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 2,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 119.5537,
+      "pair_id": "VF_TEMPORAL_VARIANT_0028",
+      "rank": 2
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 37,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 112.219,
+      "pair_id": "VF_TEMPORAL_VARIANT_0032",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 2,
+        "all_minus_ann": 2,
+        "all_minus_binary": 1,
+        "all_minus_exact": 2,
+        "all_minus_fts": 2,
+        "exact_ann": 1,
+        "exact_binary": 2,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 37,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 2,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 107.8201,
+      "pair_id": "VF_TEMPORAL_VARIANT_0033",
+      "rank": 2
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 151.2884,
+      "pair_id": "VF_VERSION_UPDATE_0001",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 2,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 43,
+      "channel_ranks": {
+        "ann": 2,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 145.4919,
+      "pair_id": "VF_VERSION_UPDATE_0016",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 138.0172,
+      "pair_id": "VF_VERSION_UPDATE_0018",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 6,
+        "exact_ann": 2,
+        "exact_binary": 5,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 40,
+      "channel_ranks": {
+        "ann": 2,
+        "binary": 5,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 134.4169,
+      "pair_id": "VF_VERSION_UPDATE_0021",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 40,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 131.6249,
+      "pair_id": "VF_VERSION_UPDATE_0033",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 2,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 36,
+      "channel_ranks": {
+        "ann": 2,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 138.5459,
+      "pair_id": "VF_VERSION_UPDATE_0035",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 5,
+        "exact_ann": 1,
+        "exact_binary": 7,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 38,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 7,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 142.2827,
+      "pair_id": "VF_VERSION_UPDATE_0036",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 45,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 152.6586,
+      "pair_id": "VH_CONDITIONAL_VARIANT_0004",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 5,
+        "exact_ann": 1,
+        "exact_binary": 10,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 46,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 10,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 164.0315,
+      "pair_id": "VH_CONDITIONAL_VARIANT_0005",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 5,
+        "exact_ann": 1,
+        "exact_binary": 15,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 46,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 15,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 149.5589,
+      "pair_id": "VH_CONDITIONAL_VARIANT_0006",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 39,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 147.8143,
+      "pair_id": "VH_CONDITIONAL_VARIANT_0007",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 3,
+        "all_minus_ann": 3,
+        "all_minus_binary": 1,
+        "all_minus_exact": 3,
+        "all_minus_fts": 3,
+        "exact_ann": 1,
+        "exact_binary": 3,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 43,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 3,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 165.3794,
+      "pair_id": "VH_CONDITIONAL_VARIANT_0009",
+      "rank": 3
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 2,
+        "all_minus_ann": 2,
+        "all_minus_binary": 1,
+        "all_minus_exact": 2,
+        "all_minus_fts": 2,
+        "exact_ann": 2,
+        "exact_binary": 2,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 45,
+      "channel_ranks": {
+        "ann": 2,
+        "binary": 2,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 133.155,
+      "pair_id": "VH_CONDITIONAL_VARIANT_0010",
+      "rank": 2
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 2,
+        "all_minus_ann": 2,
+        "all_minus_binary": 1,
+        "all_minus_exact": 2,
+        "all_minus_fts": 2,
+        "exact_ann": 1,
+        "exact_binary": 2,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 45,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 2,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 130.2942,
+      "pair_id": "VH_CONDITIONAL_VARIANT_0015",
+      "rank": 2
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 5,
+        "exact_ann": 1,
+        "exact_binary": 6,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 6,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 144.5758,
+      "pair_id": "VH_CONDITIONAL_VARIANT_0016",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 5,
+        "exact_ann": 1,
+        "exact_binary": null,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 45,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": null,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 146.2194,
+      "pair_id": "VH_CONDITIONAL_VARIANT_0017",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 2,
+        "all_minus_ann": 2,
+        "all_minus_binary": 1,
+        "all_minus_exact": 2,
+        "all_minus_fts": 2,
+        "exact_ann": 1,
+        "exact_binary": 2,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 40,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 2,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 133.7242,
+      "pair_id": "VH_CONDITIONAL_VARIANT_0019",
+      "rank": 2
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 2,
+        "all_minus_ann": 2,
+        "all_minus_binary": 2,
+        "all_minus_exact": 2,
+        "all_minus_fts": 2,
+        "exact_ann": 1,
+        "exact_binary": 2,
+        "exact_fts": 2,
+        "exact_only": null
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 2,
+        "exact": null,
+        "fts": 2
+      },
+      "latency_ms": 138.6755,
+      "pair_id": "VH_CONDITIONAL_VARIANT_0021",
+      "rank": 2
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 2,
+        "all_minus_ann": 2,
+        "all_minus_binary": 1,
+        "all_minus_exact": 2,
+        "all_minus_fts": 2,
+        "exact_ann": 2,
+        "exact_binary": 2,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 41,
+      "channel_ranks": {
+        "ann": 2,
+        "binary": 2,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 140.7218,
+      "pair_id": "VH_CONDITIONAL_VARIANT_0023",
+      "rank": 2
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 41,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 149.6314,
+      "pair_id": "VH_CONDITIONAL_VARIANT_0024",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 2,
+        "all_minus_ann": 2,
+        "all_minus_binary": 1,
+        "all_minus_exact": 2,
+        "all_minus_fts": 2,
+        "exact_ann": 1,
+        "exact_binary": 2,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 45,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 2,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 147.01,
+      "pair_id": "VH_CONDITIONAL_VARIANT_0025",
+      "rank": 2
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 41,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 143.4076,
+      "pair_id": "VH_CONDITIONAL_VARIANT_0028",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 3,
+        "all_minus_ann": 3,
+        "all_minus_binary": 1,
+        "all_minus_exact": 3,
+        "all_minus_fts": 3,
+        "exact_ann": 1,
+        "exact_binary": 3,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 3,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 144.3678,
+      "pair_id": "VH_CONDITIONAL_VARIANT_0033",
+      "rank": 3
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 5,
+        "exact_ann": 1,
+        "exact_binary": 9,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 9,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 167.0062,
+      "pair_id": "VH_CONDITIONAL_VARIANT_0034",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 141.9421,
+      "pair_id": "VH_CONFLICT_0004",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 3,
+        "all_minus_ann": 3,
+        "all_minus_binary": 1,
+        "all_minus_exact": 3,
+        "all_minus_fts": 3,
+        "exact_ann": 1,
+        "exact_binary": 3,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 45,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 3,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 146.5766,
+      "pair_id": "VH_CONFLICT_0010",
+      "rank": 3
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 5,
+        "exact_ann": 1,
+        "exact_binary": 8,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 40,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 8,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 151.7058,
+      "pair_id": "VH_CONFLICT_0020",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 41,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 141.0028,
+      "pair_id": "VH_CONFLICT_0028",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 144.3351,
+      "pair_id": "VH_CONFLICT_0029",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 50,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 140.0287,
+      "pair_id": "VH_CONFLICT_0032",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 6,
+        "all_minus_ann": 6,
+        "all_minus_binary": 4,
+        "all_minus_exact": 6,
+        "all_minus_fts": 6,
+        "exact_ann": 4,
+        "exact_binary": null,
+        "exact_fts": 4,
+        "exact_only": null
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": 4,
+        "binary": null,
+        "exact": null,
+        "fts": 4
+      },
+      "latency_ms": 144.4714,
+      "pair_id": "VH_CONFLICT_0039",
+      "rank": 6
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 45,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 141.0416,
+      "pair_id": "VH_CONFLICT_0047",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 39,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 139.714,
+      "pair_id": "VH_CONFLICT_0048",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 37,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 147.2804,
+      "pair_id": "VH_CONFLICT_0050",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 41,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 141.6139,
+      "pair_id": "VH_CONFLICT_0054",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 135.8764,
+      "pair_id": "VH_EXACT_DUPLICATE_0007",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 49,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 154.9838,
+      "pair_id": "VH_EXACT_DUPLICATE_0009",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 137.4644,
+      "pair_id": "VH_EXACT_DUPLICATE_0011",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 46,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 143.0892,
+      "pair_id": "VH_EXACT_DUPLICATE_0017",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 143.9051,
+      "pair_id": "VH_EXACT_DUPLICATE_0018",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 43,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 137.585,
+      "pair_id": "VH_EXACT_DUPLICATE_0019",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 45,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 161.1721,
+      "pair_id": "VH_EXACT_DUPLICATE_0021",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 46,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 142.8705,
+      "pair_id": "VH_EXACT_DUPLICATE_0022",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 46,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 153.5711,
+      "pair_id": "VH_EXACT_DUPLICATE_0026",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 40,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 141.0034,
+      "pair_id": "VH_EXACT_DUPLICATE_0028",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": 1
+      },
+      "candidate_count": 41,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": 1,
+        "fts": 1
+      },
+      "latency_ms": 141.4748,
+      "pair_id": "VH_EXACT_DUPLICATE_0030",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 11,
+        "exact_ann": 29,
+        "exact_binary": 8,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 47,
+      "channel_ranks": {
+        "ann": 29,
+        "binary": 8,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 145.0398,
+      "pair_id": "VH_NEAR_DUPLICATE_0002",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": null,
+        "exact_ann": null,
+        "exact_binary": null,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 48,
+      "channel_ranks": {
+        "ann": null,
+        "binary": null,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 144.1945,
+      "pair_id": "VH_NEAR_DUPLICATE_0006",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 3,
+        "all_minus_ann": 3,
+        "all_minus_binary": 1,
+        "all_minus_exact": 3,
+        "all_minus_fts": 3,
+        "exact_ann": 26,
+        "exact_binary": 3,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 45,
+      "channel_ranks": {
+        "ann": 26,
+        "binary": 3,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 134.4209,
+      "pair_id": "VH_NEAR_DUPLICATE_0011",
+      "rank": 3
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 34,
+        "exact_ann": 29,
+        "exact_binary": null,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 45,
+      "channel_ranks": {
+        "ann": 29,
+        "binary": null,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 135.4781,
+      "pair_id": "VH_NEAR_DUPLICATE_0012",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 38,
+        "exact_ann": 29,
+        "exact_binary": null,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 48,
+      "channel_ranks": {
+        "ann": 29,
+        "binary": null,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 146.0458,
+      "pair_id": "VH_NEAR_DUPLICATE_0013",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": null,
+        "exact_ann": null,
+        "exact_binary": null,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": null,
+        "binary": null,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 136.8423,
+      "pair_id": "VH_NEAR_DUPLICATE_0018",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 14,
+        "exact_ann": null,
+        "exact_binary": 6,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 47,
+      "channel_ranks": {
+        "ann": null,
+        "binary": 6,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 138.8046,
+      "pair_id": "VH_NEAR_DUPLICATE_0019",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 4,
+        "all_minus_ann": 4,
+        "all_minus_binary": 1,
+        "all_minus_exact": 4,
+        "all_minus_fts": 4,
+        "exact_ann": 21,
+        "exact_binary": 4,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 46,
+      "channel_ranks": {
+        "ann": 21,
+        "binary": 4,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 139.5405,
+      "pair_id": "VH_NEAR_DUPLICATE_0020",
+      "rank": 4
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 33,
+        "exact_ann": 27,
+        "exact_binary": null,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": 27,
+        "binary": null,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 144.4049,
+      "pair_id": "VH_NEAR_DUPLICATE_0023",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 13,
+        "exact_ann": 30,
+        "exact_binary": 13,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": 30,
+        "binary": 13,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 133.2749,
+      "pair_id": "VH_NEAR_DUPLICATE_0028",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 33,
+        "exact_ann": 26,
+        "exact_binary": null,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 47,
+      "channel_ranks": {
+        "ann": 26,
+        "binary": null,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 148.928,
+      "pair_id": "VH_NEAR_DUPLICATE_0037",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 34,
+        "exact_ann": 25,
+        "exact_binary": null,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 47,
+      "channel_ranks": {
+        "ann": 25,
+        "binary": null,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 151.7294,
+      "pair_id": "VH_NEAR_DUPLICATE_0038",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 31,
+        "exact_ann": 26,
+        "exact_binary": null,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 43,
+      "channel_ranks": {
+        "ann": 26,
+        "binary": null,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 150.1735,
+      "pair_id": "VH_NEAR_DUPLICATE_0039",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 11,
+        "exact_ann": 22,
+        "exact_binary": 10,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 49,
+      "channel_ranks": {
+        "ann": 22,
+        "binary": 10,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 145.417,
+      "pair_id": "VH_NEAR_DUPLICATE_0042",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 9,
+        "exact_ann": 27,
+        "exact_binary": 5,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 46,
+      "channel_ranks": {
+        "ann": 27,
+        "binary": 5,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 142.2947,
+      "pair_id": "VH_NEAR_DUPLICATE_0045",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 49,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 147.0752,
+      "pair_id": "VH_TEMPLATE_VARIANT_0001",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 2,
+        "all_minus_ann": 2,
+        "all_minus_binary": 1,
+        "all_minus_exact": 2,
+        "all_minus_fts": 2,
+        "exact_ann": 1,
+        "exact_binary": 2,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 47,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 2,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 143.1889,
+      "pair_id": "VH_TEMPLATE_VARIANT_0005",
+      "rank": 2
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 4,
+        "all_minus_ann": 4,
+        "all_minus_binary": 2,
+        "all_minus_exact": 4,
+        "all_minus_fts": 4,
+        "exact_ann": 1,
+        "exact_binary": 4,
+        "exact_fts": 2,
+        "exact_only": null
+      },
+      "candidate_count": 48,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 4,
+        "exact": null,
+        "fts": 2
+      },
+      "latency_ms": 145.5361,
+      "pair_id": "VH_TEMPLATE_VARIANT_0006",
+      "rank": 4
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 3,
+        "all_minus_ann": 3,
+        "all_minus_binary": 3,
+        "all_minus_exact": 3,
+        "all_minus_fts": 3,
+        "exact_ann": 1,
+        "exact_binary": 3,
+        "exact_fts": 3,
+        "exact_only": null
+      },
+      "candidate_count": 46,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 3,
+        "exact": null,
+        "fts": 3
+      },
+      "latency_ms": 148.9276,
+      "pair_id": "VH_TEMPLATE_VARIANT_0007",
+      "rank": 3
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 47,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 143.8704,
+      "pair_id": "VH_TEMPLATE_VARIANT_0013",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 2,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 2,
+        "exact_binary": 1,
+        "exact_fts": 2,
+        "exact_only": null
+      },
+      "candidate_count": 49,
+      "channel_ranks": {
+        "ann": 2,
+        "binary": 1,
+        "exact": null,
+        "fts": 2
+      },
+      "latency_ms": 151.4924,
+      "pair_id": "VH_TEMPLATE_VARIANT_0014",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 49,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 159.3507,
+      "pair_id": "VH_TEMPLATE_VARIANT_0016",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 2,
+        "all_minus_ann": 2,
+        "all_minus_binary": 2,
+        "all_minus_exact": 2,
+        "all_minus_fts": 2,
+        "exact_ann": 1,
+        "exact_binary": 2,
+        "exact_fts": 2,
+        "exact_only": null
+      },
+      "candidate_count": 48,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 2,
+        "exact": null,
+        "fts": 2
+      },
+      "latency_ms": 146.7375,
+      "pair_id": "VH_TEMPLATE_VARIANT_0017",
+      "rank": 2
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 46,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 141.7494,
+      "pair_id": "VH_TEMPLATE_VARIANT_0019",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 2,
+        "all_minus_ann": 2,
+        "all_minus_binary": 4,
+        "all_minus_exact": 2,
+        "all_minus_fts": 2,
+        "exact_ann": 1,
+        "exact_binary": 2,
+        "exact_fts": 4,
+        "exact_only": null
+      },
+      "candidate_count": 45,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 2,
+        "exact": null,
+        "fts": 4
+      },
+      "latency_ms": 145.7287,
+      "pair_id": "VH_TEMPORAL_VARIANT_0001",
+      "rank": 2
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 2,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 2,
+        "exact_only": null
+      },
+      "candidate_count": 46,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 2
+      },
+      "latency_ms": 165.4839,
+      "pair_id": "VH_TEMPORAL_VARIANT_0004",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 9,
+        "all_minus_ann": 12,
+        "all_minus_binary": 5,
+        "all_minus_exact": 9,
+        "all_minus_fts": 5,
+        "exact_ann": 1,
+        "exact_binary": null,
+        "exact_fts": 5,
+        "exact_only": null
+      },
+      "candidate_count": 40,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": null,
+        "exact": null,
+        "fts": 5
+      },
+      "latency_ms": 145.0881,
+      "pair_id": "VH_TEMPORAL_VARIANT_0009",
+      "rank": 9
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 5,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 8,
+        "exact_only": null
+      },
+      "candidate_count": 43,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 8
+      },
+      "latency_ms": 137.8704,
+      "pair_id": "VH_TEMPORAL_VARIANT_0021",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 5,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 6,
+        "exact_only": null
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 6
+      },
+      "latency_ms": 132.5523,
+      "pair_id": "VH_TEMPORAL_VARIANT_0028",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 4,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 1,
+        "exact_binary": 1,
+        "exact_fts": 4,
+        "exact_only": null
+      },
+      "candidate_count": 41,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 1,
+        "exact": null,
+        "fts": 4
+      },
+      "latency_ms": 133.7734,
+      "pair_id": "VH_TEMPORAL_VARIANT_0032",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 7,
+        "all_minus_ann": 7,
+        "all_minus_binary": 3,
+        "all_minus_exact": 7,
+        "all_minus_fts": 5,
+        "exact_ann": 1,
+        "exact_binary": 6,
+        "exact_fts": 3,
+        "exact_only": null
+      },
+      "candidate_count": 39,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": 6,
+        "exact": null,
+        "fts": 3
+      },
+      "latency_ms": 141.9449,
+      "pair_id": "VH_TEMPORAL_VARIANT_0033",
+      "rank": 7
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 6,
+        "all_minus_ann": 6,
+        "all_minus_binary": 3,
+        "all_minus_exact": 6,
+        "all_minus_fts": 5,
+        "exact_ann": 1,
+        "exact_binary": null,
+        "exact_fts": 3,
+        "exact_only": null
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": 1,
+        "binary": null,
+        "exact": null,
+        "fts": 3
+      },
+      "latency_ms": 140.7538,
+      "pair_id": "VH_TEMPORAL_VARIANT_0034",
+      "rank": 6
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 3,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": 3,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 162.4173,
+      "pair_id": "VH_VERSION_UPDATE_0001",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 2,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 5,
+        "exact_binary": 1,
+        "exact_fts": 2,
+        "exact_only": null
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": 5,
+        "binary": 1,
+        "exact": null,
+        "fts": 2
+      },
+      "latency_ms": 152.4999,
+      "pair_id": "VH_VERSION_UPDATE_0002",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 2,
+        "all_minus_ann": 2,
+        "all_minus_binary": 1,
+        "all_minus_exact": 2,
+        "all_minus_fts": 2,
+        "exact_ann": 5,
+        "exact_binary": 2,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 40,
+      "channel_ranks": {
+        "ann": 5,
+        "binary": 2,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 151.0549,
+      "pair_id": "VH_VERSION_UPDATE_0007",
+      "rank": 2
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 5,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": 5,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 152.78,
+      "pair_id": "VH_VERSION_UPDATE_0008",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 2,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 4,
+        "exact_binary": 1,
+        "exact_fts": 2,
+        "exact_only": null
+      },
+      "candidate_count": 39,
+      "channel_ranks": {
+        "ann": 4,
+        "binary": 1,
+        "exact": null,
+        "fts": 2
+      },
+      "latency_ms": 158.8873,
+      "pair_id": "VH_VERSION_UPDATE_0009",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 3,
+        "all_minus_ann": 3,
+        "all_minus_binary": 1,
+        "all_minus_exact": 3,
+        "all_minus_fts": 3,
+        "exact_ann": 4,
+        "exact_binary": 3,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 48,
+      "channel_ranks": {
+        "ann": 4,
+        "binary": 3,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 156.5323,
+      "pair_id": "VH_VERSION_UPDATE_0012",
+      "rank": 3
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 2,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 43,
+      "channel_ranks": {
+        "ann": 2,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 160.882,
+      "pair_id": "VH_VERSION_UPDATE_0013",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 5,
+        "all_minus_ann": 5,
+        "all_minus_binary": 1,
+        "all_minus_exact": 5,
+        "all_minus_fts": 9,
+        "exact_ann": 5,
+        "exact_binary": 5,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 42,
+      "channel_ranks": {
+        "ann": 5,
+        "binary": 5,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 168.38,
+      "pair_id": "VH_VERSION_UPDATE_0019",
+      "rank": 5
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 3,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 41,
+      "channel_ranks": {
+        "ann": 3,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 162.1204,
+      "pair_id": "VH_VERSION_UPDATE_0021",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 1,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 2,
+        "exact_binary": 1,
+        "exact_fts": 1,
+        "exact_only": null
+      },
+      "candidate_count": 44,
+      "channel_ranks": {
+        "ann": 2,
+        "binary": 1,
+        "exact": null,
+        "fts": 1
+      },
+      "latency_ms": 171.0189,
+      "pair_id": "VH_VERSION_UPDATE_0025",
+      "rank": 1
+    },
+    {
+      "ablation_ranks": {
+        "all_channels": 1,
+        "all_minus_ann": 1,
+        "all_minus_binary": 2,
+        "all_minus_exact": 1,
+        "all_minus_fts": 1,
+        "exact_ann": 3,
+        "exact_binary": 1,
+        "exact_fts": 2,
+        "exact_only": null
+      },
+      "candidate_count": 48,
+      "channel_ranks": {
+        "ann": 3,
+        "binary": 1,
+        "exact": null,
+        "fts": 2
+      },
+      "latency_ms": 170.657,
+      "pair_id": "VH_VERSION_UPDATE_0026",
+      "rank": 1
+    }
+  ],
+  "parameter_sweeps": {
+    "channel_k_15": {
+      "candidate_count": {
+        "max": 35.0,
+        "mean": 26.935484,
+        "p50": 27.0,
+        "p95": 32.0
+      },
+      "fusion_latency_ms": {
+        "max": 1.1862,
+        "mean": 0.384799,
+        "p50": 0.3688,
+        "p95": 0.5236
+      },
+      "recall@1": 0.529032,
+      "recall@10": 0.929032,
+      "recall@20": 0.954839,
+      "recall@5": 0.877419,
+      "recall@50": 0.993548
+    },
+    "channel_k_30": {
+      "candidate_count": {
+        "max": 50.0,
+        "mean": 42.593548,
+        "p50": 43.0,
+        "p95": 48.0
+      },
+      "fusion_latency_ms": {
+        "max": 1.7551,
+        "mean": 0.630413,
+        "p50": 0.5961,
+        "p95": 0.8727
+      },
+      "recall@1": 0.529032,
+      "recall@10": 0.929032,
+      "recall@20": 0.96129,
+      "recall@5": 0.877419,
+      "recall@50": 1.0
+    },
+    "channel_k_50": {
+      "candidate_count": {
+        "max": 50.0,
+        "mean": 50.0,
+        "p50": 50.0,
+        "p95": 50.0
+      },
+      "fusion_latency_ms": {
+        "max": 2.5193,
+        "mean": 0.941438,
+        "p50": 0.8778,
+        "p95": 1.2626
+      },
+      "recall@1": 0.529032,
+      "recall@10": 0.929032,
+      "recall@20": 0.954839,
+      "recall@5": 0.877419,
+      "recall@50": 1.0
+    },
+    "final_k_20": {
+      "candidate_count": {
+        "max": 20.0,
+        "mean": 20.0,
+        "p50": 20.0,
+        "p95": 20.0
+      },
+      "fusion_latency_ms": {
+        "max": 1.4922,
+        "mean": 0.644039,
+        "p50": 0.6021,
+        "p95": 0.9734
+      },
+      "recall@1": 0.529032,
+      "recall@10": 0.929032,
+      "recall@20": 0.96129,
+      "recall@5": 0.877419,
+      "recall@50": 0.96129
+    },
+    "final_k_50": {
+      "candidate_count": {
+        "max": 50.0,
+        "mean": 42.593548,
+        "p50": 43.0,
+        "p95": 48.0
+      },
+      "fusion_latency_ms": {
+        "max": 1.3046,
+        "mean": 0.630882,
+        "p50": 0.5964,
+        "p95": 0.9069
+      },
+      "recall@1": 0.529032,
+      "recall@10": 0.929032,
+      "recall@20": 0.96129,
+      "recall@5": 0.877419,
+      "recall@50": 1.0
+    }
+  },
+  "safety": {
+    "false_auto_reuse_count": 0,
+    "reuse_eligible_count": 8,
+    "reuse_rule": "strict normalized text + embedding input checksum; production also requires model match and vector"
+  },
+  "scale": {
+    "status": "skipped"
+  },
+  "split": "test",
+  "stress": {
+    "configured_final_candidate_k": 50,
+    "long_document": {
+      "chunk_count": 100,
+      "eligible_probe_count": 100,
+      "eligible_probe_coverage": 1.0,
+      "meaningful_position_recall": 1.0
+    },
+    "simhash_counterexample": {
+      "fixed_aligned_band_overlap": 0,
+      "hamming_distance": 21,
+      "recovered_by_selected_binary": true,
+      "selected_multilayout_overlap": 1
+    }
+  },
+  "version": "p1-candidate-generation-v1"
+}

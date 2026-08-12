@@ -1,0 +1,83 @@
+{
+  "version": "duplicate-conflict-gold-v1",
+  "labels": {
+    "EXACT_DUPLICATE": {
+      "description": "Authoritative canonical text is identical after the repository's strict normalization.",
+      "auto_reuse_allowed": true
+    },
+    "NEAR_DUPLICATE": {
+      "description": "The same entity, scope, time, claim, and value are expressed with materially different wording.",
+      "auto_reuse_allowed": false
+    },
+    "VERSION_UPDATE": {
+      "description": "A compatible successor extends or explicitly supersedes prior information without an overlapping contradiction.",
+      "auto_reuse_allowed": false
+    },
+    "TEMPORAL_VARIANT": {
+      "description": "Comparable claims apply to explicit non-overlapping time periods.",
+      "auto_reuse_allowed": false
+    },
+    "CONDITIONAL_VARIANT": {
+      "description": "The broad subject is shared but a material qualifier differs, such as market, trim, protocol, price type, or price basis.",
+      "auto_reuse_allowed": false
+    },
+    "TEMPLATE_VARIANT": {
+      "description": "Text or table structure is strongly shared while entity or business identity intentionally differs.",
+      "auto_reuse_allowed": false
+    },
+    "CONFLICT": {
+      "description": "Aligned claims have compatible entity, business, qualifier, and temporal scope but incompatible values or polarity.",
+      "auto_reuse_allowed": false
+    },
+    "DISTINCT": {
+      "description": "The pair is not a duplicate, version, temporal/conditional/template variant, or aligned conflict.",
+      "auto_reuse_allowed": false
+    },
+    "UNCERTAIN": {
+      "description": "Available extraction or context is insufficient for a safe deterministic relation.",
+      "auto_reuse_allowed": false
+    }
+  },
+  "repository_mapping": {
+    "knowledge_quality.RelationType": {
+      "exact_content": "EXACT_DUPLICATE",
+      "technical_duplicate": "EXACT_DUPLICATE",
+      "near_duplicate": "NEAR_DUPLICATE",
+      "version_candidate": "VERSION_UPDATE",
+      "version": "VERSION_UPDATE",
+      "temporal_series": "TEMPORAL_VARIANT",
+      "template_variant": "TEMPLATE_VARIANT",
+      "conflict_candidate": "CONFLICT",
+      "conflict": "CONFLICT",
+      "distinct": "DISTINCT",
+      "related": "UNCERTAIN"
+    },
+    "structured_facts.ClaimRelationType": {
+      "unchanged": "NEAR_DUPLICATE",
+      "updated": "TEMPORAL_VARIANT",
+      "added": "VERSION_UPDATE",
+      "removed": "VERSION_UPDATE",
+      "conflict_candidate": "CONFLICT",
+      "conditional_variant": "CONDITIONAL_VARIANT",
+      "uncertain": "UNCERTAIN"
+    }
+  },
+  "mapping_notes": [
+    "Structured 'unchanged' is claim equivalence, not proof of byte- or chunk-level exact duplication.",
+    "The generic text classifier has no native CONDITIONAL_VARIANT or UNCERTAIN output; those labels are expected to expose current coverage gaps.",
+    "Repository candidates remain reviewable unless an independent strict-identity auto-reuse gate applies."
+  ],
+  "p2_failure_taxonomy": {
+    "ENTITY_MENTION_MISS": "No entity mention was recovered from claim or inherited context.",
+    "ENTITY_ALIAS_MISS": "An entity mention was found but did not resolve through a versioned registry alias.",
+    "ENTITY_FALSE_MERGE": "Two different business entities were assigned the same canonical identifier.",
+    "ENTITY_AMBIGUOUS": "An alias maps to multiple canonical entities and resolution abstained.",
+    "PRODUCT_SCOPE_ERROR": "A material Vinhomes product or hierarchy facet was missing or incorrect.",
+    "COMMERCIAL_SCOPE_ERROR": "Price type, basis, channel, or inclusion qualifier was missing or incorrect.",
+    "VEHICLE_SCOPE_ERROR": "A material VinFast model, trim, year, market, protocol, battery, drivetrain, or charging facet was missing or incorrect.",
+    "TEMPORAL_SCOPE_ERROR": "Reference, validity, publication, event, or multi-period context was missing or incorrect.",
+    "QUALIFIER_SCOPE_ERROR": "A stable versus optional qualifier was missing, promoted, or compared incorrectly.",
+    "CONTEXT_INHERITANCE_ERROR": "A facet was inherited from an unverified source or failed to inherit from an allowed source.",
+    "NUMERIC_IDENTIFIER_ERROR": "A business identifier was treated as a semantic quantity, or a semantic quantity was suppressed as an identifier."
+  }
+}

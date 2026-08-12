@@ -5,10 +5,24 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from uuid import UUID
 
-from app.knowledge_quality.application.analysis import analyze_text_relation
+from app.knowledge_quality.application.analysis import (
+    analyze_text_relation,
+    build_chunk_fingerprint,
+)
+from app.knowledge_quality.application.candidate_generation import (
+    DEFAULT_CHANNEL_RESERVATION,
+    DEFAULT_FINAL_CANDIDATE_LIMIT,
+    fuse_chunk_candidates,
+)
+from app.knowledge_quality.application.chunk_preembedding import plan_chunk_deduplication
 from app.knowledge_quality.application.scope import extract_claim_scope, merge_claim_scopes
 from app.knowledge_quality.domain.models import (
+    CHUNK_NORMALIZATION_VERSION,
     DETECTOR_VERSION,
+    CandidateChannel,
+    CandidateChannelEvidence,
+    ChunkDedupCandidate,
+    ChunkDedupProbe,
     ClaimScope,
     QualityRelationCandidate,
     RelationType,
@@ -67,6 +81,16 @@ class _Aggregate:
         )
 
 
+@dataclass(frozen=True, slots=True)
+class FusedCandidateDetectionResult:
+    """Observable result of the post-embedding four-channel candidate union."""
+
+    relations: tuple[QualityRelationCandidate, ...]
+    candidates: tuple[ChunkDedupCandidate, ...]
+    probe_count: int
+    ann_candidate_count: int
+
+
 def detect_document_relation_candidates(
     *,
     vector_index: VectorIndex,
@@ -105,6 +129,8 @@ def detect_document_relation_candidates(
                 semantic_similarity=hit.score,
                 left_scope=source_scope,
                 right_scope=_hit_scope(hit),
+                left_entity_scope_metadata=chunk.metadata.get("entity_scope"),
+                right_entity_scope_metadata=hit.metadata.get("entity_scope"),
             )
             if analysis.relation_type == RelationType.DISTINCT:
                 continue
@@ -222,6 +248,88 @@ def detect_document_relation_candidates(
     return tuple(results)
 
 
+def detect_fused_document_relation_candidates(
+    *,
+    vector_index: VectorIndex,
+    chunks: tuple[EmbeddedChunk, ...],
+    probes: tuple[ChunkDedupProbe, ...],
+    preembedding_candidates: tuple[ChunkDedupCandidate, ...],
+    candidates_per_channel: int = 20,
+    final_candidate_limit: int = DEFAULT_FINAL_CANDIDATE_LIMIT,
+    channel_reservation: int = DEFAULT_CHANNEL_RESERVATION,
+) -> FusedCandidateDetectionResult:
+    """Query ANN for every eligible chunk, fuse all channels, then classify."""
+    if candidates_per_channel <= 0:
+        raise ValueError("Candidates per channel must be > 0")
+    if not chunks or not probes:
+        return FusedCandidateDetectionResult((), (), 0, 0)
+
+    probe_by_index = {probe.chunk_index: probe for probe in probes}
+    source_document_id = chunks[0].document_id
+    ann_candidates: list[ChunkDedupCandidate] = []
+    for chunk in chunks:
+        probe = probe_by_index.get(chunk.chunk_index)
+        if probe is None or not probe.include_fuzzy_candidates:
+            continue
+        hits = vector_index.query(
+            chunk.embedding,
+            owner_id=chunk.owner_id,
+            document_ids=None,
+            limit=candidates_per_channel,
+            tenant_id=chunk.tenant_id,
+        )
+        for rank, hit in enumerate(hits, 1):
+            if hit.document_id == source_document_id:
+                continue
+            try:
+                target_document_id = UUID(hit.document_id)
+            except ValueError:
+                continue
+            fingerprint = build_chunk_fingerprint(hit.text)
+            ann_candidates.append(
+                ChunkDedupCandidate(
+                    source_chunk_index=chunk.chunk_index,
+                    target_chunk_id=hit.chunk_id,
+                    target_document_id=target_document_id,
+                    target_chunk_index=hit.chunk_index or 0,
+                    canonical_text=hit.text,
+                    normalized_content_hash=fingerprint.strict_hash,
+                    normalization_version=CHUNK_NORMALIZATION_VERSION,
+                    loose_content_signature=fingerprint.loose_signature,
+                    embedding_text_checksum=None,
+                    embedding=(),
+                    embedding_model=chunk.embedding_model,
+                    scope=_hit_scope(hit),
+                    channel_evidence=(
+                        CandidateChannelEvidence(
+                            channel=CandidateChannel.ANN,
+                            rank=rank,
+                            score=hit.score,
+                        ),
+                    ),
+                )
+            )
+
+    fused = fuse_chunk_candidates(
+        probes,
+        (*preembedding_candidates, *ann_candidates),
+        final_limit=final_candidate_limit,
+        channel_reservation=channel_reservation,
+    )
+    plan = plan_chunk_deduplication(
+        probes,
+        fused,
+        embedding_model=chunks[0].embedding_model,
+        enable_exact_reuse=False,
+    )
+    return FusedCandidateDetectionResult(
+        relations=plan.relations,
+        candidates=fused,
+        probe_count=sum(probe.include_fuzzy_candidates for probe in probes),
+        ann_candidate_count=len(ann_candidates),
+    )
+
+
 def _chunk_scope(chunk: EmbeddedChunk) -> ClaimScope:
     persisted = ClaimScope.from_metadata(chunk.metadata.get("claim_scope"))
     fallback = extract_claim_scope(
@@ -270,4 +378,8 @@ def _sample_chunks(
     return tuple(chunks[index] for index in sorted(indexes))
 
 
-__all__ = ["detect_document_relation_candidates"]
+__all__ = [
+    "FusedCandidateDetectionResult",
+    "detect_document_relation_candidates",
+    "detect_fused_document_relation_candidates",
+]

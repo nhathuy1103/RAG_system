@@ -595,6 +595,9 @@ class QdrantVectorIndex:
         claim_scope = chunk.metadata.get("claim_scope")
         if claim_scope is not None:
             compact_metadata["claim_scope"] = claim_scope
+        entity_scope = chunk.metadata.get("entity_scope")
+        if entity_scope is not None:
+            compact_metadata["entity_scope"] = entity_scope
         payload: dict[str, object] = {
             "chunk_id": QdrantVectorIndex._point_id(chunk.id),
             "source_chunk_id": chunk.id,

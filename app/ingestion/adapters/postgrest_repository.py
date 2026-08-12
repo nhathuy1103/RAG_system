@@ -32,8 +32,11 @@ from app.ingestion.ports.repositories import (
     ProcessingProgressReporter,
 )
 from app.knowledge_quality.application.analysis import is_auto_identity_eligible
+from app.knowledge_quality.application.candidate_generation import fuse_chunk_candidates
 from app.knowledge_quality.application.scope import extract_claim_scope, merge_claim_scopes
 from app.knowledge_quality.domain.models import (
+    CandidateChannel,
+    CandidateChannelEvidence,
     ChunkDedupCandidate,
     ChunkDedupProbe,
     ClaimScope,
@@ -120,13 +123,13 @@ class PostgrestIngestionRepository(
                 owner_id=UUID(str(row["owner_id"])),
                 notebook_id=UUID(str(row["notebook_id"])),
                 document_id=UUID(str(row["document_id"])),
-                attempt_number=int(row["attempt_number"]),
+                attempt_number=int(str(row["attempt_number"])),
                 configuration=dict(configuration),
                 storage_bucket=str(row["storage_bucket"]),
                 storage_object_path=str(row["storage_object_path"]),
                 original_filename=str(row["original_filename"]),
                 mime_type=str(row["mime_type"]),
-                size_bytes=int(row["size_bytes"]),
+                size_bytes=int(str(row["size_bytes"])),
                 content_hash=(
                     str(row["content_hash"]) if row["content_hash"] is not None else None
                 ),
@@ -297,12 +300,17 @@ class PostgrestIngestionRepository(
             return ()
         if candidates_per_probe <= 0:
             raise ValueError("candidates_per_probe must be > 0")
+        high_recall = any(probe.binary_keys or probe.fts_terms for probe in probes)
         candidates: list[ChunkDedupCandidate] = []
         try:
             for start in range(0, len(probes), _CHUNK_CANDIDATE_BATCH_SIZE):
                 batch = probes[start : start + _CHUNK_CANDIDATE_BATCH_SIZE]
                 payload = await self._rpc(
-                    "find_chunk_dedup_candidates",
+                    (
+                        "find_chunk_candidates_v2"
+                        if high_recall
+                        else "find_chunk_dedup_candidates"
+                    ),
                     {
                         "p_owner_id": str(job.owner_id),
                         "p_notebook_id": str(job.notebook_id),
@@ -370,11 +378,18 @@ class PostgrestIngestionRepository(
                             embedding_model=str(row["embedding_model"]),
                             lsh_band_matches=int(row.get("lsh_band_matches") or 0),
                             scope=merge_claim_scopes(persisted_scope, fallback_scope),
+                            channel_evidence=_candidate_channel_evidence(row),
                         )
                     )
         except (KeyError, TypeError, ValueError) as exc:
             raise IngestionRepositoryError("Failed to parse chunk dedup candidates") from exc
-        return tuple(candidates)
+        if not high_recall:
+            return tuple(candidates)
+        return fuse_chunk_candidates(
+            probes,
+            candidates,
+            final_limit=50,
+        )
 
     async def _load_candidate_document_scopes(
         self,
@@ -603,18 +618,18 @@ class PostgrestIngestionRepository(
                 owner_id=UUID(str(row["owner_id"])),
                 notebook_id=UUID(str(row["notebook_id"])),
                 document_id=logical_document_id,
-                attempt_number=int(row["attempt_number"]),
+                attempt_number=int(str(row["attempt_number"])),
                 configuration=dict(configuration),
                 storage_bucket=str(row["storage_bucket"]),
                 storage_object_path=str(row["storage_object_path"]),
                 original_filename=str(row["original_filename"]),
                 mime_type=str(row["mime_type"]),
-                size_bytes=int(row["size_bytes"]),
+                size_bytes=int(str(row["size_bytes"])),
                 content_hash=(
                     str(row["content_hash"]) if row.get("content_hash") is not None else None
                 ),
                 claim_token=UUID(str(row["claim_token"])),
-                document_version=int(row["document_version"]),
+                document_version=int(str(row["document_version"])),
                 queue_kind="enterprise",
                 document_version_id=UUID(str(row["document_version_id"])),
                 knowledge_document_id=logical_document_id,
@@ -780,6 +795,39 @@ def _parse_embedding(value: object) -> tuple[float, ...]:
     if any(isinstance(item, bool) or not isinstance(item, int | float) for item in parsed):
         raise TypeError("Chunk candidate embedding contains a non-numeric value")
     return tuple(float(item) for item in parsed)
+
+
+def _candidate_channel_evidence(
+    row: Mapping[str, object],
+) -> tuple[CandidateChannelEvidence, ...]:
+    evidence: list[CandidateChannelEvidence] = []
+    definitions = (
+        (CandidateChannel.EXACT, "exact_rank", "exact_score", None),
+        (
+            CandidateChannel.BINARY,
+            "binary_rank",
+            "binary_score",
+            "binary_key_matches",
+        ),
+        (CandidateChannel.FTS, "fts_rank", "fts_score", None),
+    )
+    for channel, rank_key, score_key, matched_key_key in definitions:
+        raw_rank = row.get(rank_key)
+        if raw_rank is None:
+            continue
+        evidence.append(
+            CandidateChannelEvidence(
+                channel=channel,
+                rank=int(str(raw_rank)),
+                score=float(str(row.get(score_key) or 0.0)),
+                matched_key_count=(
+                    int(str(row.get(matched_key_key) or 0))
+                    if matched_key_key is not None
+                    else 0
+                ),
+            )
+        )
+    return tuple(evidence)
 
 
 def _enterprise_chunk_payload(chunk: PersistedChunk) -> dict[str, object]:

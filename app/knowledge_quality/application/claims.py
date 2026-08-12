@@ -139,6 +139,27 @@ _IDENTIFIER_CONTEXT_PATTERN = re.compile(
     r"\b(?:mã|ma|code|identifier|id|số\s+hiệu|so\s+hieu)\s*[:#\-]?\s*$",
     re.IGNORECASE | re.UNICODE,
 )
+_DOMAIN_IDENTIFIER_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
+    (
+        "vehicle_model_code",
+        re.compile(r"(?<!\w)(?:vinfast\s+)?vf\s*\d+\b", re.IGNORECASE),
+    ),
+    (
+        "building_code",
+        re.compile(r"(?<!\w)s\d+(?:[.-]\d+)?\b", re.IGNORECASE),
+    ),
+    (
+        "unit_code",
+        re.compile(
+            r"\b(?:unit|mÃ£\s*cÄƒn|ma\s*can|cÄƒn|can)\s*[:#-]?\s*\d{3,6}\b",
+            re.IGNORECASE | re.UNICODE,
+        ),
+    ),
+    (
+        "bedroom_variant",
+        re.compile(r"(?<!\w)\d+\s*pn\b", re.IGNORECASE),
+    ),
+)
 _PREDICATE_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("pay", re.compile(r"\b(?:thanh\s+toán|thanh\s+toan|pay|pays|payment)\b", re.I)),
     ("apply", re.compile(r"\b(?:áp\s+dụng|ap\s+dung|apply|applies)\b", re.I)),
@@ -429,8 +450,22 @@ def classify_numeric_mentions(text: str) -> tuple[NumericMention, ...]:
         )
         for start, end, reference_type in structural
     ]
+    identifiers = _domain_identifier_spans(text)
+    mentions.extend(
+        NumericMention(
+            raw_text=text[start:end],
+            normalized_value=" ".join(text[start:end].casefold().split()),
+            unit=None,
+            role=NumericRole.IDENTIFIER,
+            span_start=start,
+            span_end=end,
+            context=_mention_context(text, start, end),
+            reference_type=reference_type,
+        )
+        for start, end, reference_type in identifiers
+    )
     date_values = _extract_dates(text, base_offset=0)
-    occupied = [(start, end) for start, end, _ in structural]
+    occupied = [(start, end) for start, end, _ in (*structural, *identifiers)]
     occupied.extend((value.span_start, value.span_end) for value in date_values)
     mentions.extend(
         NumericMention(
@@ -636,8 +671,15 @@ def _extract_quantities(
     structural_spans = tuple(
         (span_start, span_end) for span_start, span_end, _ in _structural_reference_spans(text)
     )
+    identifier_spans = tuple(
+        (span_start, span_end) for span_start, span_end, _ in _domain_identifier_spans(text)
+    )
     for match in _QUANTITY_PATTERN.finditer(text):
-        if _overlaps(match.start(), match.end(), (*local_excluded, *structural_spans)):
+        if _overlaps(
+            match.start(),
+            match.end(),
+            (*local_excluded, *structural_spans, *identifier_spans),
+        ):
             continue
         try:
             numeric_value = _parse_decimal(match.group("number"))
@@ -921,6 +963,22 @@ def _claim_difference_reasons(
 
 def _values_of_kind(claim: ExtractedClaim, kind: str) -> tuple[ClaimValue, ...]:
     return tuple(value for value in claim.values if value.kind == kind)
+
+
+@lru_cache(maxsize=4096)
+def _domain_identifier_spans(text: str) -> tuple[tuple[int, int, str], ...]:
+    candidates: list[tuple[int, int, str]] = []
+    for reference_type, pattern in _DOMAIN_IDENTIFIER_PATTERNS:
+        candidates.extend(
+            (match.start(), match.end(), reference_type) for match in pattern.finditer(text)
+        )
+    candidates.sort(key=lambda item: (item[0], -(item[1] - item[0]), item[2]))
+    selected: list[tuple[int, int, str]] = []
+    for candidate in candidates:
+        if any(candidate[0] < end and candidate[1] > start for start, end, _ in selected):
+            continue
+        selected.append(candidate)
+    return tuple(sorted(selected, key=lambda item: item[0]))
 
 
 @lru_cache(maxsize=4096)

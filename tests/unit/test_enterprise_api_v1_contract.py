@@ -545,3 +545,36 @@ async def test_review_workspace_returns_candidate_content_and_processing_context
     assert payload["source_file"]["original_file_name"] == "policy.pdf"
     assert payload["latest_processing_job"]["status"] == "SUCCEEDED"
     assert payload["extracted_chunks"][0]["page_start"] == 2
+
+
+@pytest.mark.anyio
+async def test_text_comparison_preview_returns_explainable_conflict_result() -> None:
+    transport = httpx.ASGITransport(app=_app())
+    async with httpx.AsyncClient(transport=transport, base_url="https://api.test") as client:
+        response = await client.post(
+            "/api/v1/quality/compare-texts",
+            json={
+                "left_text": "Revenue in Q3 was 120 million.",
+                "right_text": "Revenue in Q3 was 121 million.",
+            },
+        )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["relation_type"] == "conflict_candidate"
+    assert payload["review_recommended"] is True
+    assert payload["validated_conflict_count"] >= 1
+    assert payload["reason_codes"][0] == "semantic_quantity_mismatch"
+    assert payload["semantic_similarity"] is None
+
+
+@pytest.mark.anyio
+async def test_text_comparison_preview_rejects_blank_content() -> None:
+    transport = httpx.ASGITransport(app=_app())
+    async with httpx.AsyncClient(transport=transport, base_url="https://api.test") as client:
+        response = await client.post(
+            "/api/v1/quality/compare-texts",
+            json={"left_text": "   ", "right_text": "Nội dung B"},
+        )
+
+    assert response.status_code == 422

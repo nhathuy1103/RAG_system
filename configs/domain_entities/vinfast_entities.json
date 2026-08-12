@@ -1,0 +1,47 @@
+{
+  "registry_version": "p2-vinfast-entities-v1",
+  "normalization_version": "p2-entity-normalization-v1",
+  "domain": "vinfast",
+  "entities": [
+    {
+      "canonical_id": "vinfast",
+      "entity_type": "manufacturer",
+      "canonical_name": "VinFast",
+      "aliases": ["VinFast", "Vin Fast"],
+      "codes": [],
+      "parent_id": null
+    },
+    {
+      "canonical_id": "vinfast_vf6",
+      "entity_type": "vehicle_model",
+      "canonical_name": "VinFast VF 6",
+      "aliases": ["VinFast VF 6", "VinFast VF6", "VF 6", "VF6"],
+      "codes": ["VF6", "VF 6"],
+      "parent_id": "vinfast"
+    },
+    {
+      "canonical_id": "vinfast_vf7",
+      "entity_type": "vehicle_model",
+      "canonical_name": "VinFast VF 7",
+      "aliases": ["VinFast VF 7", "VinFast VF7", "VF 7", "VF7"],
+      "codes": ["VF7", "VF 7"],
+      "parent_id": "vinfast"
+    },
+    {
+      "canonical_id": "vinfast_vf8",
+      "entity_type": "vehicle_model",
+      "canonical_name": "VinFast VF 8",
+      "aliases": ["VinFast VF 8", "VinFast VF8", "VF 8", "VF8"],
+      "codes": ["VF8", "VF 8"],
+      "parent_id": "vinfast"
+    },
+    {
+      "canonical_id": "vinfast_vf9",
+      "entity_type": "vehicle_model",
+      "canonical_name": "VinFast VF 9",
+      "aliases": ["VinFast VF 9", "VinFast VF9", "VF 9", "VF9"],
+      "codes": ["VF9", "VF 9"],
+      "parent_id": "vinfast"
+    }
+  ]
+}

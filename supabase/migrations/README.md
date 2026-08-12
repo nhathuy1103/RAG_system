@@ -82,9 +82,17 @@ sự thật vẫn là thư mục đó — các file ở đây để đọc/tra c
     filler word cùng xuất hiện, suy luận trạng thái hiệu lực tại thời điểm query, cấp
     READ qua role ACL cho tài liệu INTERNAL/PUBLIC đã publish (không mở cho anon), và
     cung cấp RPC chẩn đoán lifecycle/ACL/projection mà không trả nội dung chunk.
+32. `32_high_recall_chunk_candidates.sql` — thêm service-role RPC v2 hợp nhất exact,
+    binary và FTS ở cấp chunk, generated multi-layout SimHash keys với GIN index,
+    đồng thời giữ nguyên RPC v1 để shadow rollout và rollback.
+33. `33_domain_entity_scope_metadata.sql` — thêm partial index cho envelope metadata
+    `entity_scope` có version trên notebook/Enterprise chunks; dữ liệu cũ không bắt buộc
+    backfill và tiếp tục dùng deterministic extraction fallback.
 
 Migration phải chạy đúng thứ tự; 09 phụ thuộc 08 và chuỗi Enterprise 17–31 phụ
-thuộc toàn bộ nền tảng 01–16. Với project đã có dữ liệu, đọc
+thuộc toàn bộ nền tảng 01–16; migration 32 bổ sung trên candidate path cũ và migration
+33 chỉ lập chỉ mục metadata scope tùy chọn. Với
+project đã có dữ liệu, đọc
 [`docs/migrations/08-09-knowledge-quality.md`](../../docs/migrations/08-09-knowledge-quality.md),
 backup và thử trên clone trước khi chạy. Hướng dẫn rollout Enterprise nằm tại
 [`docs/operations/enterprise-knowledge-runbook.md`](../../docs/operations/enterprise-knowledge-runbook.md);
@@ -113,7 +121,7 @@ pipeline.
 
 Phần schema sau marker `-- Extensions required by the schema.` trong
 `RESET_AND_REBUILD.sql` phải là bản nối **nguyên văn, đúng thứ tự** của mọi migration
-canonical `01_*.sql` đến migration mới nhất (`31_*.sql` hiện tại). Không sửa phần này
+canonical `01_*.sql` đến migration mới nhất (`33_*.sql` hiện tại). Không sửa phần này
 bằng tay. Sau khi đổi hoặc
 thêm migration, chạy từ thư mục gốc:
 

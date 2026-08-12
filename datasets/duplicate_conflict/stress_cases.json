@@ -1,0 +1,30 @@
+{
+  "version": "duplicate-conflict-gold-v1",
+  "long_document": {
+    "chunk_count": 100,
+    "max_fuzzy_probes": 8,
+    "meaningful_positions_1_based": [
+      1,
+      17,
+      50,
+      83,
+      99
+    ],
+    "relation": "CONFLICT",
+    "description": "Only the listed chunk carries a same-scope changed-value claim; all other chunks are unrelated distractors."
+  },
+  "simhash_lsh": {
+    "text_a": "Giá tham chiếu căn hộ hai phòng ngủ tại dự án Vinhomes Project Alpha năm 2026 là khoảng 6,2 tỷ đồng mỗi căn và đã gồm phí quản lý.",
+    "text_b": "Giá tham chiếu căn hộ hai phòng ngủ thuộc dự án Project Alpha của Vinhomes cho kỳ 2026 xấp xỉ 6,2 tỷ đồng mỗi căn và đã gồm phí quản lý.",
+    "expected_relation": "NEAR_DUPLICATE",
+    "expected_hamming_distance": 21,
+    "expected_lsh_band_overlap": 0,
+    "expected_candidate_result": "CANDIDATE_MISS"
+  },
+  "candidate_corpus_policy": {
+    "distractors_per_pair": 60,
+    "selection": "stable SHA-256 order; same category, then same domain, then cross-domain",
+    "runtime_candidate_limit": 5,
+    "curve_limit": 50
+  }
+}

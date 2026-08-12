@@ -16,6 +16,11 @@ from dataclasses import dataclass, field, replace
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 
+from app.knowledge_quality.application.business_scope import (
+    ScopeTextContext,
+    resolve_business_context,
+)
+from app.knowledge_quality.domain.scope_models import ResolvedBusinessContext
 from app.pipeline.documents.domain.parsed import ParsedTable
 from app.structured_facts.domain.models import (
     BusinessScope,
@@ -23,6 +28,7 @@ from app.structured_facts.domain.models import (
     ClaimProvenance,
     ClaimQualifiers,
     ConstraintValue,
+    EntityEvidenceSource,
     NormalizedValue,
     ScalarValue,
     SourceAuthority,
@@ -130,6 +136,21 @@ _EXACT_HEADER_ALIASES: dict[str, str] = {
     "name": "name",
     "mo ta": "description",
     "description": "description",
+    # Vehicle identity/applicability.
+    "mau xe": "vehicle_model",
+    "vehicle model": "vehicle_model",
+    "model": "vehicle_model",
+    "phien ban": "vehicle_trim",
+    "trim": "vehicle_trim",
+    "model year": "vehicle_model_year",
+    "doi xe": "vehicle_model_year",
+    "thi truong": "vehicle_market",
+    "market": "vehicle_market",
+    "chu trinh": "vehicle_test_protocol",
+    "protocol": "vehicle_test_protocol",
+    "tam hoat dong": "vehicle_range",
+    "pham vi": "vehicle_range",
+    "range": "vehicle_range",
     "tang": "floor",
     "floor": "floor",
     "huong": "direction",
@@ -215,6 +236,13 @@ _SCOPE_FIELDS = {
     "property_type",
     "bedrooms",
     "product_variant",
+    "vehicle_model",
+    "vehicle_trim",
+    "vehicle_model_year",
+    "vehicle_battery_variant",
+    "vehicle_drivetrain",
+    "vehicle_market",
+    "vehicle_test_protocol",
 }
 _EXPLICIT_IDENTITY_FIELDS = {"id", "code", "name"}
 _QUALIFIER_FIELDS = {
@@ -257,7 +285,9 @@ def analyze_table(
         raise ValueError("document_id is required")
 
     headers, data_rows, first_data_row_index, warnings = _split_header_and_rows(table)
-    specs = tuple(_header_spec(index, name) for index, name in enumerate(headers))
+    specs = _specialize_domain_specs(
+        tuple(_header_spec(index, name) for index, name in enumerate(headers))
+    )
     normalized_schema = tuple(spec.canonical_name for spec in specs)
     duplicate_headers = sorted(
         name for name in set(normalized_schema) if normalized_schema.count(name) > 1
@@ -318,6 +348,20 @@ def analyze_table(
 
             stable = dict(spec.stable_qualifiers)
             optional = dict(spec.optional_qualifiers)
+            if (predicate := spec.predicate) and predicate == "vehicle_range":
+                stable.update(
+                    {
+                        key: value
+                        for key, value in (
+                            ("trim", identity.scope.vehicle.trim),
+                            ("model_year", identity.scope.vehicle.model_year),
+                            ("market", identity.scope.vehicle.market),
+                            ("test_protocol", identity.scope.vehicle.test_protocol),
+                            ("battery_variant", identity.scope.vehicle.battery_variant),
+                        )
+                        if value is not None
+                    }
+                )
             if spec.canonical_name in _PRICE_FIELDS:
                 stable.update(
                     {
@@ -599,6 +643,29 @@ def _header_spec(index: int, raw_name: str) -> HeaderSpec:
     )
 
 
+def _specialize_domain_specs(specs: tuple[HeaderSpec, ...]) -> tuple[HeaderSpec, ...]:
+    """Resolve generic ``Mã/Biến thể`` headers using explicit vehicle columns."""
+    is_vehicle_table = any(spec.canonical_name.startswith("vehicle_") for spec in specs)
+    if not is_vehicle_table:
+        return specs
+    specialized: list[HeaderSpec] = []
+    for spec in specs:
+        canonical = spec.canonical_name
+        if canonical == "code":
+            canonical = "vehicle_model"
+        elif canonical == "product_variant":
+            canonical = "vehicle_trim"
+        if canonical != spec.canonical_name:
+            spec = replace(
+                spec,
+                canonical_name=canonical,
+                kind="identity",
+                predicate=None,
+            )
+        specialized.append(spec)
+    return tuple(specialized)
+
+
 def _split_header_and_rows(
     table: ParsedTable,
 ) -> tuple[list[str], list[list[str]], int, list[str]]:
@@ -648,7 +715,91 @@ def _row_identity(
         product_variant=_identity_value(values_by_field.get("product_variant"))
         or base_scope.product.product_variant,
     )
-    scope = replace(base_scope, location=location, product=product)
+    raw_vehicle_values = {
+        field_name: values_by_field.get(f"vehicle_{field_name}")
+        for field_name in (
+            "model",
+            "trim",
+            "model_year",
+            "battery_variant",
+            "drivetrain",
+            "market",
+            "test_protocol",
+        )
+    }
+    resolved_vehicle_context = _resolve_table_vehicle_context(
+        table=table,
+        physical_row_index=physical_row_index,
+        raw_values=raw_vehicle_values,
+    )
+    resolved_vehicle = (
+        resolved_vehicle_context.business_scope.vehicle
+        if resolved_vehicle_context is not None
+        else None
+    )
+    vehicle = replace(
+        base_scope.vehicle,
+        manufacturer=(
+            resolved_vehicle.manufacturer
+            if resolved_vehicle is not None and resolved_vehicle.manufacturer is not None
+            else base_scope.vehicle.manufacturer
+        ),
+        model=(
+            resolved_vehicle.model
+            if resolved_vehicle is not None and resolved_vehicle.model is not None
+            else _identity_value(raw_vehicle_values["model"])
+            or base_scope.vehicle.model
+        ),
+        trim=(
+            resolved_vehicle.trim
+            if resolved_vehicle is not None and resolved_vehicle.trim is not None
+            else _identity_value(raw_vehicle_values["trim"])
+            or base_scope.vehicle.trim
+        ),
+        model_year=(
+            resolved_vehicle.model_year
+            if resolved_vehicle is not None and resolved_vehicle.model_year is not None
+            else _identity_value(raw_vehicle_values["model_year"])
+        )
+        or base_scope.vehicle.model_year,
+        battery_variant=(
+            resolved_vehicle.battery_variant
+            if resolved_vehicle is not None and resolved_vehicle.battery_variant is not None
+            else _identity_value(raw_vehicle_values["battery_variant"])
+        )
+        or base_scope.vehicle.battery_variant,
+        drivetrain=(
+            resolved_vehicle.drivetrain
+            if resolved_vehicle is not None and resolved_vehicle.drivetrain is not None
+            else _identity_value(raw_vehicle_values["drivetrain"])
+        )
+        or base_scope.vehicle.drivetrain,
+        market=(
+            resolved_vehicle.market
+            if resolved_vehicle is not None and resolved_vehicle.market is not None
+            else _identity_value(raw_vehicle_values["market"])
+            or base_scope.vehicle.market
+        ),
+        test_protocol=(
+            resolved_vehicle.test_protocol
+            if resolved_vehicle is not None and resolved_vehicle.test_protocol is not None
+            else _identity_value(raw_vehicle_values["test_protocol"])
+        )
+        or base_scope.vehicle.test_protocol,
+    )
+    resolved_entities = (
+        resolved_vehicle_context.entities if resolved_vehicle_context is not None else ()
+    )
+    entities_by_id = {
+        item.canonical_id: item for item in (*base_scope.entities, *resolved_entities)
+    }
+    scope = replace(
+        base_scope,
+        location=location,
+        product=product,
+        vehicle=vehicle,
+        entities=tuple(entities_by_id[key] for key in sorted(entities_by_id)),
+    )
 
     pairs: list[tuple[str, str]] = []
     used: list[int] = []
@@ -657,6 +808,21 @@ def _row_identity(
         if value:
             pairs.append((field_name, str(value)))
             used.extend(spec.index for spec in specs if spec.canonical_name == field_name)
+    for field_name in (
+        "model",
+        "trim",
+        "model_year",
+        "battery_variant",
+        "drivetrain",
+        "market",
+        "test_protocol",
+    ):
+        value = getattr(vehicle, field_name)
+        if value:
+            pairs.append((f"vehicle_{field_name}", str(value)))
+            used.extend(
+                spec.index for spec in specs if spec.canonical_name == f"vehicle_{field_name}"
+            )
 
     # A project alone is not a row identity.  Append explicit row identifiers
     # and stable product dimensions before considering a composite fallback.
@@ -666,7 +832,7 @@ def _row_identity(
             pairs.append((field_name, value))
             used.extend(spec.index for spec in specs if spec.canonical_name == field_name)
 
-    has_specific_location = bool(location.unit)
+    has_specific_location = bool(location.unit or vehicle.model)
     if pairs and (has_specific_location or any(key in {"id", "code", "name"} for key, _ in pairs)):
         confidence = 1.0 if location.unit else 0.9
         return _RowIdentity(
@@ -717,6 +883,42 @@ def _row_identity(
         confidence=0.35,
         used_columns=(),
         fallback_used=True,
+    )
+
+
+def _resolve_table_vehicle_context(
+    *,
+    table: ParsedTable,
+    physical_row_index: int,
+    raw_values: dict[str, str | None],
+) -> ResolvedBusinessContext | None:
+    """Resolve table vehicle cells through the same canonical P2 pipeline as prose."""
+    labels = {
+        "model": "model",
+        "trim": "trim",
+        "model_year": "model year",
+        "battery_variant": "battery",
+        "drivetrain": "drivetrain",
+        "market": "market",
+        "test_protocol": "protocol",
+    }
+    fragments = [
+        f"{labels[field_name]} {raw_value}"
+        for field_name, raw_value in raw_values.items()
+        if raw_value and raw_value.strip()
+    ]
+    if not fragments:
+        return None
+    return resolve_business_context(
+        "",
+        contexts=(
+            ScopeTextContext(
+                " | ".join(fragments),
+                EntityEvidenceSource.TABLE_CELL,
+                f"{table.table_id}:row:{physical_row_index}",
+            ),
+        ),
+        domain_hint="vinfast",
     )
 
 

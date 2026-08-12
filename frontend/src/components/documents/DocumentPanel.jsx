@@ -14,6 +14,45 @@ const isFailedStatus = (status) => {
   return ['failed', 'FAILED'].includes(status);
 };
 
+const TRACKED_QUALITY_STATUSES = new Set([
+  'duplicate',
+  'conflict',
+  'review_required',
+  'superseded',
+]);
+
+const IN_FLIGHT_DOCUMENT_STATUSES = new Set(['uploading', 'processing']);
+
+function qualityNoticeForDocument(doc) {
+  if (!doc || !TRACKED_QUALITY_STATUSES.has(doc.quality_status)) return null;
+
+  const filename = doc.original_filename || 'tài liệu';
+  switch (doc.quality_status) {
+    case 'duplicate':
+      return {
+        severity: 'info',
+        message: `File "${filename}" là bản trùng, hệ thống đã dùng lại bản có sẵn.`,
+      };
+    case 'conflict':
+      return {
+        severity: 'warning',
+        message: `File "${filename}" có xung đột nội dung và đã được đưa vào mục Duyệt.`,
+      };
+    case 'review_required':
+      return {
+        severity: 'warning',
+        message: `File "${filename}" cần duyệt vì có dấu hiệu xung đột.`,
+      };
+    case 'superseded':
+      return {
+        severity: 'warning',
+        message: `File "${filename}" là bản cũ.`,
+      };
+    default:
+      return null;
+  }
+}
+
 function SourceRow({ doc, isSelected, onToggle, onRemove }) {
   const isReady = isReadyStatus(doc.status);
   const isFailed = isFailedStatus(doc.status);
@@ -92,6 +131,7 @@ export default function DocumentPanel() {
   const [urlTitle, setUrlTitle] = useState('');
   const [docToDelete, setDocToDelete] = useState(null);
   const fileInputRef = useRef(null);
+  const pendingQualityNoticeIdsRef = useRef(new Set());
 
   useEffect(() => {
     if (!activeNotebook) return;
@@ -100,6 +140,31 @@ export default function DocumentPanel() {
     }, 3000);
     return () => clearInterval(interval);
   }, [activeNotebook, pollDocumentStatuses]);
+
+  useEffect(() => {
+    pendingQualityNoticeIdsRef.current.clear();
+  }, [activeNotebook?.id]);
+
+  useEffect(() => {
+    if (pendingQualityNoticeIdsRef.current.size === 0) return;
+
+    const documentsById = new Map(documents.map((document) => [document.id, document]));
+    for (const docId of Array.from(pendingQualityNoticeIdsRef.current)) {
+      const document = documentsById.get(docId);
+      if (!document) continue;
+
+      const notice = qualityNoticeForDocument(document);
+      if (notice) {
+        showToast(notice.message, notice.severity);
+        pendingQualityNoticeIdsRef.current.delete(docId);
+        continue;
+      }
+
+      if (!IN_FLIGHT_DOCUMENT_STATUSES.has(document.status)) {
+        pendingQualityNoticeIdsRef.current.delete(docId);
+      }
+    }
+  }, [documents, showToast]);
 
   const handleFileAdd = async (files) => {
     if (!activeNotebook) {
@@ -116,6 +181,11 @@ export default function DocumentPanel() {
       const items = result?.items || [];
       const duplicateItems = items.filter((item) => item.duplicate);
       const newCount = (result?.succeeded_count || 0) - duplicateItems.length;
+
+      items.forEach((item) => {
+        if (item.duplicate || !item.document?.id) return;
+        pendingQualityNoticeIdsRef.current.add(item.document.id);
+      });
 
       const messages = [];
       let severity = 'success';

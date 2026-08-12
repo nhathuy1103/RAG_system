@@ -996,6 +996,428 @@ export async function listEnterpriseRelations(): Promise<{ items: EnterpriseDocu
   return { items: readEnterpriseRelations() };
 }
 
+export interface EnterpriseTextComparison {
+  relation_type: string;
+  confidence: number;
+  review_recommended: boolean;
+  lexical_similarity: number;
+  containment: number;
+  semantic_similarity: number | null;
+  template_similarity: number;
+  number_agreement: boolean;
+  date_agreement: boolean;
+  negation_mismatch: boolean;
+  unit_agreement: boolean;
+  policy_modality_mismatch: boolean;
+  scope_comparison: string;
+  reason_codes: string[];
+  claim_conflicts: Array<{
+    alignment_score: number;
+    reason_codes: string[];
+    left: Record<string, unknown>;
+    right: Record<string, unknown>;
+  }>;
+  validated_conflict_count: number;
+  exact_line_overlap_count: number;
+  exact_line_overlap_ratio: number;
+  structural_numbers_ignored: number;
+}
+
+type ComparisonModality = "obligation" | "permission" | "prohibition" | "neutral";
+
+const COMPARISON_NEGATION_PATTERNS = [
+  /\bkhong duoc\b/,
+  /\bkhong\b/,
+  /\bchua\b/,
+  /\bnot\b/,
+  /\bno\b/,
+  /\bnever\b/,
+  /\bcam\b/,
+  /\bprohibited\b/,
+  /\bforbidden\b/,
+  /\bmay not\b/,
+  /\bmust not\b/,
+];
+
+const COMPARISON_OBLIGATION_PATTERNS = [
+  /\bphai\b/,
+  /\bbat buoc\b/,
+  /\bmust\b/,
+  /\brequired\b/,
+  /\bshall\b/,
+];
+
+const COMPARISON_PERMISSION_PATTERNS = [
+  /\bduoc phep\b/,
+  /\bmay\b/,
+  /\bcan\b/,
+  /\ballowed\b/,
+  /\bpermitted\b/,
+];
+
+const COMPARISON_PROHIBITION_PATTERNS = [
+  /\bkhong duoc\b/,
+  /\bcam\b/,
+  /\bnot allowed\b/,
+  /\bprohibited\b/,
+  /\bforbidden\b/,
+];
+
+const COMPARISON_UNIT_TOKENS = [
+  "%",
+  "m2",
+  "m²",
+  "triệu",
+  "tỷ",
+  "tỉ",
+  "nghìn",
+  "ngàn",
+  "đồng",
+  "vnd",
+  "vnđ",
+  "usd",
+  "million",
+  "billion",
+  "thousand",
+  "day",
+  "days",
+  "month",
+  "months",
+  "year",
+  "years",
+];
+
+function stripComparisonDiacritics(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replaceAll("đ", "d")
+    .replaceAll("Đ", "d");
+}
+
+function normalizeComparisonText(value: string): string {
+  return stripComparisonDiacritics(value)
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tokenizeComparisonText(value: string): string[] {
+  const normalized = normalizeComparisonText(value);
+  return normalized ? normalized.split(" ") : [];
+}
+
+function uniqueTokens(values: string[]): string[] {
+  return [...new Set(values.filter(Boolean))].sort();
+}
+
+function diceSimilarity(leftTokens: string[], rightTokens: string[]): number {
+  if (leftTokens.length === 0 && rightTokens.length === 0) return 1;
+  if (leftTokens.length === 0 || rightTokens.length === 0) return 0;
+  const leftSet = new Set(leftTokens);
+  const rightSet = new Set(rightTokens);
+  let overlap = 0;
+  for (const token of leftSet) {
+    if (rightSet.has(token)) overlap += 1;
+  }
+  return (2 * overlap) / (leftSet.size + rightSet.size);
+}
+
+function setOverlapCount(leftValues: string[], rightValues: string[]): number {
+  const leftSet = new Set(leftValues);
+  const rightSet = new Set(rightValues);
+  let overlap = 0;
+  for (const token of leftSet) {
+    if (rightSet.has(token)) overlap += 1;
+  }
+  return overlap;
+}
+
+function extractNumericTokens(value: string): string[] {
+  const normalized = stripComparisonDiacritics(value.toLowerCase());
+  return uniqueTokens(normalized.match(/\b\d+(?:[.,]\d+)?\b/g) ?? []);
+}
+
+function extractDateTokens(value: string): string[] {
+  const normalized = stripComparisonDiacritics(value.toLowerCase());
+  const patterns = [
+    /\b\d{1,2}[/-]\d{1,2}[/-]\d{2,4}\b/g,
+    /\b\d{4}[/-]\d{1,2}[/-]\d{1,2}\b/g,
+    /\b\d{1,2}\s*(?:thang|month)\s*\d{1,2}\s*(?:nam|year)\s*\d{2,4}\b/g,
+    /\bq[1-4]\s*\d{4}\b/g,
+  ];
+  const tokens: string[] = [];
+  for (const pattern of patterns) {
+    tokens.push(...(normalized.match(pattern) ?? []));
+  }
+  return uniqueTokens(tokens.map((token) => token.replace(/\s+/g, "")));
+}
+
+function extractUnitTokens(value: string): string[] {
+  const normalized = normalizeComparisonText(value);
+  return uniqueTokens(
+    COMPARISON_UNIT_TOKENS.filter((token) => normalized.includes(token)),
+  );
+}
+
+function detectNegation(value: string): boolean {
+  const normalized = normalizeComparisonText(value);
+  return COMPARISON_NEGATION_PATTERNS.some((pattern) => pattern.test(normalized));
+}
+
+function detectModality(value: string): ComparisonModality {
+  const normalized = normalizeComparisonText(value);
+  if (COMPARISON_PROHIBITION_PATTERNS.some((pattern) => pattern.test(normalized))) {
+    return "prohibition";
+  }
+  if (COMPARISON_OBLIGATION_PATTERNS.some((pattern) => pattern.test(normalized))) {
+    return "obligation";
+  }
+  if (COMPARISON_PERMISSION_PATTERNS.some((pattern) => pattern.test(normalized))) {
+    return "permission";
+  }
+  return "neutral";
+}
+
+function hasTemporalMarker(value: string): boolean {
+  const normalized = normalizeComparisonText(value);
+  return /\b(nam|thang|ngay|quy|year|month|day|quarter|q[1-4])\b/.test(normalized);
+}
+
+function lineOverlapCount(leftText: string, rightText: string): number {
+  const leftLines = uniqueTokens(
+    leftText
+      .split(/\r?\n+/)
+      .map((line) => normalizeComparisonText(line))
+      .filter(Boolean),
+  );
+  const rightLines = uniqueTokens(
+    rightText
+      .split(/\r?\n+/)
+      .map((line) => normalizeComparisonText(line))
+      .filter(Boolean),
+  );
+  return setOverlapCount(leftLines, rightLines);
+}
+
+function lineOverlapRatio(leftText: string, rightText: string): number {
+  const leftLines = uniqueTokens(
+    leftText
+      .split(/\r?\n+/)
+      .map((line) => normalizeComparisonText(line))
+      .filter(Boolean),
+  );
+  const rightLines = uniqueTokens(
+    rightText
+      .split(/\r?\n+/)
+      .map((line) => normalizeComparisonText(line))
+      .filter(Boolean),
+  );
+  const denominator = Math.max(leftLines.length, rightLines.length, 1);
+  return lineOverlapCount(leftText, rightText) / denominator;
+}
+
+function sharedNumericTokenCount(leftText: string, rightText: string): number {
+  return setOverlapCount(extractNumericTokens(leftText), extractNumericTokens(rightText));
+}
+
+function buildClaimValues(
+  text: string,
+  kind: string,
+  tokens: string[],
+): Array<Record<string, unknown>> {
+  return tokens.map((token) => ({
+    kind,
+    raw_text: token,
+    normalized_value: token,
+    text,
+  }));
+}
+
+function buildFallbackTextComparison(
+  leftText: string,
+  rightText: string,
+): EnterpriseTextComparison {
+  const normalizedLeft = normalizeComparisonText(leftText);
+  const normalizedRight = normalizeComparisonText(rightText);
+  const leftTokens = tokenizeComparisonText(leftText);
+  const rightTokens = tokenizeComparisonText(rightText);
+  const lexicalSimilarity = diceSimilarity(leftTokens, rightTokens);
+  const leftUnique = uniqueTokens(leftTokens);
+  const rightUnique = uniqueTokens(rightTokens);
+  const containmentOverlap = setOverlapCount(leftUnique, rightUnique);
+  const containmentDenominator = Math.max(
+    Math.min(leftUnique.length, rightUnique.length),
+    1,
+  );
+  const containment = containmentOverlap / containmentDenominator;
+
+  const leftTemplateTokens = leftTokens.filter((token) => !/^\d+(?:[.,]\d+)?$/.test(token));
+  const rightTemplateTokens = rightTokens.filter((token) => !/^\d+(?:[.,]\d+)?$/.test(token));
+  const templateSimilarity = diceSimilarity(leftTemplateTokens, rightTemplateTokens);
+
+  const leftNumbers = extractNumericTokens(leftText);
+  const rightNumbers = extractNumericTokens(rightText);
+  const leftDates = extractDateTokens(leftText);
+  const rightDates = extractDateTokens(rightText);
+  const leftUnits = extractUnitTokens(leftText);
+  const rightUnits = extractUnitTokens(rightText);
+  const leftNegation = detectNegation(leftText);
+  const rightNegation = detectNegation(rightText);
+  const leftModality = detectModality(leftText);
+  const rightModality = detectModality(rightText);
+  const temporalMarker = hasTemporalMarker(leftText) || hasTemporalMarker(rightText);
+
+  const numberAgreement = leftNumbers.length === 0
+    ? rightNumbers.length === 0
+    : leftNumbers.length > 0
+      && rightNumbers.length > 0
+      && leftNumbers.join("|") === rightNumbers.join("|");
+  const dateAgreement = leftDates.length === 0
+    ? rightDates.length === 0
+    : leftDates.length > 0
+      && rightDates.length > 0
+      && leftDates.join("|") === rightDates.join("|");
+  const unitAgreement = leftUnits.length === 0
+    ? rightUnits.length === 0
+    : leftUnits.length > 0
+      && rightUnits.length > 0
+      && leftUnits.join("|") === rightUnits.join("|");
+  const negationMismatch = leftNegation !== rightNegation;
+  const policyModalityMismatch = leftModality !== "neutral"
+    && rightModality !== "neutral"
+    && leftModality !== rightModality;
+  const numericMismatch = !numberAgreement && (leftNumbers.length > 0 || rightNumbers.length > 0);
+  const dateMismatch = !dateAgreement && (leftDates.length > 0 || rightDates.length > 0);
+  const unitMismatch = !unitAgreement && (leftUnits.length > 0 || rightUnits.length > 0);
+  const strongConflictSignals = numericMismatch
+    || dateMismatch
+    || negationMismatch
+    || policyModalityMismatch
+    || unitMismatch;
+  const sameScopeHint = lexicalSimilarity >= 0.45 || containment >= 0.45;
+  const lineOverlapCountValue = lineOverlapCount(leftText, rightText);
+  const lineOverlapRatioValue = lineOverlapRatio(leftText, rightText);
+  const sharedNumbers = sharedNumericTokenCount(leftText, rightText);
+
+  let relationType: EnterpriseTextComparison["relation_type"] = "distinct";
+  let reasonCodes: string[] = ["insufficient_duplicate_evidence"];
+
+  if (normalizedLeft.length > 0 && normalizedLeft === normalizedRight) {
+    relationType = "exact_content";
+    reasonCodes = ["strict_content_match"];
+  } else if (strongConflictSignals && sameScopeHint) {
+    if (dateMismatch && temporalMarker && !numericMismatch && !negationMismatch && !policyModalityMismatch) {
+      relationType = "temporal_series";
+      reasonCodes = [
+        "temporal_period_difference",
+        "historical_series_not_conflict",
+      ];
+    } else {
+      relationType = "conflict_candidate";
+      reasonCodes = [];
+      if (numericMismatch) reasonCodes.push("semantic_quantity_mismatch");
+      if (dateMismatch) reasonCodes.push("date_value_mismatch");
+      if (negationMismatch) reasonCodes.push("negation_mismatch");
+      if (policyModalityMismatch) reasonCodes.push("policy_modality_mismatch");
+      if (unitMismatch) reasonCodes.push("unit_value_mismatch");
+      reasonCodes.push("validated_same_scope_conflict");
+    }
+  } else if (containment >= 0.9 && lexicalSimilarity >= 0.55) {
+    relationType = "version_candidate";
+    reasonCodes = ["high_content_containment"];
+  } else if (lexicalSimilarity >= 0.82) {
+    relationType = "near_duplicate";
+    reasonCodes = ["high_semantic_lexical_overlap"];
+  } else if (templateSimilarity >= 0.78 && lexicalSimilarity >= 0.45) {
+    relationType = "template_variant";
+    reasonCodes = ["template_overlap_without_claim_alignment"];
+  } else if (lexicalSimilarity >= 0.55) {
+    relationType = "related";
+    reasonCodes = ["high_semantic_lexical_overlap"];
+  }
+
+  const confidenceByRelation: Record<string, number> = {
+    exact_content: 0.99,
+    conflict_candidate: Math.min(0.97, 0.84 + lexicalSimilarity * 0.12 + containment * 0.04),
+    version_candidate: Math.min(0.93, 0.76 + containment * 0.16 + lexicalSimilarity * 0.04),
+    near_duplicate: Math.min(0.92, 0.74 + lexicalSimilarity * 0.18),
+    template_variant: Math.min(0.86, 0.64 + templateSimilarity * 0.18),
+    temporal_series: Math.min(0.88, 0.7 + lexicalSimilarity * 0.14),
+    related: Math.min(0.75, 0.45 + lexicalSimilarity * 0.2),
+    distinct: Math.min(0.55, 0.25 + lexicalSimilarity * 0.2),
+  };
+
+  const claimConflicts = relationType === "conflict_candidate"
+    ? [
+        {
+          alignment_score: Number(lexicalSimilarity.toFixed(6)),
+          reason_codes: reasonCodes,
+          left: {
+            text: leftText,
+            alignment_key: normalizedLeft.split(" ").slice(0, 6).join(" "),
+            values: [
+              ...buildClaimValues(leftText, "number", leftNumbers),
+              ...buildClaimValues(leftText, "date", leftDates),
+            ],
+            negated: leftNegation || undefined,
+            modality: leftModality,
+          },
+          right: {
+            text: rightText,
+            alignment_key: normalizedRight.split(" ").slice(0, 6).join(" "),
+            values: [
+              ...buildClaimValues(rightText, "number", rightNumbers),
+              ...buildClaimValues(rightText, "date", rightDates),
+            ],
+            negated: rightNegation || undefined,
+            modality: rightModality,
+          },
+        },
+      ]
+    : [];
+
+  return {
+    relation_type: relationType,
+    confidence: Number((confidenceByRelation[relationType] || 0.5).toFixed(6)),
+    review_recommended: relationType !== "exact_content" && relationType !== "distinct",
+    lexical_similarity: Number(lexicalSimilarity.toFixed(6)),
+    containment: Number(containment.toFixed(6)),
+    semantic_similarity: null,
+    template_similarity: Number(templateSimilarity.toFixed(6)),
+    number_agreement: numberAgreement,
+    date_agreement: dateAgreement,
+    negation_mismatch: negationMismatch,
+    unit_agreement: unitAgreement,
+    policy_modality_mismatch: policyModalityMismatch,
+    scope_comparison: sameScopeHint ? "same_scope" : "unknown_scope",
+    reason_codes: reasonCodes,
+    claim_conflicts: claimConflicts,
+    validated_conflict_count: relationType === "conflict_candidate" ? claimConflicts.length : 0,
+    exact_line_overlap_count: lineOverlapCountValue,
+    exact_line_overlap_ratio: Number(lineOverlapRatioValue.toFixed(6)),
+    structural_numbers_ignored: sharedNumbers,
+  };
+}
+
+export async function compareEnterpriseTexts(
+  leftText: string,
+  rightText: string,
+): Promise<EnterpriseTextComparison> {
+  try {
+    return await enterpriseFetch<EnterpriseTextComparison>("/api/v1/quality/compare-texts", {
+      method: "POST",
+      body: JSON.stringify({ left_text: leftText, right_text: rightText }),
+    });
+  } catch (error: unknown) {
+    if (error instanceof EnterpriseApiError && error.status === 404) {
+      return buildFallbackTextComparison(leftText, rightText);
+    }
+    throw error;
+  }
+}
+
 export async function getEnterpriseRelationEvidence(relationId: string): Promise<EnterpriseDocumentRelationEvidence> {
   return {
     relation_id: relationId,

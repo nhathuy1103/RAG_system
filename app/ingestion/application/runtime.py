@@ -53,12 +53,14 @@ async def run_ingestion_worker(
         (
             "Ingestion worker starting with VECTOR_STORE_BACKEND=%s, "
             "CHUNKING_STRATEGY=%s, CONTEXTUAL_ENRICHMENT_ENABLED=%s, "
-            "KNOWLEDGE_QUALITY_MODE=%s, STRUCTURED_FACT_MODE=%s"
+            "KNOWLEDGE_QUALITY_MODE=%s, CANDIDATE_GENERATION_MODE=%s, "
+            "STRUCTURED_FACT_MODE=%s"
         ),
         ingestion_settings.vector_store_backend,
         ingestion_settings.chunking_strategy,
         ingestion_settings.contextual_enrichment_enabled,
         settings.knowledge_quality_mode,
+        settings.knowledge_candidate_generation_mode,
         settings.structured_fact_mode,
     )
     pipeline = build_ingestion_embedding_pipeline(
@@ -94,6 +96,9 @@ async def run_ingestion_worker(
             structured_fact_mode=settings.structured_fact_mode,
             quality_max_probe_chunks=settings.knowledge_quality_max_probe_chunks,
             quality_candidates_per_probe=settings.knowledge_quality_candidates_per_probe,
+            candidate_generation_mode=settings.knowledge_candidate_generation_mode,
+            candidate_channel_k=settings.knowledge_candidate_channel_k,
+            candidate_final_top_k=settings.knowledge_candidate_final_top_k,
             telemetry=telemetry,
         )
         await worker.run_forever(stop_event)

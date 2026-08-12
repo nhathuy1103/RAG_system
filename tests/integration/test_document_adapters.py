@@ -32,7 +32,11 @@ from app.knowledge_quality.application.analysis import (
     build_chunk_fingerprint,
     build_document_fingerprint,
 )
-from app.knowledge_quality.domain.models import ChunkDedupProbe
+from app.knowledge_quality.application.candidate_generation import (
+    candidate_fts_terms,
+    simhash_multi_layout_keys,
+)
+from app.knowledge_quality.domain.models import CandidateChannel, ChunkDedupProbe
 
 DOCUMENT_ID = UUID("30000000-0000-0000-0000-000000000003")
 NOTEBOOK_ID = UUID("10000000-0000-0000-0000-000000000001")
@@ -318,6 +322,84 @@ async def test_ingestion_repository_parses_preembedding_chunk_candidates() -> No
     assert candidates[0].lsh_band_matches == 8
     assert candidates[0].scope is not None
     assert candidates[0].scope.project_id == "project-a"
+
+
+@pytest.mark.anyio
+async def test_ingestion_repository_calls_v2_and_retains_channel_evidence() -> None:
+    text = "The approved expense policy applies to every employee in project Alpha."
+    fingerprint = build_chunk_fingerprint(text)
+    probe = ChunkDedupProbe(
+        chunk_index=0,
+        chunk_id="source-0",
+        canonical_text=text,
+        embedding_text_checksum="b" * 64,
+        fingerprint=fingerprint,
+        include_fuzzy_candidates=True,
+        binary_keys=simhash_multi_layout_keys(fingerprint.loose_signature),
+        fts_terms=candidate_fts_terms(text),
+    )
+    target_document_id = UUID("70000000-0000-0000-0000-000000000007")
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        if request.method == "GET":
+            return httpx.Response(
+                200,
+                json=[{
+                    "id": str(target_document_id),
+                    "original_filename": "policy.pdf",
+                    "canonical_document_id": None,
+                    "version_group_id": None,
+                    "quality_metadata": {},
+                }],
+            )
+        assert request.url.path == "/rest/v1/rpc/find_chunk_candidates_v2"
+        body = json.loads(request.content)
+        assert body["p_limit_per_probe"] == 30
+        assert body["p_probes"][0]["binary_keys"] == list(probe.binary_keys)
+        assert body["p_probes"][0]["fts_terms"] == list(probe.fts_terms)
+        return httpx.Response(
+            200,
+            json=[{
+                "source_chunk_index": 0,
+                "target_chunk_id": "60000000-0000-0000-0000-000000000006",
+                "target_document_id": str(target_document_id),
+                "target_chunk_index": 4,
+                "canonical_text": text,
+                "normalized_content_hash": fingerprint.strict_hash,
+                "normalization_version": fingerprint.normalization_version,
+                "loose_content_signature": fingerprint.loose_signature,
+                "embedding_text_checksum": "b" * 64,
+                "embedding": "[0.1,0.2,0.3]",
+                "embedding_model": "embedding-v1",
+                "lsh_band_matches": 5,
+                "exact_rank": 1,
+                "exact_score": 1.0,
+                "binary_rank": 2,
+                "binary_score": 0.078125,
+                "binary_key_matches": 5,
+                "fts_rank": 3,
+                "fts_score": 0.5,
+            }],
+        )
+
+    async with httpx.AsyncClient(
+        base_url="https://example.supabase.co/rest/v1",
+        transport=httpx.MockTransport(handler),
+    ) as client:
+        candidates = await PostgrestIngestionRepository(client).find_chunk_dedup_candidates(
+            _claimed_job(),
+            (probe,),
+            "embedding-v1",
+            30,
+        )
+
+    assert len(candidates) == 1
+    assert {item.channel for item in candidates[0].channel_evidence} == {
+        CandidateChannel.EXACT,
+        CandidateChannel.BINARY,
+        CandidateChannel.FTS,
+    }
+    assert candidates[0].fused_score > 0
 
 
 @pytest.mark.anyio

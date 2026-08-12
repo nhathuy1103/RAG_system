@@ -9,6 +9,10 @@ from app.structured_facts.domain.models import (
     ClaimRelationType,
     CommercialScope,
     ConstraintValue,
+    EntityEvidence,
+    EntityEvidenceSource,
+    EntityMatchMethod,
+    EntityRef,
     LocationScope,
     NormalizedValue,
     ProductScope,
@@ -20,6 +24,7 @@ from app.structured_facts.domain.models import (
     TemporalContext,
     TemporalPoint,
     TemporalRelation,
+    VehicleScope,
 )
 from app.structured_facts.domain.review import (
     StructuredClaimRelation,
@@ -40,6 +45,10 @@ __all__ = [
     "ClaimRelationType",
     "CommercialScope",
     "ConstraintValue",
+    "EntityEvidence",
+    "EntityEvidenceSource",
+    "EntityMatchMethod",
+    "EntityRef",
     "LocationScope",
     "NormalizedValue",
     "ProductScope",
@@ -58,4 +67,5 @@ __all__ = [
     "TemporalContext",
     "TemporalPoint",
     "TemporalRelation",
+    "VehicleScope",
 ]

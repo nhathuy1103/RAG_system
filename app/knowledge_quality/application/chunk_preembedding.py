@@ -14,8 +14,14 @@ from app.knowledge_quality.application.analysis import (
     is_auto_identity_eligible,
     strict_normalize_text,
 )
+from app.knowledge_quality.application.candidate_generation import (
+    candidate_channels,
+    candidate_fts_terms,
+    simhash_multi_layout_keys,
+)
 from app.knowledge_quality.domain.models import (
     CHUNK_PREEMBEDDING_DETECTOR_VERSION,
+    CandidateChannel,
     ChunkDedupCandidate,
     ChunkDedupProbe,
     ClaimScope,
@@ -96,11 +102,12 @@ class _BatchMatch:
 def build_chunk_dedup_probes(
     chunks: Sequence[ChunkData],
     *,
-    max_fuzzy_probes: int,
+    max_fuzzy_probes: int | None,
     scope: ClaimScope | None = None,
+    high_recall_candidates: bool = False,
 ) -> tuple[ChunkDedupProbe, ...]:
-    """Fingerprint every chunk and mark a bounded sample for fuzzy lookup."""
-    if max_fuzzy_probes <= 0:
+    """Fingerprint every chunk; P1 makes every eligible chunk candidate-capable."""
+    if max_fuzzy_probes is not None and max_fuzzy_probes <= 0:
         raise ValueError("max_fuzzy_probes must be > 0")
 
     prepared: list[tuple[ChunkData, str, str, DocumentFingerprint]] = []
@@ -113,9 +120,10 @@ def build_chunk_dedup_probes(
         if is_auto_identity_eligible(fingerprint):
             fuzzy_eligible_indexes.append(chunk.chunk_index)
 
-    fuzzy_indexes = _sample_indexes(
-        tuple(fuzzy_eligible_indexes),
-        max_fuzzy_probes,
+    fuzzy_indexes = (
+        set(fuzzy_eligible_indexes)
+        if max_fuzzy_probes is None
+        else _sample_indexes(tuple(fuzzy_eligible_indexes), max_fuzzy_probes)
     )
     probes: list[ChunkDedupProbe] = []
     for chunk, canonical_text, embedding_text, fingerprint in prepared:
@@ -128,6 +136,16 @@ def build_chunk_dedup_probes(
                 fingerprint=fingerprint,
                 include_fuzzy_candidates=chunk.chunk_index in fuzzy_indexes,
                 scope=scope,
+                binary_keys=(
+                    simhash_multi_layout_keys(fingerprint.loose_signature)
+                    if high_recall_candidates and chunk.chunk_index in fuzzy_indexes
+                    else ()
+                ),
+                fts_terms=(
+                    candidate_fts_terms(canonical_text)
+                    if high_recall_candidates and chunk.chunk_index in fuzzy_indexes
+                    else ()
+                ),
             )
         )
     return tuple(probes)
@@ -301,14 +319,25 @@ def _analyze_database_candidate(
         probe.fingerprint.loose_signature,
         candidate.loose_content_signature,
     )
-    if not strict_identity_match and (
-        not probe.include_fuzzy_candidates or distance > max_simhash_distance
-    ):
-        return None
+    if not strict_identity_match:
+        if not probe.include_fuzzy_candidates:
+            return None
+        channels = candidate_channels(candidate)
+        non_binary_recovery = bool(channels & {CandidateChannel.FTS, CandidateChannel.ANN})
+        if distance > max_simhash_distance and not non_binary_recovery:
+            return None
 
     analysis = analyze_text_relation(
         probe.canonical_text,
         candidate.canonical_text,
+        semantic_similarity=max(
+            (
+                evidence.score
+                for evidence in candidate.channel_evidence
+                if evidence.channel is CandidateChannel.ANN
+            ),
+            default=None,
+        ),
         left_scope=probe.scope,
         right_scope=candidate.scope,
     )
@@ -641,6 +670,10 @@ def _database_annotation(
         "target_chunk_index": match.candidate.target_chunk_index,
         "simhash_hamming_distance": match.simhash_distance,
         "lsh_band_matches": match.candidate.lsh_band_matches,
+        "candidate_channels": sorted(
+            channel.value for channel in candidate_channels(match.candidate)
+        ),
+        "candidate_fused_score": round(match.candidate.fused_score, 8),
         "lexical_similarity": round(analysis.lexical_similarity, 6),
         "containment": round(analysis.containment, 6),
         "reason_codes": list(analysis.reason_codes),

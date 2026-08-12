@@ -1,0 +1,79 @@
+{
+  "registry_version": "p2-vinhomes-entities-v1",
+  "normalization_version": "p2-entity-normalization-v1",
+  "domain": "vinhomes",
+  "entities": [
+    {
+      "canonical_id": "vinhomes",
+      "entity_type": "developer",
+      "canonical_name": "Vinhomes",
+      "aliases": ["Vinhomes"],
+      "codes": [],
+      "parent_id": null
+    },
+    {
+      "canonical_id": "vinhomes_project_alpha",
+      "entity_type": "project",
+      "canonical_name": "Vinhomes Project Alpha",
+      "aliases": ["Vinhomes Project Alpha", "Project Alpha", "Alpha"],
+      "codes": [],
+      "parent_id": "vinhomes"
+    },
+    {
+      "canonical_id": "vinhomes_project_beta",
+      "entity_type": "project",
+      "canonical_name": "Vinhomes Project Beta",
+      "aliases": ["Vinhomes Project Beta", "Project Beta", "Beta"],
+      "codes": [],
+      "parent_id": "vinhomes"
+    },
+    {
+      "canonical_id": "vinhomes_project_gamma",
+      "entity_type": "project",
+      "canonical_name": "Vinhomes Project Gamma",
+      "aliases": ["Vinhomes Project Gamma", "Project Gamma", "Gamma"],
+      "codes": [],
+      "parent_id": "vinhomes"
+    },
+    {
+      "canonical_id": "vinhomes_project_delta",
+      "entity_type": "project",
+      "canonical_name": "Vinhomes Project Delta",
+      "aliases": ["Vinhomes Project Delta", "Project Delta", "Delta"],
+      "codes": [],
+      "parent_id": "vinhomes"
+    },
+    {
+      "canonical_id": "vinhomes_project_epsilon",
+      "entity_type": "project",
+      "canonical_name": "Vinhomes Project Epsilon",
+      "aliases": ["Vinhomes Project Epsilon", "Project Epsilon", "Epsilon"],
+      "codes": [],
+      "parent_id": "vinhomes"
+    },
+    {
+      "canonical_id": "vinhomes_ocean_park_1",
+      "entity_type": "project",
+      "canonical_name": "Vinhomes Ocean Park 1",
+      "aliases": ["Vinhomes Ocean Park 1", "Ocean Park 1"],
+      "codes": [],
+      "parent_id": "vinhomes"
+    },
+    {
+      "canonical_id": "vinhomes_ocean_park_2",
+      "entity_type": "project",
+      "canonical_name": "Vinhomes Ocean Park 2",
+      "aliases": ["Vinhomes Ocean Park 2", "Ocean Park 2"],
+      "codes": [],
+      "parent_id": "vinhomes"
+    },
+    {
+      "canonical_id": "vinhomes_grand_park",
+      "entity_type": "project",
+      "canonical_name": "Vinhomes Grand Park",
+      "aliases": ["Vinhomes Grand Park", "Grand Park"],
+      "codes": [],
+      "parent_id": "vinhomes"
+    }
+  ]
+}

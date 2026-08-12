@@ -63,6 +63,9 @@ class Settings(BaseSettings):
     knowledge_quality_mode: Literal["off", "shadow", "on"] = "on"
     knowledge_quality_max_probe_chunks: int = Field(default=8, ge=1, le=32)
     knowledge_quality_candidates_per_probe: int = Field(default=5, ge=1, le=20)
+    knowledge_candidate_generation_mode: Literal["legacy", "shadow", "on"] = "shadow"
+    knowledge_candidate_channel_k: int = Field(default=30, ge=1, le=50)
+    knowledge_candidate_final_top_k: int = Field(default=50, ge=1, le=50)
     knowledge_quality_conflict_prompt_enabled: bool = True
     structured_fact_mode: Literal["off", "shadow", "on"] = "off"
 

@@ -638,6 +638,11 @@ async def test_worker_persists_generated_context_for_new_profile() -> None:
     assert isinstance(enrichment, dict)
     assert enrichment["status"] == "generated"
     assert persisted.metadata["contextual_text_version"] == "contextual-text-v4"
+    entity_scope = persisted.metadata["entity_scope"]
+    assert isinstance(entity_scope, dict)
+    assert entity_scope["version"] == "p2-entity-scope-metadata-v1"
+    assert entity_scope["business_scope_version"] == "p2-business-scope-v1"
+    assert isinstance(entity_scope["comparable_key_hash"], str)
 
 
 @pytest.mark.anyio
