@@ -223,6 +223,9 @@ class EnterpriseDocumentService:
     async def retry_processing_job(self, job_id: UUID) -> ProcessingJob:
         return await self._repository.retry_processing_job(job_id)
 
+    async def queue_quality_reprocess(self, document_id: UUID) -> ProcessingJob:
+        return await self._repository.queue_quality_reprocess(document_id)
+
     async def get_version_source(self, document_id: UUID, version_id: UUID) -> VersionSource | None:
         return await self._repository.get_version_source(document_id, version_id)
 

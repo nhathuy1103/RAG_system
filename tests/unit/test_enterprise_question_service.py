@@ -9,6 +9,7 @@ from uuid import UUID
 import pytest
 
 from app.generation.domain import CitationHit, GenerationEvent, TokenChunk, UsageInfo
+from app.generation.domain.evidence import GenerationContext
 from app.governance.application.services import (
     EnterpriseQuestionService,
     GovernanceValidationError,
@@ -97,9 +98,7 @@ class RepositoryStub:
             messages=self.history,
         )
 
-    async def append_user_message(
-        self, conversation_id: UUID, content: str
-    ) -> EnterpriseMessage:
+    async def append_user_message(self, conversation_id: UUID, content: str) -> EnterpriseMessage:
         assert conversation_id == CONVERSATION_ID
         self.appended.append(content)
         return _message(USER_MESSAGE_ID, "USER", content, "COMPLETED")
@@ -219,6 +218,46 @@ class GeneratorStub:
         yield UsageInfo(input_tokens=20, output_tokens=8)
 
 
+class P6GeneratorStub:
+    def __init__(self) -> None:
+        self.contexts: list[GenerationContext] = []
+
+    async def stream(
+        self,
+        *,
+        question: str,
+        evidence: tuple[RetrievalCandidate, ...],
+        generation_context: GenerationContext,
+    ) -> AsyncIterator[GenerationEvent]:
+        assert question
+        assert generation_context.candidates == evidence
+        self.contexts.append(generation_context)
+        candidate = generation_context.evidence_by_id["SRC-1"].candidate
+        yield TokenChunk("Giá là 48 triệu đồng năm 2025 [SRC-1].")
+        yield CitationHit(source_id="SRC-1", ordinal=1, candidate=candidate)
+        yield UsageInfo(input_tokens=24, output_tokens=10)
+
+
+class P6RepositoryStub(RepositoryStub):
+    def __init__(
+        self,
+        hits: list[SearchHit],
+        *,
+        history: tuple[EnterpriseMessage, ...],
+    ) -> None:
+        super().__init__(hits, history=history)
+        self.enrichment_calls = 0
+
+    async def enrich_relations(
+        self,
+        candidates: tuple[RetrievalCandidate, ...],
+        filters: object,
+    ) -> tuple[RetrievalCandidate, ...]:
+        assert filters is not None
+        self.enrichment_calls += 1
+        return candidates
+
+
 class MissingThenGroundedGenerator:
     def __init__(self, *, always_missing: bool = False) -> None:
         self.always_missing = always_missing
@@ -237,6 +276,27 @@ class MissingThenGroundedGenerator:
             return
         yield TokenChunk("Annual review is required [SRC-1].")
         yield CitationHit(source_id="SRC-1", ordinal=1, candidate=evidence[0])
+        yield UsageInfo(input_tokens=12, output_tokens=5)
+
+
+class UncitedMaterialThenGroundedGenerator:
+    def __init__(self) -> None:
+        self.questions: list[str] = []
+
+    async def stream(
+        self,
+        *,
+        question: str,
+        evidence: tuple[RetrievalCandidate, ...],
+        generation_context: GenerationContext,
+    ) -> AsyncIterator[GenerationEvent]:
+        self.questions.append(question)
+        candidate = generation_context.evidence_by_id["SRC-1"].candidate
+        if len(self.questions) == 1:
+            yield TokenChunk("Giá là 48 triệu đồng [SRC-1]. Nguồn áp dụng cho năm 2025.")
+        else:
+            yield TokenChunk("Giá năm 2025 là 48 triệu đồng [SRC-1].")
+        yield CitationHit(source_id="SRC-1", ordinal=1, candidate=candidate)
         yield UsageInfo(input_tokens=12, output_tokens=5)
 
 
@@ -455,6 +515,7 @@ async def test_missing_citation_is_retried_and_recovered_with_same_evidence() ->
     assert len(result.citations) == 1
     assert len(generator.questions) == 2
     assert "YÊU CẦU SỬA TRÍCH DẪN" in generator.questions[1]
+    assert "Các marker nguồn hợp lệ duy nhất cho lượt này: [SRC-1]." in (generator.questions[1])
     assert repository.completions[0]["input_tokens"] == 22
     assert repository.completions[0]["output_tokens"] == 9
     assert repository.completions[0]["error_code"] == "CITATION_RETRY_RECOVERED"
@@ -462,7 +523,7 @@ async def test_missing_citation_is_retried_and_recovered_with_same_evidence() ->
 
 
 @pytest.mark.anyio
-async def test_repeated_missing_citation_returns_trusted_cited_excerpt() -> None:
+async def test_repeated_missing_citation_returns_concise_cited_no_answer() -> None:
     repository = RepositoryStub([_hit()])
     generator = MissingThenGroundedGenerator(always_missing=True)
     service = EnterpriseQuestionService(
@@ -480,12 +541,48 @@ async def test_repeated_missing_citation_returns_trusted_cited_excerpt() -> None
     assert result.assistant_message.answer_status == "COMPLETED"
     assert len(generator.questions) == 2
     assert len(result.citations) == 1
-    assert "The security policy requires annual access review." in (
+    assert "Chưa tìm thấy đủ bằng chứng trực tiếp" in result.assistant_message.content
+    assert "The security policy requires annual access review." not in (
         result.assistant_message.content
     )
-    assert result.assistant_message.content.endswith("Nguồn: [SRC-1]")
+    assert result.assistant_message.content.endswith("[SRC-1].")
     assert repository.completions[0]["error_code"] == "CITATION_FALLBACK_USED"
     assert result.error_code == "CITATION_FALLBACK_USED"
+
+
+@pytest.mark.anyio
+async def test_uncited_material_statement_is_retried_and_recovered() -> None:
+    hit = replace(
+        _hit(),
+        content="Giá năm 2025 là 48 triệu đồng.",
+        metadata={
+            "year": 2025,
+            "reference_year": 2025,
+            "structured_predicate": "price",
+            "structured_value": {"amount": 48, "unit": "triệu đồng"},
+            "structured_temporal": {"reference_year": 2025},
+        },
+    )
+    repository = P6RepositoryStub([hit], history=())
+    generator = UncitedMaterialThenGroundedGenerator()
+    service = EnterpriseQuestionService(
+        repository,  # type: ignore[arg-type]
+        generator,  # type: ignore[arg-type]
+        model_name="test-model",
+        rag_mode="on",
+    )
+
+    result = await service.ask_question(
+        CONVERSATION_ID,
+        "Giá năm 2025 là bao nhiêu?",
+        filters={},
+        user_id=USER_MESSAGE_ID,
+    )
+
+    assert len(generator.questions) == 2
+    assert result.assistant_message.content == "Giá năm 2025 là 48 triệu đồng [SRC-1]."
+    assert result.error_code == "CITATION_RETRY_RECOVERED"
+    assert repository.completions[0]["error_code"] == "CITATION_RETRY_RECOVERED"
 
 
 @pytest.mark.anyio
@@ -661,3 +758,66 @@ async def test_broad_process_query_expands_to_bounded_sibling_context() -> None:
     assert result.assistant_message.answer_status == "COMPLETED"
     assert repository.expansion_calls == [(CHUNK_ID,)]
     assert generator.evidence_counts == [2]
+
+
+@pytest.mark.anyio
+async def test_p6_on_uses_resolved_query_relations_and_generation_contract() -> None:
+    prior_question = _message(
+        UUID("80000000-0000-0000-0000-000000000018"),
+        "USER",
+        "So sánh giá căn hộ Vinhomes qua các năm",
+        "COMPLETED",
+    )
+    current = SearchHit(
+        chunk_id=CHUNK_ID,
+        document_id=DOCUMENT_ID,
+        document_version_id=VERSION_ID,
+        title="Bảng giá Vinhomes",
+        content="Giá căn hộ Vinhomes năm 2025 là 48 triệu đồng mỗi m2.",
+        score=0.82,
+        page_start=3,
+        section_path="Giá 2025",
+        metadata={
+            "reference_year": 2025,
+            "year": 2025,
+            "content_kind": "table_row",
+            "structured_predicate": "price",
+            "structured_value": {"amount": 48, "unit": "triệu đồng/m2"},
+            "structured_temporal": {"reference_year": 2025},
+            "p4_relation_type": "DISTINCT",
+        },
+    )
+    other_year = replace(
+        current,
+        chunk_id=UUID("60000000-0000-0000-0000-000000000019"),
+        document_id=UUID("40000000-0000-0000-0000-000000000019"),
+        document_version_id=UUID("50000000-0000-0000-0000-000000000019"),
+        content="Giá căn hộ Vinhomes năm 2026 là 55 triệu đồng mỗi m2.",
+        metadata={**current.metadata, "reference_year": 2026, "year": 2026},
+    )
+    repository = P6RepositoryStub([other_year, current], history=(prior_question,))
+    generator = P6GeneratorStub()
+    service = EnterpriseQuestionService(
+        repository,  # type: ignore[arg-type]
+        generator,  # type: ignore[arg-type]
+        model_name="test-model",
+        rag_mode="on",
+    )
+
+    result = await service.ask_question(
+        CONVERSATION_ID,
+        "2025 thì sao?",
+        filters={},
+        user_id=USER_MESSAGE_ID,
+    )
+
+    assert result.assistant_message.answer_status == "COMPLETED"
+    assert result.retrieval_strategy.endswith("_p6_relation_context")
+    assert result.evidence_count == 1
+    assert result.citations[0].document_id == DOCUMENT_ID
+    assert repository.enrichment_calls == 1
+    assert repository.search_queries == ["căn hộ Vinhomes price 2025"]
+    assert " OR " not in repository.search_queries[0]
+    assert repository.search_filters == [{"year": 2025}]
+    assert generator.contexts[0].query.reference_years == (2025,)
+    assert generator.contexts[0].diagnostics.temporal_completeness == 1.0

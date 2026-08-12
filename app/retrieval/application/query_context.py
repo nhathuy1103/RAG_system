@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 
-QUERY_POLICY_VERSION = "p5-query-context-v1"
+QUERY_POLICY_VERSION = "p6-query-context-v1"
 
 
 class QueryIntent(StrEnum):
@@ -42,7 +42,16 @@ class QueryContext:
     source_comparison_requested: bool = False
     source_type_preference: str | None = None
     requested_output_constraints: tuple[str, ...] = ()
+    resolved_query: str | None = None
+    topic_terms: tuple[str, ...] = ()
+    inherited_dimensions: tuple[str, ...] = ()
     policy_version: str = QUERY_POLICY_VERSION
+
+    @property
+    def retrieval_query(self) -> str:
+        """Bounded, context-resolved query used by retrieval channels."""
+
+        return self.resolved_query or self.raw_query
 
 
 _YEAR = re.compile(r"(?<!\d)((?:19|20)\d{2})(?!\d)")
@@ -53,7 +62,17 @@ _VERSION = re.compile(r"\b(?:version|phien ban|v)\s*([a-z0-9][a-z0-9._-]*)\b")
 _ENTITY = re.compile(r"\b(?:VF\d+|[A-Z]{2,}\d*[A-Z0-9-]*)\b")
 
 _CURRENT_TERMS = ("current", "latest", "hien tai", "moi nhat", "dang hieu luc")
-_HISTORICAL_TERMS = ("historical", "history", "truoc day", "da tung", "vao nam")
+_HISTORICAL_TERMS = (
+    "historical",
+    "history",
+    "over time",
+    "across years",
+    "truoc day",
+    "da tung",
+    "vao nam",
+    "qua cac nam",
+    "theo nam",
+)
 _COMPARE_TERMS = (
     "compare",
     "comparison",
@@ -84,20 +103,23 @@ _SOURCE_COMPARE_TERMS = (
     "tai lieu nao",
     "nguon noi",
 )
-_PREDICATE_TERMS = (
-    "price",
-    "gia",
-    "range",
-    "quang duong",
-    "revenue",
-    "doanh thu",
-    "area",
-    "dien tich",
-    "fee",
-    "phi",
-    "quantity",
-    "so luong",
-)
+_PREDICATE_ALIASES = {
+    "price": ("price", "gia"),
+    "driving_range": (
+        "range",
+        "driving range",
+        "quang duong",
+        "pham vi",
+        "bao xa",
+    ),
+    "revenue": ("revenue", "doanh thu"),
+    "area": ("area", "dien tich"),
+    "fee": ("fee", "phi"),
+    "quantity": ("quantity", "so luong"),
+    "capacity": ("capacity", "cong suat", "suc chua", "dung luong"),
+    "duration": ("duration", "thoi gian", "thoi han"),
+    "rate": ("rate", "ty le", "lai suat"),
+}
 _QUALIFIERS = (
     "wltp",
     "epa",
@@ -119,6 +141,73 @@ _OUTPUT_CONSTRAINTS = {
     "brief": ("brief", "short", "ngan gon"),
     "bullets": ("bullet", "list", "liet ke"),
 }
+_TOPIC_STOPWORDS = frozenset(
+    {
+        "a",
+        "an",
+        "and",
+        "are",
+        "at",
+        "between",
+        "by",
+        "compare",
+        "current",
+        "did",
+        "di",
+        "do",
+        "does",
+        "for",
+        "from",
+        "how",
+        "in",
+        "is",
+        "latest",
+        "of",
+        "or",
+        "than",
+        "that",
+        "the",
+        "then",
+        "this",
+        "to",
+        "was",
+        "what",
+        "when",
+        "which",
+        "who",
+        "why",
+        "about",
+        "bao",
+        "bay",
+        "biet",
+        "cac",
+        "cho",
+        "co",
+        "cua",
+        "den",
+        "duoc",
+        "gi",
+        "hien",
+        "la",
+        "moi",
+        "nam",
+        "nao",
+        "nhat",
+        "nhieu",
+        "nhu",
+        "qua",
+        "ra",
+        "sao",
+        "so",
+        "sanh",
+        "tai",
+        "thi",
+        "tu",
+        "va",
+        "ve",
+    }
+)
+_TOKEN = re.compile(r"[A-Za-z0-9\u00c0-\u024f\u1e00-\u1eff][\w\-./]*", re.UNICODE)
 
 
 def parse_query_context(
@@ -158,12 +247,17 @@ def parse_query_context(
 
     period_range = (min(years), max(years)) if len(years) > 1 else None
     qualifiers = tuple(term for term in _QUALIFIERS if _phrase_present(normalized, term))
-    predicates = tuple(term for term in _PREDICATE_TERMS if _phrase_present(normalized, term))
+    predicates = tuple(
+        predicate
+        for predicate, aliases in _PREDICATE_ALIASES.items()
+        if _contains_any_phrase(normalized, aliases)
+    )
     source_preference = _source_preference(normalized)
     constraints = tuple(
         name for name, terms in _OUTPUT_CONSTRAINTS.items() if _contains_any(normalized, terms)
     )
     entities = tuple(dict.fromkeys(match.group(0).upper() for match in _ENTITY.finditer(raw)))
+    topic_terms = _topic_terms(raw, predicates=predicates, qualifiers=qualifiers)
     return QueryContext(
         raw_query=raw,
         normalized_query=normalized,
@@ -184,6 +278,8 @@ def parse_query_context(
         source_comparison_requested=source_comparison,
         source_type_preference=source_preference,
         requested_output_constraints=constraints,
+        resolved_query=raw,
+        topic_terms=topic_terms,
     )
 
 
@@ -223,6 +319,41 @@ def _phrase_present(value: str, phrase: str) -> bool:
 
 def _contains_any(value: str, terms: tuple[str, ...]) -> bool:
     return any(term in value for term in terms)
+
+
+def _contains_any_phrase(value: str, terms: tuple[str, ...]) -> bool:
+    return any(_phrase_present(value, term) for term in terms)
+
+
+def _topic_terms(
+    value: str,
+    *,
+    predicates: tuple[str, ...],
+    qualifiers: tuple[str, ...],
+) -> tuple[str, ...]:
+    """Extract generic subject/topic tokens without inventing entity scope."""
+
+    folded_predicate_aliases = {
+        token
+        for predicate in predicates
+        for alias in _PREDICATE_ALIASES.get(predicate, ())
+        for token in alias.split()
+    }
+    folded_qualifiers = {token for qualifier in qualifiers for token in qualifier.split()}
+    output: list[str] = []
+    for token in _TOKEN.findall(value):
+        folded = _fold(token).strip("-./")
+        if (
+            not folded
+            or folded in _TOPIC_STOPWORDS
+            or folded in folded_predicate_aliases
+            or folded in folded_qualifiers
+            or _YEAR.fullmatch(folded)
+            or folded.isdigit()
+        ):
+            continue
+        output.append(token.strip(".,?!:;()[]{}\"'"))
+    return tuple(dict.fromkeys(token for token in output if token))
 
 
 def _fold(value: str) -> str:

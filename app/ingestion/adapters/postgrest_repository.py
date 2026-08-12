@@ -191,6 +191,10 @@ class PostgrestIngestionRepository(
                 job,
                 worker_id,
                 chunks,
+                fingerprint=fingerprint,
+                relations=relations,
+                effective_quality_mode=effective_quality_mode,
+                claim_scope=claim_scope,
             )
         if effective_quality_mode not in {"off", "shadow", "on"}:
             raise ValueError("Effective knowledge-quality mode is invalid")
@@ -259,7 +263,23 @@ class PostgrestIngestionRepository(
         fingerprint: DocumentFingerprint,
     ) -> UUID | None:
         if job.is_enterprise:
-            return None
+            payload = await self._rpc(
+                "find_enterprise_content_duplicate",
+                {
+                    "p_actor_id": str(job.owner_id),
+                    "p_document_id": str(job.document_id),
+                    "p_normalized_content_hash": fingerprint.strict_hash,
+                    "p_normalization_version": fingerprint.normalization_version,
+                },
+            )
+            if payload is None:
+                return None
+            try:
+                return UUID(str(payload))
+            except ValueError as exc:
+                raise IngestionRepositoryError(
+                    "Enterprise duplicate response must be a UUID or null"
+                ) from exc
         try:
             response = await self._client.get(
                 "/documents",
@@ -296,8 +316,6 @@ class PostgrestIngestionRepository(
         embedding_model: str,
         candidates_per_probe: int,
     ) -> tuple[ChunkDedupCandidate, ...]:
-        if job.is_enterprise:
-            return ()
         if candidates_per_probe <= 0:
             raise ValueError("candidates_per_probe must be > 0")
         high_recall = any(probe.binary_keys or probe.fts_terms for probe in probes)
@@ -305,21 +323,30 @@ class PostgrestIngestionRepository(
         try:
             for start in range(0, len(probes), _CHUNK_CANDIDATE_BATCH_SIZE):
                 batch = probes[start : start + _CHUNK_CANDIDATE_BATCH_SIZE]
-                payload = await self._rpc(
-                    (
+                if job.is_enterprise:
+                    function_name = "find_enterprise_chunk_candidates_v2"
+                    body = {
+                        "p_actor_id": str(job.owner_id),
+                        "p_document_id": str(job.document_id),
+                        "p_embedding_model": embedding_model,
+                        "p_probes": [probe.to_payload() for probe in batch],
+                        "p_limit_per_probe": candidates_per_probe,
+                    }
+                else:
+                    function_name = (
                         "find_chunk_candidates_v2"
                         if high_recall
                         else "find_chunk_dedup_candidates"
-                    ),
-                    {
+                    )
+                    body = {
                         "p_owner_id": str(job.owner_id),
                         "p_notebook_id": str(job.notebook_id),
                         "p_document_id": str(job.document_id),
                         "p_embedding_model": embedding_model,
                         "p_probes": [probe.to_payload() for probe in batch],
                         "p_limit_per_probe": candidates_per_probe,
-                    },
-                )
+                    }
+                payload = await self._rpc(function_name, body)
                 if not isinstance(payload, list):
                     raise TypeError("Chunk candidate response must be an array")
                 target_ids = {
@@ -327,9 +354,10 @@ class PostgrestIngestionRepository(
                     for row in payload
                     if isinstance(row, Mapping)
                 }
-                document_scopes = await self._load_candidate_document_scopes(
-                    job,
-                    target_ids,
+                document_scopes = (
+                    {}
+                    if job.is_enterprise
+                    else await self._load_candidate_document_scopes(job, target_ids)
                 )
                 for row in payload:
                     if not isinstance(row, Mapping):
@@ -644,14 +672,37 @@ class PostgrestIngestionRepository(
         job: ClaimedIngestionJob,
         worker_id: str,
         chunks: Sequence[PersistedChunk],
+        *,
+        fingerprint: DocumentFingerprint | None,
+        relations: Sequence[QualityRelationCandidate],
+        effective_quality_mode: Literal["off", "shadow", "on"],
+        claim_scope: ClaimScope | None,
     ) -> IngestionCompletionDisposition:
+        if effective_quality_mode not in {"off", "shadow", "on"}:
+            raise ValueError("Effective knowledge-quality mode is invalid")
+        quality_metadata = fingerprint.to_metadata() if fingerprint is not None else {}
+        quality_metadata["knowledge_quality_mode"] = effective_quality_mode
+        if claim_scope is not None:
+            quality_metadata["claim_scope"] = claim_scope.to_metadata()
         payload = await self._rpc(
-            "complete_processing_job_v3",
+            "complete_processing_job_v4",
             {
                 "p_job_id": str(job.id),
                 "p_worker_id": worker_id,
                 "p_claim_token": str(job.claim_token),
                 "p_chunks": [_enterprise_chunk_payload(chunk) for chunk in chunks],
+                "p_normalized_content_hash": (
+                    fingerprint.strict_hash if fingerprint is not None else None
+                ),
+                "p_normalization_version": (
+                    fingerprint.normalization_version if fingerprint is not None else None
+                ),
+                "p_loose_content_signature": (
+                    fingerprint.loose_signature if fingerprint is not None else None
+                ),
+                "p_quality_metadata": quality_metadata,
+                "p_quality_mode": effective_quality_mode,
+                "p_relations": [relation.to_payload() for relation in relations],
             },
         )
         if payload is None:

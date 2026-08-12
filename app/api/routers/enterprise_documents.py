@@ -483,3 +483,18 @@ async def retry_processing_job(
     service: Annotated[EnterpriseDocumentService, Depends(get_enterprise_document_service)],
 ) -> ProcessingJobResponse:
     return ProcessingJobResponse.model_validate(await service.retry_processing_job(job_id))
+
+
+@router.post(
+    "/documents/{document_id}/quality/reprocess",
+    response_model=ProcessingJobResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+async def queue_enterprise_quality_reprocess(
+    document_id: UUID,
+    _principal: Annotated[PrincipalContext, Depends(require_review_workspace)],
+    service: Annotated[EnterpriseDocumentService, Depends(get_enterprise_document_service)],
+) -> ProcessingJobResponse:
+    return ProcessingJobResponse.model_validate(
+        await service.queue_quality_reprocess(document_id)
+    )

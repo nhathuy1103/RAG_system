@@ -539,6 +539,8 @@ class EnterpriseCitationResponse(BaseModel):
     document_version_id: UUID
     document_title: str | None = None
     chunk_id: UUID
+    citation_order: int = Field(ge=1)
+    quote_text: str = Field(min_length=1)
     page: int | None = Field(default=None, validation_alias="page_number")
     section: str | None = Field(default=None, validation_alias="section_path")
 
@@ -700,3 +702,77 @@ class TextComparisonResponse(BaseModel):
     exact_line_overlap_count: int
     exact_line_overlap_ratio: float
     structural_numbers_ignored: int
+
+
+EnterpriseRelationStatus = Literal[
+    "pending",
+    "deferred",
+    "auto_confirmed",
+    "confirmed",
+    "dismissed",
+]
+EnterpriseRelationAction = Literal[
+    "confirm_duplicate",
+    "mark_version",
+    "confirm_conflict",
+    "keep_separate",
+    "prefer_source",
+    "prefer_target",
+    "dismiss",
+    "defer_review",
+]
+
+
+class EnterpriseDocumentRelationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    source_document_id: UUID
+    target_document_id: UUID
+    relation_type: str
+    status: EnterpriseRelationStatus
+    confidence: float
+    reason: str | None = None
+    created_at: datetime
+    updated_at: datetime
+    resolution_action: EnterpriseRelationAction | None = None
+    source_document_title: str | None = None
+    target_document_title: str | None = None
+
+
+class EnterpriseDocumentRelationListResponse(BaseModel):
+    items: list[EnterpriseDocumentRelationResponse]
+    total_count: int
+    limit: int
+    offset: int
+
+
+class EnterpriseRelationEvidenceDocumentResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    title: str
+    version_number: int
+    text_content: str
+
+
+class EnterpriseRelationOverlapResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    source_text: str
+    target_text: str
+
+
+class EnterpriseDocumentRelationEvidenceResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    relation_id: UUID
+    source_document: EnterpriseRelationEvidenceDocumentResponse
+    target_document: EnterpriseRelationEvidenceDocumentResponse
+    overlaps: list[EnterpriseRelationOverlapResponse]
+
+
+class EnterpriseDocumentRelationResolutionRequest(BaseModel):
+    action: EnterpriseRelationAction
+    reason: str | None = Field(default=None, max_length=2000)
+    expected_updated_at: datetime | None = None

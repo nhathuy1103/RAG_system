@@ -94,3 +94,42 @@ def test_relation_metadata_enrichment_uses_only_fully_visible_edges() -> None:
     assert enriched[0].chunk.metadata["is_current"] is False
     assert enriched[1].chunk.metadata["version_number"] == 2
     assert enriched[1].chunk.metadata["is_current"] is True
+
+
+def test_relation_metadata_enrichment_reads_canonical_enterprise_edges() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path.endswith("/knowledge_document_relations")
+        assert "owner_id" not in request.url.params
+        assert "notebook_id" not in request.url.params
+        return httpx.Response(
+            200,
+            json=[
+                {
+                    "source_document_id": SOURCE,
+                    "target_document_id": TARGET,
+                    "relation_type": "conflict",
+                    "status": "pending",
+                    "detector_version": "knowledge-quality-v4",
+                    "preferred_document_id": None,
+                    "signals": {
+                        "p4_primary_relation": "CONFLICT",
+                        "p4_review_status": "pending",
+                    },
+                }
+            ],
+        )
+
+    with httpx.Client(
+        transport=httpx.MockTransport(handler),
+        base_url="https://supabase.test/rest/v1",
+    ) as client:
+        enriched = PostgrestRelationMetadataAdapter(client).enrich(
+            (_candidate("source-chunk", SOURCE), _candidate("target-chunk", TARGET)),
+            RetrievalFilters(owner_id=OWNER, notebook_id=None),
+        )
+
+    for candidate in enriched:
+        assert candidate.chunk.metadata["p4_relation_type"] == "CONFLICT"
+        assert str(candidate.chunk.metadata["conflict_group_id"]).startswith(
+            "p4-conflict-"
+        )

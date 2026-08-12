@@ -466,6 +466,15 @@ class PostgrestEnterpriseDocumentRepository(EnterpriseDocumentRepository):
         payload = await self._rpc("retry_processing_job", {"p_job_id": str(job_id)})
         return self._parse_processing_job(self._one(payload, "processing job retry"))
 
+    async def queue_quality_reprocess(self, document_id: UUID) -> ProcessingJob:
+        payload = await self._rpc(
+            "queue_enterprise_quality_reprocess",
+            {"p_document_id": str(document_id)},
+        )
+        return self._parse_processing_job(
+            self._one(payload, "Enterprise quality reprocess")
+        )
+
     async def get_version_source(self, document_id: UUID, version_id: UUID) -> VersionSource | None:
         payload = await self._rpc(
             "get_document_version_source",

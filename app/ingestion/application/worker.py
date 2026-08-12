@@ -253,6 +253,16 @@ class IngestionWorker:
         """Apply the safer durable/runtime mode for structured fact extraction."""
         configured = job.configuration.get("structured_fact_mode")
         if configured not in {"off", "shadow", "on"}:
+            if job.is_enterprise:
+                LOGGER.info(
+                    (
+                        "Enterprise ingestion job %s has no durable structured-fact "
+                        "mode; using the worker rollout mode %s"
+                    ),
+                    job.id,
+                    self._structured_fact_mode,
+                )
+                return self._structured_fact_mode
             LOGGER.warning(
                 ("Ingestion job %s has no valid durable structured-fact mode; using fail-safe off"),
                 job.id,
@@ -289,6 +299,16 @@ class IngestionWorker:
         """Keep rollout semantics fixed to the enqueue-time job profile."""
         configured = job.configuration.get("knowledge_quality_mode")
         if configured not in {"off", "shadow", "on"}:
+            if job.is_enterprise:
+                LOGGER.info(
+                    (
+                        "Enterprise ingestion job %s has no durable knowledge-quality "
+                        "mode; using the worker rollout mode %s"
+                    ),
+                    job.id,
+                    self._knowledge_quality_mode,
+                )
+                return self._knowledge_quality_mode
             LOGGER.warning(
                 (
                     "Ingestion job %s has no valid durable knowledge-quality "
@@ -380,13 +400,6 @@ class IngestionWorker:
     ) -> None:
         quality_mode = self._quality_mode_for_job(job)
         structured_mode = self._structured_mode_for_job(job)
-        if job.is_enterprise:
-            # Legacy quality/structured stores still carry notebook/document
-            # foreign keys. Enterprise chunks are persisted canonically by
-            # complete_processing_job and must not write those compatibility
-            # tables during the expand/cutover phase.
-            quality_mode = "off"
-            structured_mode = "off"
         is_repair_job = job.configuration.get("ingestion_kind") == "reconciliation_repair"
         if is_repair_job:
             # Repair restores derived artifacts only. It must never create a
@@ -535,7 +548,7 @@ class IngestionWorker:
                 and is_auto_identity_eligible(fingerprint)
             ):
                 duplicate_id = await self._safe_find_content_duplicate(job, fingerprint)
-                if duplicate_id is not None and quality_mode == "on":
+                if duplicate_id is not None and quality_mode == "on" and not job.is_enterprise:
                     self._ensure_lease(lease_lost)
                     await self._repository.complete_duplicate(
                         job,
@@ -601,6 +614,7 @@ class IngestionWorker:
                                 job,
                                 high_recall_probes,
                                 candidates_per_probe=self._candidate_channel_k,
+                                required=quality_mode == "on",
                             )
                         )
                         high_recall_plan = plan_chunk_deduplication(
@@ -624,6 +638,7 @@ class IngestionWorker:
                         chunk_candidates = await self._safe_find_chunk_dedup_candidates(
                             job,
                             probes,
+                            required=quality_mode == "on",
                         )
                         dedup_plan = plan_chunk_deduplication(
                             probes,
@@ -697,13 +712,17 @@ class IngestionWorker:
                 and self._pipeline.vector_index is not None
             ):
                 if self._candidate_generation_mode == "legacy":
-                    detected = await self._safe_detect_relations(result)
+                    detected = await self._safe_detect_relations(
+                        result,
+                        required=quality_mode == "on",
+                    )
                     relations = self._merge_relation_candidates(relations, detected)
                 elif high_recall_probes:
                     fused = await self._safe_detect_fused_relations(
                         result,
                         high_recall_probes,
                         high_recall_candidates,
+                        required=quality_mode == "on",
                     )
                     chunk_dedup_stats["post_embedding_fusion"] = {
                         "probe_count": fused.probe_count,
@@ -836,7 +855,11 @@ class IngestionWorker:
                         job.document_id,
                     )
             structured_write_result: StructuredFactWriteResult | None = None
-            if structured_mode != "off" and completion_disposition == "completed":
+            if (
+                structured_mode != "off"
+                and completion_disposition == "completed"
+                and not job.is_enterprise
+            ):
                 structured_write_result = await self._safe_replace_structured_facts(
                     job=job,
                     result=result,
@@ -1268,6 +1291,7 @@ class IngestionWorker:
         probes: Sequence[ChunkDedupProbe],
         *,
         candidates_per_probe: int | None = None,
+        required: bool = False,
     ) -> tuple[ChunkDedupCandidate, ...]:
         try:
             return await self._repository.find_chunk_dedup_candidates(
@@ -1277,6 +1301,15 @@ class IngestionWorker:
                 candidates_per_probe or self._quality_candidates_per_probe,
             )
         except Exception:
+            if required:
+                LOGGER.exception(
+                    (
+                        "Required pre-embedding candidate lookup failed for document "
+                        "%s; failing the quality-enabled attempt"
+                    ),
+                    job.document_id,
+                )
+                raise
             LOGGER.exception(
                 (
                     "Pre-embedding chunk candidate lookup failed for document "
@@ -1291,6 +1324,8 @@ class IngestionWorker:
         result: IngestionEmbeddingResult,
         probes: tuple[ChunkDedupProbe, ...],
         preembedding_candidates: tuple[ChunkDedupCandidate, ...],
+        *,
+        required: bool = False,
     ) -> FusedCandidateDetectionResult:
         if self._pipeline.vector_index is None:
             return FusedCandidateDetectionResult((), (), 0, 0)
@@ -1305,6 +1340,15 @@ class IngestionWorker:
                 final_candidate_limit=self._candidate_final_top_k,
             )
         except Exception:
+            if required:
+                LOGGER.exception(
+                    (
+                        "Required fused relation detection failed for document %s; "
+                        "failing the quality-enabled attempt"
+                    ),
+                    result.source.document_id,
+                )
+                raise
             LOGGER.exception(
                 "Fused chunk candidate detection failed for document %s; continuing ingestion",
                 result.source.document_id,
@@ -1314,6 +1358,8 @@ class IngestionWorker:
     async def _safe_detect_relations(
         self,
         result: IngestionEmbeddingResult,
+        *,
+        required: bool = False,
     ) -> tuple[QualityRelationCandidate, ...]:
         if self._pipeline.vector_index is None:
             return ()
@@ -1326,6 +1372,15 @@ class IngestionWorker:
                 candidates_per_probe=self._quality_candidates_per_probe,
             )
         except Exception:
+            if required:
+                LOGGER.exception(
+                    (
+                        "Required relation detection failed for document %s; "
+                        "failing the quality-enabled attempt"
+                    ),
+                    result.source.document_id,
+                )
+                raise
             LOGGER.exception(
                 "Knowledge relation detection failed for document %s; continuing ingestion",
                 result.source.document_id,

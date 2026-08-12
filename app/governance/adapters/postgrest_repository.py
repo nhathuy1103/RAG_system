@@ -17,7 +17,11 @@ from app.governance.domain.models import (
     ConversationDetail,
     EnterpriseCitation,
     EnterpriseConversation,
+    EnterpriseDocumentRelation,
+    EnterpriseDocumentRelationEvidence,
     EnterpriseMessage,
+    EnterpriseRelationDocumentEvidence,
+    EnterpriseRelationOverlap,
     SearchHit,
 )
 from app.governance.ports.repositories import (
@@ -27,6 +31,8 @@ from app.governance.ports.repositories import (
     GovernanceRepositoryError,
     NewEnterpriseCitation,
 )
+from app.retrieval.adapters.postgrest_relation_metadata import enrich_visible_candidates
+from app.retrieval.domain.models import RetrievalCandidate, RetrievalFilters
 
 LOGGER = logging.getLogger(__name__)
 
@@ -106,6 +112,38 @@ class PostgrestGovernanceRepository(GovernanceRepository):
             self._parse_search_hit(row)
             for row in self._rows(payload, "enterprise context expansion")
         ]
+
+    async def enrich_relations(
+        self,
+        candidates: tuple[RetrievalCandidate, ...],
+        filters: RetrievalFilters,
+    ) -> tuple[RetrievalCandidate, ...]:
+        """Fetch the visible P4 graph once and enrich only in-pool endpoints."""
+
+        document_ids = tuple(
+            sorted({candidate.chunk.document_id for candidate in candidates})
+        )
+        if len(document_ids) < 2:
+            return candidates
+        in_filter = ",".join(document_ids)
+        response = await self._request(
+            "GET",
+            "/knowledge_document_relations",
+            params={
+                "status": "neq.dismissed",
+                "or": (
+                    f"(source_document_id.in.({in_filter}),"
+                    f"target_document_id.in.({in_filter}))"
+                ),
+                "select": (
+                    "source_document_id,target_document_id,relation_type,status,signals,"
+                    "detector_version,preferred_document_id"
+                ),
+                "limit": "1000",
+            },
+        )
+        rows = self._rows(response.json(), "Enterprise query-time relation enrichment")
+        return enrich_visible_candidates(candidates, list(rows), [], filters)
 
     async def create_conversation(self, title: str | None) -> EnterpriseConversation:
         payload = await self._rpc("create_enterprise_conversation", {"p_title": title})
@@ -311,6 +349,64 @@ class PostgrestGovernanceRepository(GovernanceRepository):
         rows = self._rows(response.json(), "answer report resolution")
         return self._parse_report(rows[0]) if rows else None
 
+    async def list_document_relations(
+        self,
+        *,
+        relation_status: str | None,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[EnterpriseDocumentRelation], int]:
+        payload = await self._rpc(
+            "list_enterprise_document_relations",
+            {
+                "p_status": relation_status,
+                "p_limit": limit,
+                "p_offset": offset,
+            },
+        )
+        row = self._one(payload, "Enterprise relation list")
+        items = row.get("items")
+        if not isinstance(items, list) or not all(isinstance(item, Mapping) for item in items):
+            raise GovernanceRepositoryError("Invalid Enterprise relation list response")
+        return (
+            [self._parse_document_relation(item) for item in items],
+            int(str(row.get("total_count", len(items)))),
+        )
+
+    async def get_document_relation_evidence(
+        self, relation_id: UUID
+    ) -> EnterpriseDocumentRelationEvidence | None:
+        payload = await self._rpc(
+            "get_enterprise_document_relation_evidence",
+            {"p_relation_id": str(relation_id)},
+        )
+        if payload is None:
+            return None
+        return self._parse_document_relation_evidence(
+            self._one(payload, "Enterprise relation evidence")
+        )
+
+    async def resolve_document_relation(
+        self,
+        relation_id: UUID,
+        *,
+        action: str,
+        reason: str | None,
+        expected_updated_at: str | None,
+    ) -> EnterpriseDocumentRelation:
+        payload = await self._rpc(
+            "resolve_enterprise_document_relation",
+            {
+                "p_relation_id": str(relation_id),
+                "p_action": action,
+                "p_reason": reason,
+                "p_expected_updated_at": expected_updated_at,
+            },
+        )
+        return self._parse_document_relation(
+            self._one(payload, "Enterprise relation resolution")
+        )
+
     async def _rpc(self, name: str, body: dict[str, object]) -> object:
         response = await self._request("POST", f"/rpc/{name}", json=body)
         return response.json()
@@ -486,6 +582,74 @@ class PostgrestGovernanceRepository(GovernanceRepository):
             created_at=cls._datetime(row["created_at"]),
             request_id=(str(row["request_id"]) if row.get("request_id") else None),
             trace_id=(str(row["trace_id"]) if row.get("trace_id") else None),
+        )
+
+    @classmethod
+    def _parse_document_relation(
+        cls, row: Mapping[str, object]
+    ) -> EnterpriseDocumentRelation:
+        signals = row.get("signals")
+        resolution_action = row.get("resolution_action")
+        if resolution_action is None and isinstance(signals, Mapping):
+            resolution_action = signals.get("resolution_action")
+        return EnterpriseDocumentRelation(
+            id=UUID(str(row["id"])),
+            source_document_id=UUID(str(row["source_document_id"])),
+            target_document_id=UUID(str(row["target_document_id"])),
+            relation_type=str(row["relation_type"]),
+            status=str(row["status"]),
+            confidence=float(str(row["confidence"])),
+            reason=(str(row["reason"]) if row.get("reason") else None),
+            created_at=cls._datetime(row["created_at"]),
+            updated_at=cls._datetime(row["updated_at"]),
+            resolution_action=(str(resolution_action) if resolution_action else None),
+            source_document_title=(
+                str(row["source_document_title"])
+                if row.get("source_document_title")
+                else None
+            ),
+            target_document_title=(
+                str(row["target_document_title"])
+                if row.get("target_document_title")
+                else None
+            ),
+        )
+
+    @classmethod
+    def _parse_document_relation_evidence(
+        cls, row: Mapping[str, object]
+    ) -> EnterpriseDocumentRelationEvidence:
+        source = row.get("source_document")
+        target = row.get("target_document")
+        overlaps = row.get("overlaps", [])
+        if (
+            not isinstance(source, Mapping)
+            or not isinstance(target, Mapping)
+            or not isinstance(overlaps, list)
+            or not all(isinstance(item, Mapping) for item in overlaps)
+        ):
+            raise GovernanceRepositoryError("Invalid Enterprise relation evidence response")
+        return EnterpriseDocumentRelationEvidence(
+            relation_id=UUID(str(row["relation_id"])),
+            source_document=EnterpriseRelationDocumentEvidence(
+                id=UUID(str(source["id"])),
+                title=str(source.get("title", "")),
+                version_number=int(str(source.get("version_number", 1))),
+                text_content=str(source.get("text_content", "")),
+            ),
+            target_document=EnterpriseRelationDocumentEvidence(
+                id=UUID(str(target["id"])),
+                title=str(target.get("title", "")),
+                version_number=int(str(target.get("version_number", 1))),
+                text_content=str(target.get("text_content", "")),
+            ),
+            overlaps=tuple(
+                EnterpriseRelationOverlap(
+                    source_text=str(item.get("source_text", "")),
+                    target_text=str(item.get("target_text", "")),
+                )
+                for item in overlaps
+            ),
         )
 
     @staticmethod

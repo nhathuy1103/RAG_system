@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { Navigate } from "react-router-dom";
 
 import { GovernanceAdminPanel, IdentityAdminPanel } from "./EnterpriseAdminPanels";
@@ -35,6 +35,7 @@ import {
   ENTERPRISE_RELATIONS_UPDATED_EVENT,
   listEnterpriseRelations,
   publishDocumentVersion,
+  queueEnterpriseQualityReprocess,
   retryProcessingJob,
   reviewDocumentVersion,
   revokeDocumentPermission,
@@ -270,6 +271,8 @@ export default function AdminKnowledgePortal() {
   const [job, setJob] = useState<ProcessingJobDetail | null>(null);
 
   const [pendingIssuesCount, setPendingIssuesCount] = useState(0);
+  const pendingIssuesInitializedRef = useRef(false);
+  const [qualityReprocessingId, setQualityReprocessingId] = useState<string | null>(null);
 
   const canManageDocuments = functionalPermissions.has("MANAGE_DOCUMENT");
   const canUploadDocuments = functionalPermissions.has("UPLOAD_DOCUMENT") || canManageDocuments;
@@ -505,10 +508,11 @@ export default function AdminKnowledgePortal() {
         const pendingCount = data.items.filter(r => r.status === "pending").length;
         if (!cancelled) {
           setPendingIssuesCount(prev => {
-            if (pendingCount > prev && prev !== 0) {
+            if (pendingIssuesInitializedRef.current && pendingCount > prev) {
               setNotice("Phát hiện tài liệu mới có lỗi trùng lặp/mâu thuẫn. Vui lòng kiểm tra tab Vấn đề & Mâu thuẫn.");
               window.setTimeout(() => setNotice(null), 5000);
             }
+            pendingIssuesInitializedRef.current = true;
             return pendingCount;
           });
         }
@@ -712,6 +716,23 @@ export default function AdminKnowledgePortal() {
     }
   }
 
+  async function reprocessDocumentQuality() {
+    if (!selected) return;
+    setQualityReprocessingId(selected.id);
+    try {
+      const queued = await queueEnterpriseQualityReprocess(selected.id);
+      setSection("PROCESSING");
+      setProcessingStatus("ALL");
+      setProcessingVersionId(queued.document_version_id);
+      setJob(await getProcessingJob(queued.id));
+      success("Đã xếp hàng quét lại duplicate/conflict cho phiên bản hiện hành");
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : "Không thể quét lại duplicate/conflict");
+    } finally {
+      setQualityReprocessingId(null);
+    }
+  }
+
   if (loading || authorized === null) return <div className="flex flex-1 items-center justify-center text-sm text-faint">Đang xác minh quyền quản trị...</div>;
   if (!authorized) return <Navigate to="/knowledge" replace />;
 
@@ -907,6 +928,23 @@ export default function AdminKnowledgePortal() {
                     <section className="rounded-2xl border border-border bg-panel p-5">
                       <div className="flex items-start justify-between gap-4"><div><div className="font-heading text-xl font-bold">{selected.title}</div><p className="mt-2 text-sm leading-6 text-dim">{selected.description || "Chưa có mô tả"}</p></div><StatusBadge value={selected.status} /></div>
                       <div className="mt-4 grid grid-cols-2 gap-3 text-xs md:grid-cols-4"><div><span className="text-faint">Loại tài liệu</span><div className="mt-1 font-medium">{selected.document_type || "—"}</div></div><div><span className="text-faint">Danh mục</span><div className="mt-1 font-medium">{selected.category || "—"}</div></div><div><span className="text-faint">Phiên bản hiện hành</span><div className="mt-1 truncate font-medium">{selected.current_version_id || "—"}</div></div><div><span className="text-faint">Phòng ban sở hữu</span><div className="mt-1 truncate font-medium">{selected.owner_department_id || "—"}</div></div></div>
+                      {canUseReviewWorkspace && selected.status === "PUBLISHED" && (
+                        <button
+                          type="button"
+                          onClick={() => void reprocessDocumentQuality()}
+                          disabled={qualityReprocessingId === selected.id}
+                          className="mt-4 rounded-lg border border-yellow/30 bg-yellow/10 px-3 py-2 text-xs font-semibold text-yellow hover:bg-yellow/20 disabled:cursor-wait disabled:opacity-60"
+                        >
+                          <Icon
+                            icon={qualityReprocessingId === selected.id ? "lucide:loader-circle" : "lucide:scan-search"}
+                            width={14}
+                            className={`mr-1 inline ${qualityReprocessingId === selected.id ? "animate-spin" : ""}`}
+                          />
+                          {qualityReprocessingId === selected.id
+                            ? "Đang xếp hàng quét lại…"
+                            : "Quét lại duplicate / conflict"}
+                        </button>
+                      )}
                       {canArchiveDocuments && selected.status !== "ARCHIVED" && (
                         <details className="mt-4 rounded-lg border border-border bg-background px-3 py-2 text-xs">
                           <summary className="cursor-pointer text-faint">Thao tác khác</summary>

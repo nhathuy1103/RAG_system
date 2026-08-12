@@ -91,6 +91,17 @@ sự thật vẫn là thư mục đó — các file ở đây để đọc/tra c
 34. `34_p4_relation_replacement.sql` — materialize P4 document relations atomically
     from persisted P3 claim evidence, preserve reviewed rows, enforce tenant scope,
     and record an append-only recomputation audit event.
+35. `35_enterprise_knowledge_quality.sql` — enable ACL-scoped duplicate/conflict
+    candidate generation for canonical Enterprise chunks, persist normalized
+    identities and relations atomically with processing completion, and expose
+    only relations whose two endpoints remain readable by the current user.
+36. `36_enterprise_relation_review.sql` — bound indexed Enterprise candidate
+    channels before loading vector payloads, add durable deferred review,
+    and expose ACL-safe list/evidence/optimistic-resolution RPCs with audit.
+37. `37_enterprise_query_time_p6.sql` — add canonical claim/chunk reference-year
+    indexing, fix sparse/dense temporal filters when `effective_date` is null,
+    and expose duplicate/version/source metadata required by the unified P6
+    Enterprise query-time policy without changing existing RPC signatures.
 
 Migration phải chạy đúng thứ tự; 09 phụ thuộc 08 và chuỗi Enterprise 17–31 phụ
 thuộc toàn bộ nền tảng 01–16; migration 32 bổ sung trên candidate path cũ và migration
@@ -124,7 +135,7 @@ pipeline.
 
 Phần schema sau marker `-- Extensions required by the schema.` trong
 `RESET_AND_REBUILD.sql` phải là bản nối **nguyên văn, đúng thứ tự** của mọi migration
-canonical `01_*.sql` đến migration mới nhất (`34_*.sql` hiện tại). Không sửa phần này
+canonical `01_*.sql` đến migration mới nhất (`37_*.sql` hiện tại). Không sửa phần này
 bằng tay. Sau khi đổi hoặc
 thêm migration, chạy từ thư mục gốc:
 

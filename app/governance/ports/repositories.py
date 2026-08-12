@@ -14,9 +14,12 @@ from app.governance.domain.models import (
     ConversationDetail,
     EnterpriseCitation,
     EnterpriseConversation,
+    EnterpriseDocumentRelation,
+    EnterpriseDocumentRelationEvidence,
     EnterpriseMessage,
     SearchHit,
 )
+from app.retrieval.domain.models import RetrievalCandidate, RetrievalFilters
 
 
 class GovernanceRepositoryError(RuntimeError):
@@ -64,6 +67,12 @@ class GovernanceRepository(Protocol):
         sibling_window: int,
         limit: int,
     ) -> list[SearchHit]: ...
+
+    async def enrich_relations(
+        self,
+        candidates: tuple[RetrievalCandidate, ...],
+        filters: RetrievalFilters,
+    ) -> tuple[RetrievalCandidate, ...]: ...
 
     async def create_conversation(self, title: str | None) -> EnterpriseConversation: ...
 
@@ -116,3 +125,24 @@ class GovernanceRepository(Protocol):
     async def resolve_answer_report(
         self, report_id: UUID, *, status: str, resolution_note: str
     ) -> AnswerReport | None: ...
+
+    async def list_document_relations(
+        self,
+        *,
+        relation_status: str | None,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[EnterpriseDocumentRelation], int]: ...
+
+    async def get_document_relation_evidence(
+        self, relation_id: UUID
+    ) -> EnterpriseDocumentRelationEvidence | None: ...
+
+    async def resolve_document_relation(
+        self,
+        relation_id: UUID,
+        *,
+        action: str,
+        reason: str | None,
+        expected_updated_at: str | None,
+    ) -> EnterpriseDocumentRelation: ...

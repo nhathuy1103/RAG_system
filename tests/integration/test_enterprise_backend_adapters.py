@@ -29,6 +29,8 @@ GROUP_ID = UUID("80000000-0000-0000-0000-000000000008")
 DEPARTMENT_ID = UUID("90000000-0000-0000-0000-000000000009")
 MEMBERSHIP_ID = UUID("a0000000-0000-0000-0000-000000000010")
 NOW = datetime(2026, 8, 8, tzinfo=UTC)
+RELATION_ID = UUID("b0000000-0000-0000-0000-000000000011")
+TARGET_DOCUMENT_ID = UUID("c0000000-0000-0000-0000-000000000012")
 
 VERSION_ROW = {
     "id": str(VERSION_ID),
@@ -370,6 +372,123 @@ async def test_exact_document_route_and_context_expansion_use_acl_gated_rpcs() -
     assert routes == [DOCUMENT_ID]
     assert expanded[0].chunk_id == sibling_id
     assert expanded[0].metadata["expansion_kind"] == "sibling"
+
+
+@pytest.mark.anyio
+async def test_enterprise_relation_review_uses_canonical_acl_rpcs() -> None:
+    relation_row = {
+        "id": str(RELATION_ID),
+        "source_document_id": str(DOCUMENT_ID),
+        "target_document_id": str(TARGET_DOCUMENT_ID),
+        "relation_type": "conflict_candidate",
+        "status": "pending",
+        "confidence": 0.91,
+        "reason": "semantic_quantity_mismatch",
+        "created_at": NOW.isoformat(),
+        "updated_at": NOW.isoformat(),
+        "resolution_action": None,
+        "source_document_title": "Vinhomes 2026",
+        "target_document_title": "Vinhomes 2026 copy",
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.content)
+        if request.url.path.endswith("/rpc/list_enterprise_document_relations"):
+            assert body == {"p_status": "pending", "p_limit": 50, "p_offset": 0}
+            return httpx.Response(
+                200,
+                json={"items": [relation_row], "total_count": 1, "limit": 50, "offset": 0},
+            )
+        if request.url.path.endswith(
+            "/rpc/get_enterprise_document_relation_evidence"
+        ):
+            assert body == {"p_relation_id": str(RELATION_ID)}
+            return httpx.Response(
+                200,
+                json={
+                    "relation_id": str(RELATION_ID),
+                    "source_document": {
+                        "id": str(DOCUMENT_ID),
+                        "title": "Vinhomes 2026",
+                        "version_number": 1,
+                        "text_content": "Giá 106 triệu/m²",
+                    },
+                    "target_document": {
+                        "id": str(TARGET_DOCUMENT_ID),
+                        "title": "Vinhomes 2026 copy",
+                        "version_number": 1,
+                        "text_content": "Giá 103 triệu/m²",
+                    },
+                    "overlaps": [
+                        {
+                            "source_text": "106 triệu/m²",
+                            "target_text": "103 triệu/m²",
+                        }
+                    ],
+                },
+            )
+        assert request.url.path.endswith("/rpc/resolve_enterprise_document_relation")
+        assert body == {
+            "p_relation_id": str(RELATION_ID),
+            "p_action": "confirm_conflict",
+            "p_reason": "Different prices for the same period",
+            "p_expected_updated_at": NOW.isoformat(),
+        }
+        return httpx.Response(
+            200,
+            json={
+                **relation_row,
+                "relation_type": "conflict",
+                "status": "confirmed",
+                "reason": "Different prices for the same period",
+                "signals": {"resolution_action": "confirm_conflict"},
+            },
+        )
+
+    async with httpx.AsyncClient(
+        base_url="https://example.test/rest/v1",
+        transport=httpx.MockTransport(handler),
+    ) as client:
+        repository = PostgrestGovernanceRepository(client)
+        relations, total = await repository.list_document_relations(
+            relation_status="pending", limit=50, offset=0
+        )
+        evidence = await repository.get_document_relation_evidence(RELATION_ID)
+        resolved = await repository.resolve_document_relation(
+            RELATION_ID,
+            action="confirm_conflict",
+            reason="Different prices for the same period",
+            expected_updated_at=NOW.isoformat(),
+        )
+
+    assert total == 1
+    assert relations[0].source_document_title == "Vinhomes 2026"
+    assert evidence is not None
+    assert evidence.overlaps[0].source_text == "106 triệu/m²"
+    assert resolved.status == "confirmed"
+    assert resolved.resolution_action == "confirm_conflict"
+
+
+@pytest.mark.anyio
+async def test_enterprise_quality_reprocess_calls_guarded_rpc() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path.endswith("/rpc/queue_enterprise_quality_reprocess")
+        assert json.loads(request.content) == {"p_document_id": str(DOCUMENT_ID)}
+        return httpx.Response(
+            200,
+            json={**JOB_ROW, "job_type": "REPROCESS", "attempt_no": 2},
+        )
+
+    async with httpx.AsyncClient(
+        base_url="https://example.test/rest/v1",
+        transport=httpx.MockTransport(handler),
+    ) as client:
+        job = await PostgrestEnterpriseDocumentRepository(client).queue_quality_reprocess(
+            DOCUMENT_ID
+        )
+
+    assert job.job_type == "REPROCESS"
+    assert job.attempt_no == 2
 
 
 @pytest.mark.anyio

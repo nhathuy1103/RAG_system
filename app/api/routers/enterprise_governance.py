@@ -31,6 +31,11 @@ from app.api.schemas.enterprise import (
     ConversationDetailResponse,
     ConversationResponse,
     EnterpriseCitationResponse,
+    EnterpriseDocumentRelationEvidenceResponse,
+    EnterpriseDocumentRelationListResponse,
+    EnterpriseDocumentRelationResolutionRequest,
+    EnterpriseDocumentRelationResponse,
+    EnterpriseRelationStatus,
     FeedbackCreateRequest,
     FeedbackResponse,
     MessageCreateRequest,
@@ -48,6 +53,71 @@ from app.knowledge_quality.application.analysis import analyze_text_relation
 from app.knowledge_quality.domain.models import RelationType
 
 router = APIRouter(prefix="/api/v1", tags=["enterprise-knowledge"])
+
+
+@router.get(
+    "/quality/relations",
+    response_model=EnterpriseDocumentRelationListResponse,
+)
+async def list_enterprise_document_relations(
+    _principal: Annotated[PrincipalContext, Depends(require_review_workspace)],
+    service: Annotated[GovernanceService, Depends(get_governance_service)],
+    relation_status: Annotated[
+        EnterpriseRelationStatus | None,
+        Query(alias="status"),
+    ] = None,
+    limit: Annotated[int, Query(ge=1, le=200)] = 200,
+    offset: Annotated[int, Query(ge=0)] = 0,
+) -> EnterpriseDocumentRelationListResponse:
+    items, total = await service.list_document_relations(
+        relation_status=relation_status,
+        limit=limit,
+        offset=offset,
+    )
+    return EnterpriseDocumentRelationListResponse(
+        items=[EnterpriseDocumentRelationResponse.model_validate(item) for item in items],
+        total_count=total,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@router.get(
+    "/quality/relations/{relation_id}/evidence",
+    response_model=EnterpriseDocumentRelationEvidenceResponse,
+)
+async def get_enterprise_document_relation_evidence(
+    relation_id: UUID,
+    _principal: Annotated[PrincipalContext, Depends(require_review_workspace)],
+    service: Annotated[GovernanceService, Depends(get_governance_service)],
+) -> EnterpriseDocumentRelationEvidenceResponse:
+    evidence = await service.get_document_relation_evidence(relation_id)
+    if evidence is None:
+        raise HTTPException(status_code=404, detail="Enterprise relation was not found")
+    return EnterpriseDocumentRelationEvidenceResponse.model_validate(evidence)
+
+
+@router.post(
+    "/quality/relations/{relation_id}/resolve",
+    response_model=EnterpriseDocumentRelationResponse,
+)
+async def resolve_enterprise_document_relation(
+    relation_id: UUID,
+    payload: EnterpriseDocumentRelationResolutionRequest,
+    _principal: Annotated[PrincipalContext, Depends(require_review_workspace)],
+    service: Annotated[GovernanceService, Depends(get_governance_service)],
+) -> EnterpriseDocumentRelationResponse:
+    relation = await service.resolve_document_relation(
+        relation_id,
+        action=payload.action,
+        reason=payload.reason,
+        expected_updated_at=(
+            payload.expected_updated_at.isoformat()
+            if payload.expected_updated_at is not None
+            else None
+        ),
+    )
+    return EnterpriseDocumentRelationResponse.model_validate(relation)
 
 
 @router.post("/quality/compare-texts", response_model=TextComparisonResponse)
@@ -164,6 +234,8 @@ async def append_conversation_message(
                 document_version_id=item.document_version_id,
                 document_title=item.document_title,
                 chunk_id=item.chunk_id,
+                citation_order=item.citation_order,
+                quote_text=item.quote_text,
                 page=item.page_number,
                 section=item.section_path,
             )

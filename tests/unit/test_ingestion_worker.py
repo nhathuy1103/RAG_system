@@ -754,6 +754,61 @@ async def test_shadow_job_persists_candidate_without_automatic_aliasing() -> Non
 
 
 @pytest.mark.anyio
+async def test_quality_on_job_fails_when_required_candidate_lookup_is_unavailable() -> None:
+    class UnavailableCandidateRepository(FakeWorkerRepository):
+        async def find_chunk_dedup_candidates(
+            self,
+            job,
+            probes,
+            embedding_model,
+            candidates_per_probe,
+        ):
+            del job, probes, embedding_model, candidates_per_probe
+            raise IngestionRepositoryError("candidate RPC unavailable")
+
+    repository = UnavailableCandidateRepository(
+        make_job(knowledge_quality_mode="on")
+    )
+
+    processed = await make_worker(
+        repository,
+        knowledge_quality_mode="on",
+    ).run_once()
+
+    assert processed is True
+    assert repository.completed is None
+    assert repository.failed is not None
+    assert "candidate RPC unavailable" in repository.failed[1]
+
+
+@pytest.mark.anyio
+async def test_quality_shadow_job_remains_fail_open_for_candidate_lookup() -> None:
+    class UnavailableCandidateRepository(FakeWorkerRepository):
+        async def find_chunk_dedup_candidates(
+            self,
+            job,
+            probes,
+            embedding_model,
+            candidates_per_probe,
+        ):
+            del job, probes, embedding_model, candidates_per_probe
+            raise IngestionRepositoryError("candidate RPC unavailable")
+
+    repository = UnavailableCandidateRepository(
+        make_job(knowledge_quality_mode="shadow")
+    )
+
+    processed = await make_worker(
+        repository,
+        knowledge_quality_mode="shadow",
+    ).run_once()
+
+    assert processed is True
+    assert repository.failed is None
+    assert repository.completed is not None
+
+
+@pytest.mark.anyio
 async def test_worker_reuses_exact_chunk_embedding_before_provider_call() -> None:
     reused_vector = (0.25,) * 32
     target_document_id = UUID("50000000-0000-0000-0000-000000000005")
@@ -953,6 +1008,39 @@ async def test_legacy_job_without_durable_mode_fails_safe_to_off() -> None:
 
 
 @pytest.mark.anyio
+async def test_enterprise_job_uses_worker_modes_and_preserves_duplicate_evidence() -> None:
+    canonical_id = UUID("50000000-0000-0000-0000-000000000005")
+    enterprise_job = replace(
+        make_job(knowledge_quality_mode="on", structured_fact_mode="on"),
+        configuration={},
+        queue_kind="enterprise",
+        document_version_id=UUID("60000000-0000-0000-0000-000000000006"),
+        knowledge_document_id=DOCUMENT_ID,
+    )
+    repository = FakeWorkerRepository(enterprise_job, duplicate_id=canonical_id)
+    worker = make_worker(
+        repository,
+        knowledge_quality_mode="on",
+        structured_fact_mode="on",
+    )
+
+    assert worker._quality_mode_for_job(enterprise_job) == "on"
+    assert worker._structured_mode_for_job(enterprise_job) == "on"
+
+    processed = await worker.run_once()
+
+    assert processed is True
+    assert repository.failed is None
+    assert repository.duplicate_completed is None
+    assert repository.completed is not None
+    assert repository.completed_quality_mode == "on"
+    assert repository.completed_fingerprint is not None
+    assert len(repository.completed_relations) == 1
+    assert repository.completed_relations[0].target_document_id == canonical_id
+    assert repository.completed_relations[0].relation_type.value == "exact_content"
+
+
+@pytest.mark.anyio
 async def test_worker_does_not_write_vectors_after_generation_lease_is_lost() -> None:
     repository = FakeWorkerRepository(make_job(), renew_succeeds=False)
     vector_index = InMemoryVectorIndex()
@@ -1023,9 +1111,10 @@ def test_ingestion_profile_requires_openai_qdrant_contract() -> None:
     assert profile.configuration["structured_fact_mode"] == "off"
 
 
-def test_application_default_enables_safe_exact_content_reuse() -> None:
+def test_application_rollout_enables_quality_and_structured_claims() -> None:
     assert AppSettings.model_validate({}).knowledge_quality_mode == "on"
-    assert AppSettings.model_validate({}).structured_fact_mode == "off"
+    assert AppSettings.model_validate({}).structured_fact_mode == "on"
+    assert AppSettings.model_validate({}).knowledge_candidate_generation_mode == "on"
 
 
 def test_ingestion_profile_rejects_silent_local_fallback() -> None:

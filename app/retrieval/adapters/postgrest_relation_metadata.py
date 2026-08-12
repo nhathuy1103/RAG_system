@@ -50,44 +50,67 @@ class PostgrestRelationMetadataAdapter:
                 }
             )
         )
-        if len(document_ids) < 2 or filters.notebook_id is None:
+        if len(document_ids) < 2:
             return candidates
         in_filter = ",".join(document_ids)
-        response = self._client.get(
-            "/document_relations",
-            params={
-                "owner_id": f"eq.{filters.owner_id}",
-                "notebook_id": f"eq.{filters.notebook_id}",
-                "status": "neq.dismissed",
-                "or": (
-                    f"(source_document_id.in.({in_filter}),target_document_id.in.({in_filter}))"
-                ),
-                "select": _COLUMNS,
-                "limit": "1000",
-            },
-        )
-        response.raise_for_status()
-        payload = response.json()
-        if not isinstance(payload, list):
-            raise TypeError("PostgREST relation metadata response must be an array")
-        documents_response = self._client.get(
-            "/documents",
-            params={
-                "id": f"in.({in_filter})",
-                "owner_id": f"eq.{filters.owner_id}",
-                "notebook_id": f"eq.{filters.notebook_id}",
-                "select": "id,version_number,is_current,status",
-                "limit": str(len(document_ids)),
-            },
-        )
-        documents_response.raise_for_status()
-        document_payload = documents_response.json()
-        if not isinstance(document_payload, list):
-            raise TypeError("PostgREST relation document response must be an array")
-        return _enrich_visible_candidates(candidates, payload, document_payload, filters)
+        payload: list[object] = []
+        document_payload: list[object] = []
+        if filters.notebook_id is not None:
+            response = self._client.get(
+                "/document_relations",
+                params={
+                    "owner_id": f"eq.{filters.owner_id}",
+                    "notebook_id": f"eq.{filters.notebook_id}",
+                    "status": "neq.dismissed",
+                    "or": (
+                        f"(source_document_id.in.({in_filter}),target_document_id.in.({in_filter}))"
+                    ),
+                    "select": _COLUMNS,
+                    "limit": "1000",
+                },
+            )
+            response.raise_for_status()
+            legacy_payload = response.json()
+            if not isinstance(legacy_payload, list):
+                raise TypeError("PostgREST relation metadata response must be an array")
+            payload.extend(legacy_payload)
+            documents_response = self._client.get(
+                "/documents",
+                params={
+                    "id": f"in.({in_filter})",
+                    "owner_id": f"eq.{filters.owner_id}",
+                    "notebook_id": f"eq.{filters.notebook_id}",
+                    "select": "id,version_number,is_current,status",
+                    "limit": str(len(document_ids)),
+                },
+            )
+            documents_response.raise_for_status()
+            legacy_documents = documents_response.json()
+            if not isinstance(legacy_documents, list):
+                raise TypeError("PostgREST relation document response must be an array")
+            document_payload.extend(legacy_documents)
+
+        if not payload:
+            enterprise_response = self._client.get(
+                "/knowledge_document_relations",
+                params={
+                    "status": "neq.dismissed",
+                    "or": (
+                        f"(source_document_id.in.({in_filter}),target_document_id.in.({in_filter}))"
+                    ),
+                    "select": _COLUMNS,
+                    "limit": "1000",
+                },
+            )
+            enterprise_response.raise_for_status()
+            enterprise_payload = enterprise_response.json()
+            if not isinstance(enterprise_payload, list):
+                raise TypeError("Enterprise relation metadata response must be an array")
+            payload.extend(enterprise_payload)
+        return enrich_visible_candidates(candidates, payload, document_payload, filters)
 
 
-def _enrich_visible_candidates(
+def enrich_visible_candidates(
     candidates: tuple[RetrievalCandidate, ...],
     rows: list[object],
     document_rows: list[object],
@@ -270,6 +293,7 @@ def _mapping_sequence(value: object) -> tuple[Mapping[object, object], ...]:
 def _legacy_primary(relation_type: str) -> str:
     return {
         "exact_content": "EXACT_DUPLICATE",
+        "technical_duplicate": "EXACT_DUPLICATE",
         "near_duplicate": "NEAR_DUPLICATE",
         "version": "VERSION_UPDATE",
         "version_candidate": "UNCERTAIN",
@@ -327,4 +351,4 @@ def _uuid_text(value: str) -> str | None:
         return None
 
 
-__all__ = ["PostgrestRelationMetadataAdapter"]
+__all__ = ["PostgrestRelationMetadataAdapter", "enrich_visible_candidates"]

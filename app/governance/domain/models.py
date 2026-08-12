@@ -126,3 +126,41 @@ class AnalyticsSummary:
     feedback_up: int = 0
     feedback_down: int = 0
     no_answer_rate: float | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class EnterpriseDocumentRelation:
+    id: UUID
+    source_document_id: UUID
+    target_document_id: UUID
+    relation_type: str
+    status: str
+    confidence: float
+    reason: str | None
+    created_at: datetime
+    updated_at: datetime
+    resolution_action: str | None = None
+    source_document_title: str | None = None
+    target_document_title: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class EnterpriseRelationDocumentEvidence:
+    id: UUID
+    title: str
+    version_number: int
+    text_content: str
+
+
+@dataclass(frozen=True, slots=True)
+class EnterpriseRelationOverlap:
+    source_text: str
+    target_text: str
+
+
+@dataclass(frozen=True, slots=True)
+class EnterpriseDocumentRelationEvidence:
+    relation_id: UUID
+    source_document: EnterpriseRelationDocumentEvidence
+    target_document: EnterpriseRelationDocumentEvidence
+    overlaps: tuple[EnterpriseRelationOverlap, ...] = ()

@@ -1,0 +1,35 @@
+{
+  "valid": true,
+  "pair_count": 164,
+  "evidence_count": 165,
+  "errors": [],
+  "warnings": [],
+  "relation_counts": {
+    "CONDITIONAL_VARIANT": 12,
+    "CONFLICT": 20,
+    "DISTINCT": 14,
+    "EXACT_DUPLICATE": 40,
+    "NEAR_DUPLICATE": 30,
+    "TEMPLATE_VARIANT": 10,
+    "TEMPORAL_VARIANT": 18,
+    "UNCERTAIN": 10,
+    "VERSION_UPDATE": 10
+  },
+  "split_counts": {
+    "dev": 96,
+    "test": 68
+  },
+  "provenance_counts": {
+    "controlled_mutation": 70,
+    "observed": 94
+  },
+  "difficulty_counts": {
+    "easy": 40,
+    "hard": 64,
+    "medium": 60
+  },
+  "test_ratio": 0.414634,
+  "observed_ratio": 0.573171,
+  "cross_split_full_input_overlap": 0,
+  "source_family_overlap": []
+}

@@ -11,6 +11,7 @@ import {
   listEnterpriseRelations,
   resolveEnterpriseRelation,
 } from "../../lib/enterpriseApi";
+import { buildEnterpriseDocumentDiff } from "../../lib/enterpriseDocumentDiff.js";
 
 const STATUS_OPTIONS: Array<{
   value: EnterpriseDocumentRelationStatus;
@@ -152,6 +153,295 @@ function ComparisonMetric({ label, value }: { label: string; value: number }) {
       </div>
       <div className="h-1.5 overflow-hidden rounded-full bg-inset">
         <div className="h-full rounded-full bg-accent" style={{ width: `${percentage}%` }} />
+      </div>
+    </div>
+  );
+}
+
+type DiffTone = "exact" | "near" | "conflict" | "changed" | "source_only" | "target_only";
+
+interface DiffSegment {
+  text: string;
+  changed: boolean;
+}
+
+const DIFF_TONE_STYLES: Record<DiffTone, {
+  row: string;
+  badge: string;
+  mark: string;
+  icon: string;
+}> = {
+  exact: {
+    row: "border-green/20 bg-green/[0.045]",
+    badge: "border-green/30 bg-green/10 text-green",
+    mark: "bg-green/15 text-green",
+    icon: "lucide:equal",
+  },
+  near: {
+    row: "border-yellow/30 bg-yellow/[0.075]",
+    badge: "border-yellow/40 bg-yellow/15 text-yellow",
+    mark: "bg-yellow/25 text-yellow",
+    icon: "lucide:scan-text",
+  },
+  conflict: {
+    row: "border-red/40 bg-red/[0.09]",
+    badge: "border-red/40 bg-red/15 text-red",
+    mark: "bg-red/25 text-red",
+    icon: "lucide:triangle-alert",
+  },
+  changed: {
+    row: "border-blue/30 bg-blue/[0.07]",
+    badge: "border-blue/30 bg-blue/10 text-blue",
+    mark: "bg-blue/20 text-blue",
+    icon: "lucide:replace",
+  },
+  source_only: {
+    row: "border-blue/30 bg-blue/[0.07]",
+    badge: "border-blue/30 bg-blue/10 text-blue",
+    mark: "bg-blue/20 text-blue",
+    icon: "lucide:file-plus-2",
+  },
+  target_only: {
+    row: "border-blue/30 bg-blue/[0.07]",
+    badge: "border-blue/30 bg-blue/10 text-blue",
+    mark: "bg-blue/20 text-blue",
+    icon: "lucide:file-minus-2",
+  },
+};
+
+function relationIssueLevel(relation: EnterpriseDocumentRelation) {
+  if (["conflict", "conflict_candidate"].includes(relation.relation_type)) {
+    return {
+      label: relation.relation_type === "conflict" ? "Mâu thuẫn nghiêm trọng" : "Rủi ro mâu thuẫn cao",
+      description: "Cần đối chiếu từng phát biểu và số liệu trước khi chọn nguồn ưu tiên.",
+      style: "border-red/40 bg-red/10 text-red",
+      bar: "bg-red",
+      icon: "lucide:shield-alert",
+    };
+  }
+  if (["exact_content", "technical_duplicate"].includes(relation.relation_type)) {
+    return {
+      label: "Trùng lặp hoàn toàn",
+      description: "Nội dung giống nhau; có thể chọn một tài liệu làm đại diện.",
+      style: "border-green/40 bg-green/10 text-green",
+      bar: "bg-green",
+      icon: "lucide:copy-check",
+    };
+  }
+  if (relation.relation_type === "near_duplicate") {
+    return {
+      label: "Trùng lặp đáng kể",
+      description: "Phần lớn nội dung giống nhau nhưng vẫn có các dòng cần kiểm tra.",
+      style: "border-yellow/40 bg-yellow/10 text-yellow",
+      bar: "bg-yellow",
+      icon: "lucide:copy-plus",
+    };
+  }
+  return {
+    label: "Cần người dùng đánh giá",
+    description: "Hai tài liệu có liên quan nhưng chưa đủ cơ sở để tự động kết luận.",
+    style: "border-blue/30 bg-blue/10 text-blue",
+    bar: "bg-blue",
+    icon: "lucide:search-check",
+  };
+}
+
+function InlineDiffText({
+  segments,
+  tone,
+  emptyLabel,
+}: {
+  segments: DiffSegment[];
+  tone: DiffTone;
+  emptyLabel: string;
+}) {
+  if (segments.length === 0) {
+    return <span className="italic text-faint">{emptyLabel}</span>;
+  }
+  const style = DIFF_TONE_STYLES[tone];
+  return (
+    <span className="whitespace-pre-wrap break-words">
+      {segments.map((segment, index) => segment.changed ? (
+        <mark
+          // Position is stable inside one immutable diff result.
+          key={`${index}-${segment.text}`}
+          className={`rounded-sm px-0.5 font-semibold ${style.mark}`}
+        >
+          {segment.text}
+        </mark>
+      ) : <span key={`${index}-${segment.text}`}>{segment.text}</span>)}
+    </span>
+  );
+}
+
+function DocumentDiffViewer({
+  relation,
+  evidence,
+}: {
+  relation: EnterpriseDocumentRelation;
+  evidence: EnterpriseDocumentRelationEvidence;
+}) {
+  const [issuesOnly, setIssuesOnly] = useState(false);
+  const diff = useMemo(
+    () => buildEnterpriseDocumentDiff(
+      evidence.source_document.text_content,
+      evidence.target_document.text_content,
+      relation.relation_type,
+    ),
+    [evidence, relation.relation_type],
+  );
+  const rows = issuesOnly
+    ? diff.rows.filter((row) => row.kind !== "exact")
+    : diff.rows;
+  const issueCount = diff.rows.length - diff.counts.exact;
+  const issueLevel = relationIssueLevel(relation);
+  const confidence = Math.max(0, Math.min(100, relation.confidence * 100));
+
+  return (
+    <div className="space-y-4">
+      <div className={`rounded-xl border p-4 ${issueLevel.style}`}>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="rounded-lg border border-current/20 bg-background/50 p-2">
+              <Icon icon={issueLevel.icon} width={20} />
+            </div>
+            <div>
+              <div className="font-heading text-sm font-bold">{issueLevel.label}</div>
+              <p className="mt-1 text-xs leading-5 opacity-85">{issueLevel.description}</p>
+            </div>
+          </div>
+          <div className="min-w-36 text-right">
+            <div className="text-[10px] font-bold uppercase tracking-wider opacity-70">
+              Độ tin cậy
+            </div>
+            <div className="mt-1 font-heading text-xl font-bold">{confidence.toFixed(1)}%</div>
+          </div>
+        </div>
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-background/60">
+          <div className={`h-full rounded-full ${issueLevel.bar}`} style={{ width: `${confidence}%` }} />
+        </div>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4" aria-label="Tóm tắt khác biệt">
+        <div className="rounded-lg border border-green/25 bg-green/[0.06] px-3 py-2.5">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-green">Trùng khớp</div>
+          <div className="mt-1 font-heading text-lg font-bold text-foreground">{diff.counts.exact}</div>
+        </div>
+        <div className="rounded-lg border border-yellow/30 bg-yellow/[0.08] px-3 py-2.5">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-yellow">Gần giống</div>
+          <div className="mt-1 font-heading text-lg font-bold text-foreground">{diff.counts.near}</div>
+        </div>
+        <div className="rounded-lg border border-red/30 bg-red/[0.08] px-3 py-2.5">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-red">Mâu thuẫn</div>
+          <div className="mt-1 font-heading text-lg font-bold text-foreground">{diff.counts.conflict}</div>
+        </div>
+        <div className="rounded-lg border border-blue/25 bg-blue/[0.06] px-3 py-2.5">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-blue">Chỉ có một bên</div>
+          <div className="mt-1 font-heading text-lg font-bold text-foreground">
+            {diff.counts.source_only + diff.counts.target_only + diff.counts.changed}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-inset/40 px-4 py-3">
+        <div className="flex flex-wrap items-center gap-3 text-[10px] font-semibold">
+          <span className="inline-flex items-center gap-1.5 text-green"><i className="h-2.5 w-2.5 rounded-sm bg-green" />Trùng khớp</span>
+          <span className="inline-flex items-center gap-1.5 text-yellow"><i className="h-2.5 w-2.5 rounded-sm bg-yellow" />Khác biệt nhẹ</span>
+          <span className="inline-flex items-center gap-1.5 text-red"><i className="h-2.5 w-2.5 rounded-sm bg-red" />Mâu thuẫn cao</span>
+          <span className="inline-flex items-center gap-1.5 text-blue"><i className="h-2.5 w-2.5 rounded-sm bg-blue" />Chỉ có một bên</span>
+        </div>
+        <div className="flex rounded-lg border border-border bg-background p-0.5 text-[10px] font-semibold">
+          <button
+            type="button"
+            onClick={() => setIssuesOnly(false)}
+            className={`rounded-md px-2.5 py-1.5 ${!issuesOnly ? "bg-accent text-accent-foreground" : "text-dim hover:bg-inset"}`}
+          >
+            Tất cả · {diff.rows.length}
+          </button>
+          <button
+            type="button"
+            onClick={() => setIssuesOnly(true)}
+            className={`rounded-md px-2.5 py-1.5 ${issuesOnly ? "bg-accent text-accent-foreground" : "text-dim hover:bg-inset"}`}
+          >
+            Chỉ khác biệt · {issueCount}
+          </button>
+        </div>
+      </div>
+
+      {(diff.sourceTruncated || diff.targetTruncated) && (
+        <div className="rounded-lg border border-yellow/30 bg-yellow/10 px-3 py-2 text-xs text-yellow">
+          Tài liệu dài nên màn hình đang hiển thị tối đa {diff.maxLines} dòng đầu tiên mỗi bên.
+        </div>
+      )}
+
+      <div className="overflow-hidden rounded-xl border border-border bg-background">
+        <div className="overflow-x-auto">
+          <div className="min-w-[820px]">
+            <div className="sticky top-0 z-10 grid grid-cols-2 border-b border-border bg-panel shadow-sm">
+              {[evidence.source_document, evidence.target_document].map((document, index) => (
+                <div key={document.id} className={`p-4 ${index === 0 ? "border-r border-border" : ""}`}>
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-faint">
+                    {index === 0 ? "Tài liệu hiện hành" : "Tài liệu phát hiện trùng/mâu thuẫn"}
+                  </div>
+                  <div className="mt-1 truncate text-sm font-semibold" title={document.title}>{document.title}</div>
+                  <div className="mt-1 text-[10px] text-dim">Phiên bản {document.version_number}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="space-y-1.5 bg-inset/20 p-2">
+              {rows.length === 0 ? (
+                <div className="p-10 text-center text-xs text-dim">
+                  Không có dòng khác biệt. Hai tài liệu đang trùng khớp hoàn toàn trong phạm vi hiển thị.
+                </div>
+              ) : rows.map((row) => {
+                const tone = row.kind as DiffTone;
+                const style = DIFF_TONE_STYLES[tone] || DIFF_TONE_STYLES.changed;
+                return (
+                  <article key={row.id} className={`overflow-hidden rounded-lg border ${style.row}`}>
+                    <div className="flex items-center justify-between gap-3 border-b border-current/10 px-3 py-1.5">
+                      <span className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[9.5px] font-bold ${style.badge}`}>
+                        <Icon icon={style.icon} width={12} />
+                        {row.label}
+                      </span>
+                      {typeof row.similarity === "number" && (
+                        <span className="text-[9.5px] font-semibold tabular-nums text-dim">
+                          Tương đồng {(row.similarity * 100).toFixed(1)}%
+                        </span>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 text-[11.5px] leading-5">
+                      <div className="grid min-h-14 grid-cols-[34px_1fr] border-r border-current/10">
+                        <div className="border-r border-current/10 px-2 py-3 text-right font-mono text-[9px] text-faint">
+                          {row.sourceLineNumber || "–"}
+                        </div>
+                        <div className="p-3">
+                          <InlineDiffText
+                            segments={row.inline.source}
+                            tone={tone}
+                            emptyLabel="Không có nội dung tương ứng"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid min-h-14 grid-cols-[34px_1fr]">
+                        <div className="border-r border-current/10 px-2 py-3 text-right font-mono text-[9px] text-faint">
+                          {row.targetLineNumber || "–"}
+                        </div>
+                        <div className="p-3">
+                          <InlineDiffText
+                            segments={row.inline.target}
+                            tone={tone}
+                            emptyLabel="Không có nội dung tương ứng"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -376,7 +666,12 @@ export default function EnterpriseIssuesPanel() {
     if (!selectedRelation) return;
     setResolving(true);
     try {
-      const updated = await resolveEnterpriseRelation(selectedRelation.id, action, reason);
+      const updated = await resolveEnterpriseRelation(
+        selectedRelation.id,
+        action,
+        reason,
+        selectedRelation.updated_at,
+      );
       setRelations((prev) =>
         prev.map((r) => (r.id === updated.id ? updated : r))
       );
@@ -494,63 +789,10 @@ export default function EnterpriseIssuesPanel() {
                   Đang tải nội dung...
                 </div>
               ) : evidence ? (
-                <div className="grid grid-cols-2 gap-4">
-                  {/* Source Document */}
-                  <div className="flex flex-col rounded-xl border border-border bg-background p-4">
-                    <div className="mb-3 border-b border-border pb-3">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-faint">
-                        Tài liệu hiện hành
-                      </div>
-                      <div className="mt-1 font-semibold text-foreground truncate" title={evidence.source_document.title}>
-                        {evidence.source_document.title}
-                      </div>
-                      <div className="mt-1 text-xs text-dim">
-                        Phiên bản {evidence.source_document.version_number}
-                      </div>
-                    </div>
-                    <div className="flex-1 overflow-y-auto whitespace-pre-wrap text-sm leading-6 text-foreground">
-                      {evidence.source_document.text_content}
-                    </div>
-                  </div>
-                  {/* Target Document */}
-                  <div className="flex flex-col rounded-xl border border-border bg-background p-4">
-                    <div className="mb-3 border-b border-border pb-3">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-faint">
-                        Tài liệu phát hiện trùng/mâu thuẫn
-                      </div>
-                      <div className="mt-1 font-semibold text-foreground truncate" title={evidence.target_document.title}>
-                        {evidence.target_document.title}
-                      </div>
-                      <div className="mt-1 text-xs text-dim">
-                        Phiên bản {evidence.target_document.version_number}
-                      </div>
-                    </div>
-                    <div className="flex-1 overflow-y-auto whitespace-pre-wrap text-sm leading-6 text-foreground">
-                      {evidence.target_document.text_content}
-                    </div>
-                  </div>
-                </div>
+                <DocumentDiffViewer relation={selectedRelation} evidence={evidence} />
               ) : (
                 <div className="text-center text-xs text-faint p-4">
                   Không tìm thấy dữ liệu so sánh.
-                </div>
-              )}
-              {evidence?.overlaps && evidence.overlaps.length > 0 && (
-                <div className="mt-4 rounded-xl border border-red/20 bg-red/5 p-4">
-                  <div className="mb-2 text-xs font-semibold text-red flex items-center gap-2">
-                    <Icon icon="lucide:alert-circle" width={16} />
-                    Điểm cần lưu ý (Highlight)
-                  </div>
-                  {evidence.overlaps.map((overlap, idx) => (
-                    <div key={idx} className="grid grid-cols-2 gap-4 text-xs">
-                      <div className="rounded bg-red/10 p-2 text-red-900 dark:text-red-300">
-                        "{overlap.source_text}"
-                      </div>
-                      <div className="rounded bg-red/10 p-2 text-red-900 dark:text-red-300">
-                        "{overlap.target_text}"
-                      </div>
-                    </div>
-                  ))}
                 </div>
               )}
             </div>

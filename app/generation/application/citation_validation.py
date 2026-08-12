@@ -20,6 +20,8 @@ from app.retrieval.domain.models import RetrievalCandidate
 _SOURCE_MARKER_PATTERN = re.compile(r"\[(SRC-[^\[\]]+)\]")
 _NUMERIC_FACT_PATTERN = re.compile(r"(?<![\w-])\d+(?:[.,]\d+)*(?![\w-])")
 _SENTENCE_BOUNDARY_PATTERN = re.compile(r"(?<!\d)[.!?]+(?!\d)|\n+")
+_MARKDOWN_ORDERED_LIST_PREFIX = re.compile(r"^\s*\d+[.)]\s+")
+_PARAGRAPH_BOUNDARY_PATTERN = re.compile(r"(\n\s*\n)")
 
 
 @dataclass(frozen=True, slots=True)
@@ -166,8 +168,9 @@ def validate_p5_citation_contract(
         source_ids = tuple(
             dict.fromkeys(value.group(1) for value in _SOURCE_MARKER_PATTERN.finditer(statement))
         )
-        statement_numbers = set(_numbers(_SOURCE_MARKER_PATTERN.sub("", statement)))
-        material = bool(statement_numbers) or any(
+        statement_numbers = set(_statement_numbers(statement))
+        asserted_numbers = statement_numbers - query_numbers
+        material = bool(asserted_numbers) or any(
             token in statement.casefold()
             for token in ("reports", "states", "source", "nguồn", "tài liệu", "mâu thuẫn")
         )
@@ -231,6 +234,44 @@ def validate_p5_citation_contract(
     )
 
 
+def anchor_grouped_inline_citations(answer: str) -> str:
+    """Repeat one unambiguous block citation on each numeric Markdown line.
+
+    Models commonly cite the last bullet in a compact list even when every
+    bullet came from the same source.  A block containing exactly one source
+    marker is unambiguous, so repeating that marker on the other numeric lines
+    preserves fail-closed validation without guessing across sources.
+    """
+
+    repaired_parts: list[str] = []
+    for part in _PARAGRAPH_BOUNDARY_PATTERN.split(answer):
+        if not part or _PARAGRAPH_BOUNDARY_PATTERN.fullmatch(part):
+            repaired_parts.append(part)
+            continue
+        source_ids = tuple(
+            dict.fromkeys(match.group(1) for match in _SOURCE_MARKER_PATTERN.finditer(part))
+        )
+        if len(source_ids) != 1:
+            repaired_parts.append(part)
+            continue
+        marker = f"[{source_ids[0]}]"
+        repaired_lines: list[str] = []
+        for line in part.splitlines(keepends=True):
+            body = line.rstrip("\r\n")
+            ending = line[len(body) :]
+            if marker not in body and _statement_numbers(body):
+                body = f"{body.rstrip()} {marker}"
+            repaired_lines.append(body + ending)
+        repaired_parts.append("".join(repaired_lines))
+    return "".join(repaired_parts)
+
+
+def _statement_numbers(value: str) -> tuple[str, ...]:
+    without_markers = _SOURCE_MARKER_PATTERN.sub("", value)
+    without_list_ordinal = _MARKDOWN_ORDERED_LIST_PREFIX.sub("", without_markers)
+    return _numbers(without_list_ordinal)
+
+
 def _numbers(value: str) -> tuple[str, ...]:
     return tuple(
         match.group(0).replace(",", ".") for match in _NUMERIC_FACT_PATTERN.finditer(value)
@@ -241,6 +282,7 @@ __all__ = [
     "CitationValidationError",
     "P5CitationDiagnostics",
     "build_evidence_aliases",
+    "anchor_grouped_inline_citations",
     "validate_answer_citations",
     "validate_citation_hit",
     "validate_p5_citation_contract",

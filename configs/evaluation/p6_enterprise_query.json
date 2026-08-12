@@ -1,0 +1,49 @@
+{
+  "version": "p6-enterprise-query-evaluation-v1",
+  "status": "frozen",
+  "rollout_default": "shadow",
+  "query_policy_version": "p6-query-context-v1",
+  "evidence_policy_version": "p6-enterprise-evidence-v1",
+  "relation_policy_version": "p4-relation-retrieval-v1",
+  "generation_contract_version": "p5-generation-evidence-v1",
+  "retrieval": {
+    "top_k": 10,
+    "production_top_k": 6,
+    "mmr_lambda": 0.7,
+    "max_chunks_per_document": 2,
+    "max_near_duplicate_representatives": 1
+  },
+  "context": {
+    "max_evidence_items": 10,
+    "max_characters": 12000,
+    "characters_per_token": 4.0
+  },
+  "targets": {
+    "evidence_recall_at_10": 0.95,
+    "requested_year_coverage": 0.98,
+    "temporal_coverage_recall": 0.98,
+    "followup_resolution_accuracy": 0.98,
+    "value_bearing_evidence_recall": 0.95,
+    "historical_selection_accuracy": 0.98,
+    "current_version_accuracy": 0.98,
+    "conditional_selection_accuracy": 0.98,
+    "conflict_preservation_recall": 1.0,
+    "permission_leakage": 0.0
+  },
+  "test_execution_policy": {
+    "maximum_runs": 1,
+    "immutable_reports": true,
+    "tune_after_test": false
+  },
+  "frozen_at_utc": "2026-08-12T12:00:00Z",
+  "frozen_inputs_sha256": {
+    "datasets/rag_p6/enterprise_p6_queries_v1_test.jsonl": "12497101FE466F14ACEEAF9CDACE56558D8E72C7F45CA108716955B3170604BA",
+    "app/retrieval/application/query_context.py": "0522D61F28B71B7D93E4260EAC9D8ED0C53C3885953DF5BEF5A90E4B02A6F3F8",
+    "app/retrieval/application/conversation_query.py": "5CD375D58ECFBB665147E2B98CDA368D3BE1F7BAFCEA72CFDAC6BEC005DC81BD",
+    "app/retrieval/application/enterprise_evidence.py": "5FC688D7B1A7A18C9682DBD41B5ABBDCFBA7E5ADE6FCC8CB36A162C58FD17DF9",
+    "app/generation/application/enterprise_context.py": "35854E490179E3E95EBB0AC125845C0A4EB38521EF3161927E5BC5E0DF553BEF",
+    "app/retrieval/adapters/postgrest_relation_metadata.py": "8C0EBF4AA92B0D8E93F0D40C2B969A2FDD84F61D2B15DA57702E196B20ACB55F",
+    "supabase/migrations/37_enterprise_query_time_p6.sql": "0E9649CD478B3A0B87877E090638E31EB1136FDAA36A7B04B89021052C964389",
+    "evaluation/rag_p6/evaluate.py": "FB8A279A1999A161C2F52E0269543A9817872BA5FA554E3B964212D4576C9527"
+  }
+}

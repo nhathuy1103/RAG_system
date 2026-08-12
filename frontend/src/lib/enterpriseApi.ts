@@ -331,6 +331,8 @@ export interface EnterpriseCitation {
   document_version_id: string;
   document_title: string;
   chunk_id: string;
+  citation_order?: number;
+  quote_text?: string;
   page: number | null;
   section: string | null;
 }
@@ -755,6 +757,11 @@ export const getProcessingJob = (jobId: string) =>
 export const retryProcessingJob = (jobId: string) =>
   enterpriseFetch<ProcessingJob>(`/api/v1/processing-jobs/${jobId}/retry`, { method: "POST" });
 
+export const queueEnterpriseQualityReprocess = (documentId: string) =>
+  enterpriseFetch<ProcessingJob>(`/api/v1/documents/${documentId}/quality/reprocess`, {
+    method: "POST",
+  });
+
 export const searchKnowledge = (query: string, filters: Record<string, unknown> = {}) =>
   enterpriseFetch<{ items: Array<{
     chunk_id: string;
@@ -883,6 +890,8 @@ export interface EnterpriseDocumentRelation {
   created_at: string;
   updated_at: string;
   resolution_action: EnterpriseDocumentRelationAction | null;
+  source_document_title?: string | null;
+  target_document_title?: string | null;
 }
 
 export interface EnterpriseDocumentRelationEvidence {
@@ -905,95 +914,23 @@ export interface EnterpriseDocumentRelationEvidence {
   }>;
 }
 
-const ENTERPRISE_RELATION_STORAGE_KEY = "enterprise-document-relations-demo-v4";
 export const ENTERPRISE_RELATIONS_UPDATED_EVENT = "enterprise-relations-updated";
 
-const enterpriseRelationSeed: EnterpriseDocumentRelation[] = [
-  {
-    id: "mock-rel-1",
-    source_document_id: "doc-1",
-    target_document_id: "doc-2",
-    relation_type: "conflict",
-    status: "pending",
-    confidence: 0.95,
-    reason: null,
-    created_at: "2026-08-10T16:27:28.000Z",
-    updated_at: "2026-08-10T16:27:28.000Z",
-    resolution_action: null,
-  },
-  {
-    id: "mock-rel-2",
-    source_document_id: "doc-3",
-    target_document_id: "doc-4",
-    relation_type: "near_duplicate",
-    status: "pending",
-    confidence: 0.88,
-    reason: null,
-    created_at: "2026-08-09T16:27:28.000Z",
-    updated_at: "2026-08-09T16:27:28.000Z",
-    resolution_action: null,
-  },
-];
+export interface EnterpriseDocumentRelationList {
+  items: EnterpriseDocumentRelation[];
+  total_count: number;
+  limit: number;
+  offset: number;
+}
 
-let enterpriseRelationMemory = enterpriseRelationSeed.map((item) => ({ ...item }));
-
-function isEnterpriseRelation(value: unknown): value is EnterpriseDocumentRelation {
-  if (!value || typeof value !== "object") return false;
-  const relation = value as Partial<EnterpriseDocumentRelation>;
-  return (
-    typeof relation.id === "string"
-    && typeof relation.source_document_id === "string"
-    && typeof relation.target_document_id === "string"
-    && typeof relation.relation_type === "string"
-    && typeof relation.status === "string"
-    && typeof relation.confidence === "number"
-    && typeof relation.created_at === "string"
+export async function listEnterpriseRelations(
+  status?: EnterpriseDocumentRelationStatus,
+): Promise<EnterpriseDocumentRelationList> {
+  const params = new URLSearchParams({ limit: "200", offset: "0" });
+  if (status) params.set("status", status);
+  return enterpriseFetch<EnterpriseDocumentRelationList>(
+    `/api/v1/quality/relations?${params.toString()}`,
   );
-}
-
-function readEnterpriseRelations(): EnterpriseDocumentRelation[] {
-  if (typeof window === "undefined") {
-    return enterpriseRelationMemory.map((item) => ({ ...item }));
-  }
-  try {
-    const stored = window.localStorage.getItem(ENTERPRISE_RELATION_STORAGE_KEY);
-    if (stored) {
-      const parsed: unknown = JSON.parse(stored);
-      if (Array.isArray(parsed) && parsed.every(isEnterpriseRelation)) {
-        enterpriseRelationMemory = parsed.map((item) => ({
-          ...item,
-          updated_at: item.updated_at || item.created_at,
-          resolution_action: item.resolution_action || null,
-        }));
-        return enterpriseRelationMemory.map((item) => ({ ...item }));
-      }
-    }
-    window.localStorage.setItem(
-      ENTERPRISE_RELATION_STORAGE_KEY,
-      JSON.stringify(enterpriseRelationMemory),
-    );
-  } catch {
-    // The in-memory copy still keeps the demo usable when storage is blocked.
-  }
-  return enterpriseRelationMemory.map((item) => ({ ...item }));
-}
-
-function writeEnterpriseRelations(relations: EnterpriseDocumentRelation[]) {
-  enterpriseRelationMemory = relations.map((item) => ({ ...item }));
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(
-      ENTERPRISE_RELATION_STORAGE_KEY,
-      JSON.stringify(enterpriseRelationMemory),
-    );
-  } catch {
-    // Keep the decision in memory for storage-restricted browser sessions.
-  }
-  window.dispatchEvent(new Event(ENTERPRISE_RELATIONS_UPDATED_EVENT));
-}
-
-export async function listEnterpriseRelations(): Promise<{ items: EnterpriseDocumentRelation[] }> {
-  return { items: readEnterpriseRelations() };
 }
 
 export interface EnterpriseTextComparison {
@@ -1419,69 +1356,34 @@ export async function compareEnterpriseTexts(
 }
 
 export async function getEnterpriseRelationEvidence(relationId: string): Promise<EnterpriseDocumentRelationEvidence> {
-  return {
-    relation_id: relationId,
-    source_document: {
-      id: "doc-1",
-      title: "Chính sách nhân sự 2024.pdf",
-      version_number: 2,
-      text_content: "Công ty hỗ trợ 100% chi phí ăn trưa cho nhân viên khối văn phòng. Phụ cấp đi lại là 500k/tháng.",
-    },
-    target_document: {
-      id: "doc-2",
-      title: "Quy định phụ cấp 2024.docx",
-      version_number: 1,
-      text_content: "Công ty hỗ trợ 50% chi phí ăn trưa cho nhân viên khối văn phòng. Phụ cấp đi lại là 300k/tháng.",
-    },
-    overlaps: [
-      {
-        source_text: "100% chi phí ăn trưa ... 500k/tháng",
-        target_text: "50% chi phí ăn trưa ... 300k/tháng",
-      }
-    ]
-  };
+  return enterpriseFetch<EnterpriseDocumentRelationEvidence>(
+    `/api/v1/quality/relations/${relationId}/evidence`,
+  );
 }
 
 export async function resolveEnterpriseRelation(
   relationId: string,
   action: EnterpriseDocumentRelationAction,
   reason: string,
+  expectedUpdatedAt?: string,
 ): Promise<EnterpriseDocumentRelation> {
-  const relations = readEnterpriseRelations();
-  const current = relations.find((relation) => relation.id === relationId);
-  if (!current) throw new Error("Không tìm thấy vấn đề cần xử lý.");
-  if (current.status !== "pending" && current.status !== "deferred") {
-    throw new Error("Vấn đề này đã được xử lý. Hãy tải lại danh sách trước khi quyết định.");
-  }
-
   const normalizedReason = reason.trim();
   if (action !== "defer_review" && !normalizedReason) {
     throw new Error("Vui lòng nhập lý do cho quyết định.");
   }
-
-  let relationType = current.relation_type;
-  let status: EnterpriseDocumentRelationStatus = "confirmed";
-  if (action === "confirm_duplicate") relationType = "exact_content";
-  if (action === "mark_version") relationType = "version";
-  if (["confirm_conflict", "prefer_source", "prefer_target"].includes(action)) {
-    relationType = "conflict";
-  }
-  if (action === "keep_separate") relationType = "distinct";
-  if (action === "dismiss") status = "dismissed";
-  if (action === "defer_review") status = "deferred";
-
-  const updated: EnterpriseDocumentRelation = {
-    ...current,
-    relation_type: relationType,
-    status,
-    reason: action === "defer_review"
-      ? normalizedReason || "Người dùng chọn xử lý sau."
-      : normalizedReason,
-    updated_at: new Date().toISOString(),
-    resolution_action: action,
-  };
-  writeEnterpriseRelations(
-    relations.map((relation) => (relation.id === relationId ? updated : relation)),
+  const updated = await enterpriseFetch<EnterpriseDocumentRelation>(
+    `/api/v1/quality/relations/${relationId}/resolve`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        action,
+        reason: normalizedReason || null,
+        expected_updated_at: expectedUpdatedAt || null,
+      }),
+    },
   );
-  return { ...updated };
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(ENTERPRISE_RELATIONS_UPDATED_EVENT));
+  }
+  return updated;
 }

@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:rag-system:duplicate-conflict-benchmark-v2",
+  "title": "Provenance-first duplicate/conflict benchmark pair",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "pair_id", "split", "domain", "category", "expected_relation", "variation_type", "side_a", "side_b", "invariants", "critical_conflict", "conflict_fields", "difficulty", "provenance_kind", "is_synthetic", "mutation", "annotation", "diagnostic_hints", "source_documents", "source_family_ids", "expected_auto_reuse", "distinct_justification", "temporal_overlap_justification"],
+  "properties": {
+    "schema_version": {"const": "duplicate-conflict-benchmark-v2"},
+    "pair_id": {"type": "string", "pattern": "^DCV2_(DEV|TEST)_[0-9]{4}$"},
+    "split": {"enum": ["dev", "test"]},
+    "domain": {"enum": ["real_estate", "mobility_safety", "cross_domain"]},
+    "category": {"type": "string", "minLength": 1},
+    "expected_relation": {"enum": ["EXACT_DUPLICATE", "NEAR_DUPLICATE", "VERSION_UPDATE", "TEMPORAL_VARIANT", "CONDITIONAL_VARIANT", "TEMPLATE_VARIANT", "CONFLICT", "DISTINCT", "UNCERTAIN"]},
+    "variation_type": {"type": "string", "minLength": 1},
+    "side_a": {"$ref": "#/$defs/side"},
+    "side_b": {"$ref": "#/$defs/side"},
+    "invariants": {"$ref": "#/$defs/invariants"},
+    "critical_conflict": {"type": "boolean"},
+    "conflict_fields": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "difficulty": {"enum": ["easy", "medium", "hard"]},
+    "provenance_kind": {"enum": ["observed", "controlled_mutation"]},
+    "is_synthetic": {"type": "boolean"},
+    "mutation": {"$ref": "#/$defs/mutation_or_null"},
+    "annotation": {"$ref": "#/$defs/annotation"},
+    "diagnostic_hints": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "source_documents": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true},
+    "source_family_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}, "uniqueItems": true},
+    "expected_auto_reuse": {"type": "boolean"},
+    "distinct_justification": {"type": ["string", "null"]},
+    "temporal_overlap_justification": {"type": ["string", "null"]}
+  },
+  "$defs": {
+    "side": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text", "source_evidence_id", "source_form", "context", "representation", "extraction_reliability"],
+      "properties": {
+        "text": {"type": "string", "minLength": 1},
+        "source_evidence_id": {"type": "string", "minLength": 1},
+        "source_form": {"enum": ["prose", "table"]},
+        "context": {"type": "array", "items": {"type": "string"}},
+        "representation": {"enum": ["observed", "controlled_mutation"]},
+        "extraction_reliability": {"enum": ["high", "medium", "low"]}
+      }
+    },
+    "invariants": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["same_entity", "same_business_scope", "same_temporal_scope", "same_claim", "same_value"],
+      "properties": {
+        "same_entity": {"type": "boolean"},
+        "same_business_scope": {"type": "boolean"},
+        "same_temporal_scope": {"type": "boolean"},
+        "same_claim": {"type": "boolean"},
+        "same_value": {"type": "boolean"}
+      }
+    },
+    "mutation_or_null": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["operator", "target_side", "parent_evidence_id", "changed_fields", "factual_change"],
+          "properties": {
+            "operator": {"type": "string", "minLength": 1},
+            "target_side": {"enum": ["a", "b"]},
+            "parent_evidence_id": {"type": "string", "minLength": 1},
+            "changed_fields": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+            "factual_change": {"type": "boolean"},
+            "before": {"type": "string"},
+            "after": {"type": "string"}
+          }
+        }
+      ]
+    },
+    "annotation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "rationale", "decisive_evidence", "independent_human_reviews"],
+      "properties": {
+        "status": {"const": "provisional_gold"},
+        "rationale": {"type": "string", "minLength": 1},
+        "decisive_evidence": {"type": "array", "minItems": 2, "items": {"type": "string"}},
+        "independent_human_reviews": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}

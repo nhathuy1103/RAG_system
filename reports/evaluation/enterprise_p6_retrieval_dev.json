@@ -1,0 +1,48 @@
+{
+  "split": "dev",
+  "dataset_count": 160,
+  "category_counts": {
+    "simple_factual": 10,
+    "historical_explicit_year": 10,
+    "current_latest": 10,
+    "temporal_comparison": 10,
+    "followup_year_override": 10,
+    "followup_qualifier_override": 10,
+    "duplicate_heavy": 10,
+    "methodology_vs_value": 10,
+    "version_comparison": 10,
+    "conflict": 10,
+    "conditional_variant": 10,
+    "uncertain_evidence": 10,
+    "table_fact": 10,
+    "prose_fact": 10,
+    "multi_document_comparison": 10,
+    "permission_sensitive": 10
+  },
+  "config_sha256": "96EB0F3909DF735861F147EBD78516F6F9E86CF820F1F3E158203AAF57A9B19D",
+  "metrics": {
+    "evidence_recall_at_10": 1.0,
+    "evidence_precision_at_10": 0.6979166666666667,
+    "temporal_coverage_recall": 1.0,
+    "requested_year_coverage": 1.0,
+    "followup_resolution_accuracy": 1.0,
+    "value_bearing_evidence_recall": 1.0,
+    "historical_selection_accuracy": 1.0,
+    "current_version_accuracy": 1.0,
+    "conditional_selection_accuracy": 1.0,
+    "conflict_preservation_recall": 1.0,
+    "permission_leakage": 0,
+    "citation_support_accuracy": 1.0,
+    "provenance_retention": 1.0,
+    "duplicate_slot_waste_baseline": 0.75,
+    "duplicate_slot_waste_p6": 0.0
+  },
+  "latency_ms": {
+    "controlled_pre_llm_mean": 0.743531875,
+    "controlled_pre_llm_p50": 0.6955,
+    "controlled_pre_llm_p95": 1.0154,
+    "production_db_explain": "not_executed"
+  },
+  "failures": [],
+  "test_policy": "DEV tuning allowed"
+}

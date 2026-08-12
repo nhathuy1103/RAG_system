@@ -1,0 +1,1551 @@
+{
+  "gold_file": "/workspace/scratch/9db5c89b1a2e/duplicate_conflict_benchmark_v2/data/benchmark_test.jsonl",
+  "overall": {
+    "count": 68,
+    "accuracy": 0.588235,
+    "macro_f1_supported": 0.303623,
+    "supported_labels": [
+      "EXACT_DUPLICATE",
+      "NEAR_DUPLICATE",
+      "VERSION_UPDATE",
+      "TEMPORAL_VARIANT",
+      "CONDITIONAL_VARIANT",
+      "TEMPLATE_VARIANT",
+      "CONFLICT",
+      "DISTINCT",
+      "UNCERTAIN"
+    ],
+    "per_class": {
+      "EXACT_DUPLICATE": {
+        "precision": 0.8,
+        "recall": 1.0,
+        "f1": 0.888889,
+        "support": 16
+      },
+      "NEAR_DUPLICATE": {
+        "precision": 0.705882,
+        "recall": 1.0,
+        "f1": 0.827586,
+        "support": 12
+      },
+      "VERSION_UPDATE": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 4
+      },
+      "TEMPORAL_VARIANT": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 8
+      },
+      "CONDITIONAL_VARIANT": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 4
+      },
+      "TEMPLATE_VARIANT": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 4
+      },
+      "CONFLICT": {
+        "precision": 0.5,
+        "recall": 0.5,
+        "f1": 0.5,
+        "support": 8
+      },
+      "DISTINCT": {
+        "precision": 0.347826,
+        "recall": 1.0,
+        "f1": 0.516129,
+        "support": 8
+      },
+      "UNCERTAIN": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "support": 4
+      }
+    },
+    "confusion_matrix": {
+      "EXACT_DUPLICATE": {
+        "EXACT_DUPLICATE": 16,
+        "NEAR_DUPLICATE": 0,
+        "VERSION_UPDATE": 0,
+        "TEMPORAL_VARIANT": 0,
+        "CONDITIONAL_VARIANT": 0,
+        "TEMPLATE_VARIANT": 0,
+        "CONFLICT": 0,
+        "DISTINCT": 0,
+        "UNCERTAIN": 0
+      },
+      "NEAR_DUPLICATE": {
+        "EXACT_DUPLICATE": 0,
+        "NEAR_DUPLICATE": 12,
+        "VERSION_UPDATE": 0,
+        "TEMPORAL_VARIANT": 0,
+        "CONDITIONAL_VARIANT": 0,
+        "TEMPLATE_VARIANT": 0,
+        "CONFLICT": 0,
+        "DISTINCT": 0,
+        "UNCERTAIN": 0
+      },
+      "VERSION_UPDATE": {
+        "EXACT_DUPLICATE": 0,
+        "NEAR_DUPLICATE": 0,
+        "VERSION_UPDATE": 0,
+        "TEMPORAL_VARIANT": 0,
+        "CONDITIONAL_VARIANT": 0,
+        "TEMPLATE_VARIANT": 0,
+        "CONFLICT": 0,
+        "DISTINCT": 4,
+        "UNCERTAIN": 0
+      },
+      "TEMPORAL_VARIANT": {
+        "EXACT_DUPLICATE": 0,
+        "NEAR_DUPLICATE": 0,
+        "VERSION_UPDATE": 0,
+        "TEMPORAL_VARIANT": 0,
+        "CONDITIONAL_VARIANT": 0,
+        "TEMPLATE_VARIANT": 0,
+        "CONFLICT": 4,
+        "DISTINCT": 4,
+        "UNCERTAIN": 0
+      },
+      "CONDITIONAL_VARIANT": {
+        "EXACT_DUPLICATE": 0,
+        "NEAR_DUPLICATE": 4,
+        "VERSION_UPDATE": 0,
+        "TEMPORAL_VARIANT": 0,
+        "CONDITIONAL_VARIANT": 0,
+        "TEMPLATE_VARIANT": 0,
+        "CONFLICT": 0,
+        "DISTINCT": 0,
+        "UNCERTAIN": 0
+      },
+      "TEMPLATE_VARIANT": {
+        "EXACT_DUPLICATE": 4,
+        "NEAR_DUPLICATE": 0,
+        "VERSION_UPDATE": 0,
+        "TEMPORAL_VARIANT": 0,
+        "CONDITIONAL_VARIANT": 0,
+        "TEMPLATE_VARIANT": 0,
+        "CONFLICT": 0,
+        "DISTINCT": 0,
+        "UNCERTAIN": 0
+      },
+      "CONFLICT": {
+        "EXACT_DUPLICATE": 0,
+        "NEAR_DUPLICATE": 0,
+        "VERSION_UPDATE": 0,
+        "TEMPORAL_VARIANT": 0,
+        "CONDITIONAL_VARIANT": 0,
+        "TEMPLATE_VARIANT": 0,
+        "CONFLICT": 4,
+        "DISTINCT": 4,
+        "UNCERTAIN": 0
+      },
+      "DISTINCT": {
+        "EXACT_DUPLICATE": 0,
+        "NEAR_DUPLICATE": 0,
+        "VERSION_UPDATE": 0,
+        "TEMPORAL_VARIANT": 0,
+        "CONDITIONAL_VARIANT": 0,
+        "TEMPLATE_VARIANT": 0,
+        "CONFLICT": 0,
+        "DISTINCT": 8,
+        "UNCERTAIN": 0
+      },
+      "UNCERTAIN": {
+        "EXACT_DUPLICATE": 0,
+        "NEAR_DUPLICATE": 1,
+        "VERSION_UPDATE": 0,
+        "TEMPORAL_VARIANT": 0,
+        "CONDITIONAL_VARIANT": 0,
+        "TEMPLATE_VARIANT": 0,
+        "CONFLICT": 0,
+        "DISTINCT": 3,
+        "UNCERTAIN": 0
+      }
+    }
+  },
+  "safety": {
+    "auto_reuse_precision": 0.8,
+    "auto_reuse_precision_95ci": [
+      0.583978,
+      0.919344
+    ],
+    "unsafe_auto_reuse_count": 4,
+    "unsafe_auto_reuse_rate_all": 0.058824,
+    "conflict_recall": 0.5,
+    "conflict_recall_95ci": [
+      0.215213,
+      0.784787
+    ],
+    "missed_conflict_count": 4,
+    "false_conflict_count": 4,
+    "false_conflict_rate_predicted": 0.5
+  },
+  "by_provenance": {
+    "controlled_mutation": {
+      "count": 28,
+      "accuracy": 0.428571,
+      "macro_f1_supported": 0.361111,
+      "supported_labels": [
+        "EXACT_DUPLICATE",
+        "NEAR_DUPLICATE",
+        "VERSION_UPDATE",
+        "TEMPORAL_VARIANT",
+        "CONDITIONAL_VARIANT",
+        "CONFLICT"
+      ],
+      "per_class": {
+        "EXACT_DUPLICATE": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 4
+        },
+        "NEAR_DUPLICATE": {
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.666667,
+          "support": 4
+        },
+        "VERSION_UPDATE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 4
+        },
+        "TEMPORAL_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 4
+        },
+        "CONDITIONAL_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 4
+        },
+        "TEMPLATE_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "CONFLICT": {
+          "precision": 0.5,
+          "recall": 0.5,
+          "f1": 0.5,
+          "support": 8
+        },
+        "DISTINCT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "UNCERTAIN": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        }
+      },
+      "confusion_matrix": {
+        "EXACT_DUPLICATE": {
+          "EXACT_DUPLICATE": 4,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "NEAR_DUPLICATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 4,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "VERSION_UPDATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 4,
+          "UNCERTAIN": 0
+        },
+        "TEMPORAL_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 4,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "CONDITIONAL_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 4,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "TEMPLATE_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "CONFLICT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 4,
+          "DISTINCT": 4,
+          "UNCERTAIN": 0
+        },
+        "DISTINCT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "UNCERTAIN": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        }
+      }
+    },
+    "observed": {
+      "count": 40,
+      "accuracy": 0.7,
+      "macro_f1_supported": 0.415662,
+      "supported_labels": [
+        "EXACT_DUPLICATE",
+        "NEAR_DUPLICATE",
+        "TEMPORAL_VARIANT",
+        "TEMPLATE_VARIANT",
+        "DISTINCT",
+        "UNCERTAIN"
+      ],
+      "per_class": {
+        "EXACT_DUPLICATE": {
+          "precision": 0.75,
+          "recall": 1.0,
+          "f1": 0.857143,
+          "support": 12
+        },
+        "NEAR_DUPLICATE": {
+          "precision": 0.888889,
+          "recall": 1.0,
+          "f1": 0.941176,
+          "support": 8
+        },
+        "VERSION_UPDATE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "TEMPORAL_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 4
+        },
+        "CONDITIONAL_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "TEMPLATE_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 4
+        },
+        "CONFLICT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "DISTINCT": {
+          "precision": 0.533333,
+          "recall": 1.0,
+          "f1": 0.695652,
+          "support": 8
+        },
+        "UNCERTAIN": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 4
+        }
+      },
+      "confusion_matrix": {
+        "EXACT_DUPLICATE": {
+          "EXACT_DUPLICATE": 12,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "NEAR_DUPLICATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 8,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "VERSION_UPDATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "TEMPORAL_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 4,
+          "UNCERTAIN": 0
+        },
+        "CONDITIONAL_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "TEMPLATE_VARIANT": {
+          "EXACT_DUPLICATE": 4,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "CONFLICT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "DISTINCT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 8,
+          "UNCERTAIN": 0
+        },
+        "UNCERTAIN": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 1,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 3,
+          "UNCERTAIN": 0
+        }
+      }
+    }
+  },
+  "by_difficulty": {
+    "easy": {
+      "count": 16,
+      "accuracy": 1.0,
+      "macro_f1_supported": 1.0,
+      "supported_labels": [
+        "EXACT_DUPLICATE"
+      ],
+      "per_class": {
+        "EXACT_DUPLICATE": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 16
+        },
+        "NEAR_DUPLICATE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "VERSION_UPDATE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "TEMPORAL_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "CONDITIONAL_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "TEMPLATE_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "CONFLICT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "DISTINCT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "UNCERTAIN": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        }
+      },
+      "confusion_matrix": {
+        "EXACT_DUPLICATE": {
+          "EXACT_DUPLICATE": 16,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "NEAR_DUPLICATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "VERSION_UPDATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "TEMPORAL_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "CONDITIONAL_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "TEMPLATE_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "CONFLICT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "DISTINCT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "UNCERTAIN": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        }
+      }
+    },
+    "hard": {
+      "count": 28,
+      "accuracy": 0.285714,
+      "macro_f1_supported": 0.181287,
+      "supported_labels": [
+        "TEMPORAL_VARIANT",
+        "CONDITIONAL_VARIANT",
+        "TEMPLATE_VARIANT",
+        "CONFLICT",
+        "DISTINCT",
+        "UNCERTAIN"
+      ],
+      "per_class": {
+        "EXACT_DUPLICATE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "NEAR_DUPLICATE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "VERSION_UPDATE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "TEMPORAL_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 4
+        },
+        "CONDITIONAL_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 4
+        },
+        "TEMPLATE_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 4
+        },
+        "CONFLICT": {
+          "precision": 1.0,
+          "recall": 0.5,
+          "f1": 0.666667,
+          "support": 8
+        },
+        "DISTINCT": {
+          "precision": 0.266667,
+          "recall": 1.0,
+          "f1": 0.421053,
+          "support": 4
+        },
+        "UNCERTAIN": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 4
+        }
+      },
+      "confusion_matrix": {
+        "EXACT_DUPLICATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "NEAR_DUPLICATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "VERSION_UPDATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "TEMPORAL_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 4,
+          "UNCERTAIN": 0
+        },
+        "CONDITIONAL_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 4,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "TEMPLATE_VARIANT": {
+          "EXACT_DUPLICATE": 4,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "CONFLICT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 4,
+          "DISTINCT": 4,
+          "UNCERTAIN": 0
+        },
+        "DISTINCT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 4,
+          "UNCERTAIN": 0
+        },
+        "UNCERTAIN": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 1,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 3,
+          "UNCERTAIN": 0
+        }
+      }
+    },
+    "medium": {
+      "count": 24,
+      "accuracy": 0.666667,
+      "macro_f1_supported": 0.416667,
+      "supported_labels": [
+        "NEAR_DUPLICATE",
+        "VERSION_UPDATE",
+        "TEMPORAL_VARIANT",
+        "DISTINCT"
+      ],
+      "per_class": {
+        "EXACT_DUPLICATE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "NEAR_DUPLICATE": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 12
+        },
+        "VERSION_UPDATE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 4
+        },
+        "TEMPORAL_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 4
+        },
+        "CONDITIONAL_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "TEMPLATE_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "CONFLICT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "DISTINCT": {
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.666667,
+          "support": 4
+        },
+        "UNCERTAIN": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        }
+      },
+      "confusion_matrix": {
+        "EXACT_DUPLICATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "NEAR_DUPLICATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 12,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "VERSION_UPDATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 4,
+          "UNCERTAIN": 0
+        },
+        "TEMPORAL_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 4,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "CONDITIONAL_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "TEMPLATE_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "CONFLICT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "DISTINCT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 4,
+          "UNCERTAIN": 0
+        },
+        "UNCERTAIN": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        }
+      }
+    }
+  },
+  "by_source_form": {
+    "prose->prose": {
+      "count": 16,
+      "accuracy": 0.75,
+      "macro_f1_supported": 0.555556,
+      "supported_labels": [
+        "EXACT_DUPLICATE",
+        "TEMPLATE_VARIANT",
+        "DISTINCT"
+      ],
+      "per_class": {
+        "EXACT_DUPLICATE": {
+          "precision": 0.5,
+          "recall": 1.0,
+          "f1": 0.666667,
+          "support": 4
+        },
+        "NEAR_DUPLICATE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "VERSION_UPDATE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "TEMPORAL_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "CONDITIONAL_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "TEMPLATE_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 4
+        },
+        "CONFLICT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "DISTINCT": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 8
+        },
+        "UNCERTAIN": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        }
+      },
+      "confusion_matrix": {
+        "EXACT_DUPLICATE": {
+          "EXACT_DUPLICATE": 4,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "NEAR_DUPLICATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "VERSION_UPDATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "TEMPORAL_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "CONDITIONAL_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "TEMPLATE_VARIANT": {
+          "EXACT_DUPLICATE": 4,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "CONFLICT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "DISTINCT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 8,
+          "UNCERTAIN": 0
+        },
+        "UNCERTAIN": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        }
+      }
+    },
+    "prose->table": {
+      "count": 4,
+      "accuracy": 1.0,
+      "macro_f1_supported": 1.0,
+      "supported_labels": [
+        "NEAR_DUPLICATE"
+      ],
+      "per_class": {
+        "EXACT_DUPLICATE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "NEAR_DUPLICATE": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 4
+        },
+        "VERSION_UPDATE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "TEMPORAL_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "CONDITIONAL_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "TEMPLATE_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "CONFLICT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "DISTINCT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "UNCERTAIN": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        }
+      },
+      "confusion_matrix": {
+        "EXACT_DUPLICATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "NEAR_DUPLICATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 4,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "VERSION_UPDATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "TEMPORAL_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "CONDITIONAL_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "TEMPLATE_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "CONFLICT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "DISTINCT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "UNCERTAIN": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        }
+      }
+    },
+    "table->table": {
+      "count": 48,
+      "accuracy": 0.5,
+      "macro_f1_supported": 0.323129,
+      "supported_labels": [
+        "EXACT_DUPLICATE",
+        "NEAR_DUPLICATE",
+        "VERSION_UPDATE",
+        "TEMPORAL_VARIANT",
+        "CONDITIONAL_VARIANT",
+        "CONFLICT",
+        "UNCERTAIN"
+      ],
+      "per_class": {
+        "EXACT_DUPLICATE": {
+          "precision": 1.0,
+          "recall": 1.0,
+          "f1": 1.0,
+          "support": 12
+        },
+        "NEAR_DUPLICATE": {
+          "precision": 0.615385,
+          "recall": 1.0,
+          "f1": 0.761905,
+          "support": 8
+        },
+        "VERSION_UPDATE": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 4
+        },
+        "TEMPORAL_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 8
+        },
+        "CONDITIONAL_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 4
+        },
+        "TEMPLATE_VARIANT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "CONFLICT": {
+          "precision": 0.5,
+          "recall": 0.5,
+          "f1": 0.5,
+          "support": 8
+        },
+        "DISTINCT": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 0
+        },
+        "UNCERTAIN": {
+          "precision": 0.0,
+          "recall": 0.0,
+          "f1": 0.0,
+          "support": 4
+        }
+      },
+      "confusion_matrix": {
+        "EXACT_DUPLICATE": {
+          "EXACT_DUPLICATE": 12,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "NEAR_DUPLICATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 8,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "VERSION_UPDATE": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 4,
+          "UNCERTAIN": 0
+        },
+        "TEMPORAL_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 4,
+          "DISTINCT": 4,
+          "UNCERTAIN": 0
+        },
+        "CONDITIONAL_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 4,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "TEMPLATE_VARIANT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "CONFLICT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 4,
+          "DISTINCT": 4,
+          "UNCERTAIN": 0
+        },
+        "DISTINCT": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 0,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 0,
+          "UNCERTAIN": 0
+        },
+        "UNCERTAIN": {
+          "EXACT_DUPLICATE": 0,
+          "NEAR_DUPLICATE": 1,
+          "VERSION_UPDATE": 0,
+          "TEMPORAL_VARIANT": 0,
+          "CONDITIONAL_VARIANT": 0,
+          "TEMPLATE_VARIANT": 0,
+          "CONFLICT": 0,
+          "DISTINCT": 3,
+          "UNCERTAIN": 0
+        }
+      }
+    }
+  },
+  "prediction_distribution": {
+    "CONFLICT": 8,
+    "DISTINCT": 23,
+    "EXACT_DUPLICATE": 20,
+    "NEAR_DUPLICATE": 17
+  }
+}

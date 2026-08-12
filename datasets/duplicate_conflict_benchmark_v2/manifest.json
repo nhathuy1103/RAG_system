@@ -1,0 +1,151 @@
+{
+  "benchmark_version": "duplicate-conflict-benchmark-v2",
+  "build_id": "dc-benchmark-v2-20260812",
+  "source_repository": {
+    "url": "https://github.com/nhathuy1103/RAG_system",
+    "reviewed_commit": "0ad16adb577bf52c7ff5396ef55f1bacd6eae5c7",
+    "compatibility_note": "V2 preserves the repository's nine relation labels but removes the V1 schema constraint is_synthetic=true."
+  },
+  "pair_count": 164,
+  "evidence_count": 165,
+  "relation_counts": {
+    "CONDITIONAL_VARIANT": 12,
+    "CONFLICT": 20,
+    "DISTINCT": 14,
+    "EXACT_DUPLICATE": 40,
+    "NEAR_DUPLICATE": 30,
+    "TEMPLATE_VARIANT": 10,
+    "TEMPORAL_VARIANT": 18,
+    "UNCERTAIN": 10,
+    "VERSION_UPDATE": 10
+  },
+  "split_counts": {
+    "dev": 96,
+    "test": 68
+  },
+  "provenance_counts": {
+    "controlled_mutation": 70,
+    "observed": 94
+  },
+  "source_documents": [
+    {
+      "document_id": "11_vinhomes_central_park",
+      "filename": "11_Vinhomes_Central_Park(1).docx",
+      "sha256": "8bd5b7b592baece1be1b1870e19150b6b530fca0f0e66c1ed938e25b586229e7",
+      "split": "dev",
+      "domain": "real_estate",
+      "title": "Vinhomes Central Park",
+      "raw_document_included": false
+    },
+    {
+      "document_id": "12_vinhomes_golden_river",
+      "filename": "12_Vinhomes_Golden_River(1).docx",
+      "sha256": "9c63f5d8cba01ea2c6c44f44aa0ba45cbcc8d1e623e985d2b3e86b6c6e6f07b8",
+      "split": "test",
+      "domain": "real_estate",
+      "title": "Vinhomes Golden River (Ba Son)",
+      "raw_document_included": false
+    },
+    {
+      "document_id": "13_vinhomes_green_paradise_can_gio",
+      "filename": "13_Vinhomes_Green_Paradise_Can_Gio(1).docx",
+      "sha256": "f6e5af2b31f74d9dcb2c86a3c1b77c62db6a09429cbe2a3d0f1e8c5e90183aab",
+      "split": "dev",
+      "domain": "real_estate",
+      "title": "Vinhomes Green Paradise Cần Giờ",
+      "raw_document_included": false
+    },
+    {
+      "document_id": "14_vinhomes_imperia_hai_phong",
+      "filename": "14_Vinhomes_Imperia_Hai_Phong(1).docx",
+      "sha256": "202bb418076897a22015ed6d73f66d3d5a51f9cf851a3b86ef4657fb35074c98",
+      "split": "dev",
+      "domain": "real_estate",
+      "title": "Vinhomes Imperia Hải Phòng",
+      "raw_document_included": false
+    },
+    {
+      "document_id": "14_he_thong_an_toan_s2s_2025_04_15",
+      "filename": "14_he_thong_an_toan_s2s_2025-04-15(1).docx",
+      "sha256": "0e6b07a731efc780a44603a30e9e586ca00b02be2ade6901d7d1687e7744926b",
+      "split": "test",
+      "domain": "mobility_safety",
+      "title": "Xanh SM triển khai hệ thống giám sát an toàn S2S",
+      "raw_document_included": false
+    },
+    {
+      "document_id": "15_vinhomes_marina_hai_phong",
+      "filename": "15_Vinhomes_Marina_Hai_Phong(1).docx",
+      "sha256": "6abdf2bc9704f776adc1ce959cfbfe7ef16437efb510aeb35f41e739f997419c",
+      "split": "test",
+      "domain": "real_estate",
+      "title": "Vinhomes Marina Hải Phòng",
+      "raw_document_included": false
+    },
+    {
+      "document_id": "16_vinhomes_royal_island",
+      "filename": "16_Vinhomes_Royal_Island(1).docx",
+      "sha256": "bc513e8972aa9ee44643f90ca59b421ec1b8d8075997ef4218da1a56cbec5a73",
+      "split": "dev",
+      "domain": "real_estate",
+      "title": "Vinhomes Royal Island",
+      "raw_document_included": false
+    },
+    {
+      "document_id": "17_vinhomes_dragon_bay",
+      "filename": "17_Vinhomes_Dragon_Bay(1).docx",
+      "sha256": "f0afee979155a8ec12d14a16004c8cdaa2036c054ba8007b5a09194f486282f4",
+      "split": "test",
+      "domain": "real_estate",
+      "title": "Vinhomes Dragon Bay",
+      "raw_document_included": false
+    },
+    {
+      "document_id": "18_vinhomes_golden_avenue_mong_cai",
+      "filename": "18_Vinhomes_Golden_Avenue_Mong_Cai(1).docx",
+      "sha256": "eb42cd05dbf1d80fd13d7f54f0420d2cc77d6f24d6d39442cd1c48e8b7866d75",
+      "split": "dev",
+      "domain": "real_estate",
+      "title": "Vinhomes Golden Avenue Móng Cái",
+      "raw_document_included": false
+    },
+    {
+      "document_id": "19_vinhomes_star_city_thanh_hoa",
+      "filename": "19_Vinhomes_Star_City_Thanh_Hoa(1).docx",
+      "sha256": "b1281e5d4e5eb8d8a129342a006a7dd3ec14772e1ec7e71bb5827a1beaad5aae",
+      "split": "dev",
+      "domain": "real_estate",
+      "title": "Vinhomes Star City Thanh Hóa",
+      "raw_document_included": false
+    },
+    {
+      "document_id": "20_cum_can_ho_trung_tam_ha_noi",
+      "filename": "20_Cum_Can_Ho_Trung_Tam_Ha_Noi(1).docx",
+      "sha256": "1fc3a6a62a835e6d4f9df3b20a5c85f83151bf64f1badde177f82e37a146486c",
+      "split": "test",
+      "domain": "real_estate",
+      "title": "Cụm căn hộ trung tâm Hà Nội: Metropolis – Skylake – West Point",
+      "raw_document_included": false
+    }
+  ],
+  "split_policy": {
+    "unit": "source_document_family",
+    "dev_documents": [
+      "11_Vinhomes_Central_Park(1).docx",
+      "13_Vinhomes_Green_Paradise_Can_Gio(1).docx",
+      "14_Vinhomes_Imperia_Hai_Phong(1).docx",
+      "16_Vinhomes_Royal_Island(1).docx",
+      "18_Vinhomes_Golden_Avenue_Mong_Cai(1).docx",
+      "19_Vinhomes_Star_City_Thanh_Hoa(1).docx"
+    ],
+    "test_documents": [
+      "12_Vinhomes_Golden_River(1).docx",
+      "14_he_thong_an_toan_s2s_2025-04-15(1).docx",
+      "15_Vinhomes_Marina_Hai_Phong(1).docx",
+      "17_Vinhomes_Dragon_Bay(1).docx",
+      "20_Cum_Can_Ho_Trung_Tam_Ha_Noi(1).docx"
+    ],
+    "rule": "No source document may contribute to both splits; template pairs use same-split partners only."
+  },
+  "annotation_status": "provisional_gold_pending_two_independent_human_reviews"
+}

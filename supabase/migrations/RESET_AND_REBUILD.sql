@@ -157,7 +157,7 @@ drop function if exists public.admin_user_count() cascade;
 drop function if exists public.admin_daily_auth_events(integer) cascade;
 drop function if exists public.admin_recent_auth_events(integer) cascade;
 
--- Canonical migrations 01 through 34 are appended verbatim below.
+-- Canonical migrations 01 through 37 are appended verbatim below.
 
 -- Extensions required by the schema.
 create extension if not exists pgcrypto;
@@ -19682,3 +19682,2226 @@ revoke all on function public.replace_p4_document_relations(uuid, text, jsonb)
 from public, anon, authenticated;
 grant execute on function public.replace_p4_document_relations(uuid, text, jsonb)
 to service_role;
+
+-- Canonical Enterprise duplicate/conflict ingestion support.
+-- Run after 34_p4_relation_replacement.sql.
+
+alter table public.processing_jobs
+    alter column configuration set default
+        '{"knowledge_quality_mode":"on","structured_fact_mode":"on"}'::jsonb;
+
+-- Existing direct Enterprise jobs were created with an empty configuration.
+-- Only unclaimed work is opted in; an in-flight attempt keeps its original
+-- execution contract.
+update public.processing_jobs
+set configuration = jsonb_build_object(
+        'knowledge_quality_mode', 'on',
+        'structured_fact_mode', 'on'
+    ) || configuration
+where status = 'PENDING'
+  and (
+      configuration ->> 'knowledge_quality_mode' is null
+      or configuration ->> 'structured_fact_mode' is null
+  );
+
+alter table public.document_versions
+    add column if not exists normalized_content_hash text,
+    add column if not exists normalization_version text,
+    add column if not exists loose_content_signature text,
+    add column if not exists quality_metadata jsonb not null default '{}'::jsonb;
+
+alter table public.document_versions
+    drop constraint if exists document_versions_normalized_content_hash;
+alter table public.document_versions
+    add constraint document_versions_normalized_content_hash check (
+        normalized_content_hash is null
+        or normalized_content_hash ~ '^[0-9a-f]{64}$'
+    );
+alter table public.document_versions
+    drop constraint if exists document_versions_normalization_version;
+alter table public.document_versions
+    add constraint document_versions_normalization_version check (
+        normalization_version is null
+        or char_length(btrim(normalization_version)) between 1 and 100
+    );
+alter table public.document_versions
+    drop constraint if exists document_versions_loose_content_signature;
+alter table public.document_versions
+    add constraint document_versions_loose_content_signature check (
+        loose_content_signature is null
+        or loose_content_signature ~ '^[0-9a-f]{16}$'
+    );
+alter table public.document_versions
+    drop constraint if exists document_versions_quality_metadata;
+alter table public.document_versions
+    add constraint document_versions_quality_metadata check (
+        jsonb_typeof(quality_metadata) = 'object'
+    );
+
+create index if not exists document_versions_normalized_identity_idx
+    on public.document_versions (normalized_content_hash, normalization_version)
+    where normalized_content_hash is not null;
+
+-- Migration 32 normally owns this helper. Define it idempotently here as well
+-- so Enterprise-only deployments and databases upgraded from an incomplete
+-- migration history can still create the canonical chunk generated column.
+create or replace function public.knowledge_simhash_multi_keys(p_signature text)
+returns text[]
+language plpgsql
+immutable
+strict
+set search_path = ''
+as $$
+declare
+    decoded bytea;
+    multipliers integer[] := array[1, 3, 5, 7, 11, 13, 17, 21];
+    multiplier integer;
+    band integer;
+    bit_offset integer;
+    byte_value integer;
+    result text[] := array[]::text[];
+begin
+    if p_signature !~ '^[0-9a-f]{16}$' then
+        raise exception 'SimHash signature must be 16 lowercase hexadecimal characters'
+            using errcode = '22023';
+    end if;
+    decoded := decode(p_signature, 'hex');
+    foreach multiplier in array multipliers loop
+        for band in 0..7 loop
+            byte_value := 0;
+            for bit_offset in 0..7 loop
+                byte_value := byte_value * 2 + get_bit(
+                    decoded,
+                    ((band * 8 + bit_offset) * multiplier) % 64
+                );
+            end loop;
+            result := array_append(
+                result,
+                'm' || multiplier::text || ':b' || band::text || ':'
+                    || lpad(to_hex(byte_value), 2, '0')
+            );
+        end loop;
+    end loop;
+    return result;
+end;
+$$;
+
+revoke all on function public.knowledge_simhash_multi_keys(text)
+    from public, anon, authenticated;
+grant execute on function public.knowledge_simhash_multi_keys(text)
+    to service_role;
+
+-- The worker already stores these canonical fingerprints in chunk metadata.
+-- Generated columns expose them to indexed SQL candidate generation without
+-- duplicating ownership of the values.
+alter table public.knowledge_chunks
+    add column if not exists normalized_content_hash text
+        generated always as (
+            nullif(metadata ->> 'normalized_content_hash', '')
+        ) stored,
+    add column if not exists normalization_version text
+        generated always as (
+            nullif(metadata ->> 'normalization_version', '')
+        ) stored,
+    add column if not exists loose_content_signature text
+        generated always as (
+            nullif(metadata ->> 'loose_content_signature', '')
+        ) stored,
+    add column if not exists embedding_text_checksum text
+        generated always as (
+            nullif(metadata ->> 'embedding_text_checksum', '')
+        ) stored;
+
+alter table public.knowledge_chunks
+    add column if not exists candidate_binary_keys text[]
+        generated always as (
+            public.knowledge_simhash_multi_keys(
+                nullif(metadata ->> 'loose_content_signature', '')
+            )
+        ) stored;
+
+create index if not exists knowledge_chunks_normalized_identity_idx
+    on public.knowledge_chunks (
+        normalized_content_hash,
+        normalization_version,
+        document_id
+    )
+    where embedding is not null;
+create index if not exists knowledge_chunks_candidate_binary_keys_idx
+    on public.knowledge_chunks using gin (candidate_binary_keys)
+    where embedding is not null;
+
+create table if not exists public.knowledge_document_relations (
+    id uuid primary key default gen_random_uuid(),
+    source_document_id uuid not null
+        references public.knowledge_documents (id) on delete cascade,
+    target_document_id uuid not null
+        references public.knowledge_documents (id) on delete cascade,
+    source_document_version_id uuid
+        references public.document_versions (id) on delete set null,
+    target_document_version_id uuid
+        references public.document_versions (id) on delete set null,
+    relation_type text not null,
+    status text not null default 'pending',
+    confidence double precision not null,
+    signals jsonb not null default '{}'::jsonb,
+    reason text,
+    detector_version text not null,
+    preferred_document_id uuid
+        references public.knowledge_documents (id) on delete set null,
+    resolved_by uuid references auth.users (id) on delete set null,
+    resolved_at timestamptz,
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now(),
+    constraint knowledge_document_relations_distinct_documents
+        check (source_document_id <> target_document_id),
+    constraint knowledge_document_relations_type check (
+        relation_type in (
+            'exact_content',
+            'near_duplicate',
+            'version_candidate',
+            'version',
+            'conflict_candidate',
+            'conflict',
+            'related',
+            'distinct',
+            'technical_duplicate',
+            'template_variant',
+            'temporal_series'
+        )
+    ),
+    constraint knowledge_document_relations_status check (
+        status in ('pending', 'auto_confirmed', 'confirmed', 'dismissed')
+    ),
+    constraint knowledge_document_relations_confidence
+        check (confidence between 0 and 1),
+    constraint knowledge_document_relations_signals
+        check (jsonb_typeof(signals) = 'object'),
+    constraint knowledge_document_relations_detector_version
+        check (char_length(btrim(detector_version)) between 1 and 100),
+    constraint knowledge_document_relations_resolution check (
+        (status in ('pending', 'auto_confirmed') and resolved_by is null)
+        or (status in ('confirmed', 'dismissed') and resolved_by is not null)
+    ),
+    constraint knowledge_document_relations_detector_key unique (
+        source_document_id,
+        target_document_id,
+        detector_version
+    )
+);
+
+drop trigger if exists knowledge_document_relations_set_updated_at
+on public.knowledge_document_relations;
+create trigger knowledge_document_relations_set_updated_at
+before update on public.knowledge_document_relations
+for each row execute function public.set_enterprise_updated_at();
+
+create index if not exists knowledge_document_relations_source_idx
+    on public.knowledge_document_relations (
+        source_document_id,
+        status,
+        relation_type,
+        confidence desc
+    );
+create index if not exists knowledge_document_relations_target_idx
+    on public.knowledge_document_relations (
+        target_document_id,
+        status,
+        relation_type
+    );
+
+alter table public.knowledge_document_relations enable row level security;
+alter table public.knowledge_document_relations force row level security;
+
+drop policy if exists knowledge_document_relations_select_visible
+on public.knowledge_document_relations;
+create policy knowledge_document_relations_select_visible
+on public.knowledge_document_relations
+for select to authenticated
+using (
+    public.has_document_permission(auth.uid(), source_document_id, 'READ')
+    and public.has_document_permission(auth.uid(), target_document_id, 'READ')
+);
+
+revoke all on table public.knowledge_document_relations
+from public, anon, authenticated;
+grant select on table public.knowledge_document_relations to authenticated;
+grant all privileges on table public.knowledge_document_relations to service_role;
+
+create or replace function public.find_enterprise_content_duplicate(
+    p_actor_id uuid,
+    p_document_id uuid,
+    p_normalized_content_hash text,
+    p_normalization_version text
+)
+returns uuid
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+    duplicate_document_id uuid;
+begin
+    if auth.role() <> 'service_role' then
+        raise exception 'Service role is required' using errcode = '42501';
+    end if;
+    if p_actor_id is null
+       or p_document_id is null
+       or p_normalized_content_hash !~ '^[0-9a-f]{64}$'
+       or char_length(btrim(coalesce(p_normalization_version, '')))
+            not between 1 and 100 then
+        raise exception 'Invalid Enterprise document identity lookup'
+            using errcode = '22023';
+    end if;
+
+    select documents.id
+    into duplicate_document_id
+    from public.knowledge_documents as documents
+    join public.document_versions as versions
+      on versions.id = documents.current_version_id
+     and versions.document_id = documents.id
+     and versions.status = 'ACTIVE'
+    where documents.id <> p_document_id
+      and documents.status = 'PUBLISHED'
+      and versions.normalized_content_hash = p_normalized_content_hash
+      and versions.normalization_version = btrim(p_normalization_version)
+      and public.has_document_permission(p_actor_id, documents.id, 'READ')
+    order by documents.created_at, documents.id
+    limit 1;
+
+    return duplicate_document_id;
+end;
+$$;
+
+revoke all on function public.find_enterprise_content_duplicate(
+    uuid, uuid, text, text
+) from public, anon, authenticated;
+grant execute on function public.find_enterprise_content_duplicate(
+    uuid, uuid, text, text
+) to service_role;
+
+create or replace function public.find_enterprise_chunk_candidates_v2(
+    p_actor_id uuid,
+    p_document_id uuid,
+    p_embedding_model text,
+    p_probes jsonb,
+    p_limit_per_probe integer default 50
+)
+returns table (
+    source_chunk_index integer,
+    target_chunk_id uuid,
+    target_document_id uuid,
+    target_chunk_index integer,
+    canonical_text text,
+    normalized_content_hash text,
+    normalization_version text,
+    loose_content_signature text,
+    embedding_text_checksum text,
+    embedding text,
+    embedding_model text,
+    lsh_band_matches integer,
+    exact_rank integer,
+    exact_score double precision,
+    binary_rank integer,
+    binary_score double precision,
+    binary_key_matches integer,
+    fts_rank integer,
+    fts_score double precision,
+    target_claim_scope jsonb,
+    target_original_filename text,
+    target_version_group_id uuid
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+    if auth.role() <> 'service_role' then
+        raise exception 'Service role is required' using errcode = '42501';
+    end if;
+    if p_actor_id is null
+       or p_document_id is null
+       or char_length(btrim(coalesce(p_embedding_model, '')))
+            not between 1 and 200 then
+        raise exception 'Invalid Enterprise candidate scope or embedding model'
+            using errcode = '22023';
+    end if;
+    if p_limit_per_probe is null
+       or p_limit_per_probe < 1
+       or p_limit_per_probe > 50 then
+        raise exception 'Chunk candidate limit must be between 1 and 50'
+            using errcode = '22023';
+    end if;
+    if p_probes is null
+       or jsonb_typeof(p_probes) <> 'array'
+       or jsonb_array_length(p_probes) = 0
+       or jsonb_array_length(p_probes) > 128 then
+        raise exception 'Chunk probes must contain between 1 and 128 items'
+            using errcode = '22023';
+    end if;
+    if exists (
+        select 1
+        from jsonb_array_elements(p_probes) as probe(value)
+        where jsonb_typeof(probe.value) <> 'object'
+           or probe.value ->> 'chunk_index' !~ '^[0-9]+$'
+           or probe.value ->> 'normalized_content_hash' !~ '^[0-9a-f]{64}$'
+           or char_length(btrim(probe.value ->> 'normalization_version'))
+                not between 1 and 100
+           or probe.value ->> 'loose_content_signature' !~ '^[0-9a-f]{16}$'
+           or jsonb_typeof(probe.value -> 'include_fuzzy') <> 'boolean'
+           or jsonb_typeof(probe.value -> 'binary_keys') <> 'array'
+           or jsonb_array_length(probe.value -> 'binary_keys') > 64
+           or jsonb_typeof(probe.value -> 'fts_terms') <> 'array'
+           or jsonb_array_length(probe.value -> 'fts_terms') > 16
+    ) then
+        raise exception 'An Enterprise chunk probe has an invalid candidate payload'
+            using errcode = '22023';
+    end if;
+
+    return query
+    select
+        (probe.value ->> 'chunk_index')::integer,
+        candidate.target_chunk_id,
+        candidate.target_document_id,
+        candidate.target_chunk_index,
+        candidate.canonical_text,
+        candidate.normalized_content_hash,
+        candidate.normalization_version,
+        candidate.loose_content_signature,
+        candidate.embedding_text_checksum,
+        candidate.embedding::text,
+        candidate.embedding_model,
+        candidate.lsh_band_matches,
+        candidate.exact_rank,
+        candidate.exact_score,
+        candidate.binary_rank,
+        candidate.binary_score,
+        candidate.binary_key_matches,
+        candidate.fts_rank,
+        candidate.fts_score,
+        candidate.target_claim_scope,
+        candidate.target_original_filename,
+        candidate.target_version_group_id
+    from jsonb_array_elements(p_probes) as probe(value)
+    cross join lateral (
+        with fts_query as (
+            select to_tsquery(
+                'simple'::regconfig,
+                string_agg(quote_literal(term.value), ' | ' order by term.ordinality)
+            ) as value
+            from jsonb_array_elements_text(probe.value -> 'fts_terms')
+                with ordinality as term(value, ordinality)
+        ),
+        eligible as (
+            select
+                chunks.id as target_chunk_id,
+                chunks.document_id as target_document_id,
+                chunks.chunk_index as target_chunk_index,
+                coalesce(nullif(chunks.metadata ->> 'canonical_text', ''), chunks.content)
+                    as canonical_text,
+                chunks.normalized_content_hash,
+                chunks.normalization_version,
+                chunks.loose_content_signature,
+                chunks.embedding_text_checksum,
+                chunks.embedding,
+                versions.embedding_model,
+                coalesce((
+                    select count(*)::integer
+                    from unnest(chunks.candidate_binary_keys) as stored(key)
+                    where stored.key in (
+                        select jsonb_array_elements_text(probe.value -> 'binary_keys')
+                    )
+                ), 0) as binary_key_matches,
+                ts_rank_cd(chunks.search_vector, fts_query.value, 32)::double precision
+                    as fts_channel_score,
+                chunks.normalized_content_hash =
+                    probe.value ->> 'normalized_content_hash' as exact_match,
+                chunks.metadata -> 'claim_scope' as target_claim_scope,
+                files.original_file_name as target_original_filename,
+                versions.id as target_version_group_id,
+                documents.created_at
+            from public.knowledge_chunks as chunks
+            join public.document_versions as versions
+              on versions.id = chunks.document_version_id
+             and versions.document_id = chunks.document_id
+             and versions.status = 'ACTIVE'
+            join public.knowledge_documents as documents
+              on documents.id = chunks.document_id
+             and documents.current_version_id = versions.id
+             and documents.status = 'PUBLISHED'
+            join public.source_files as files on files.id = versions.source_file_id
+            cross join fts_query
+            where chunks.document_id <> p_document_id
+              and chunks.normalization_version =
+                    btrim(probe.value ->> 'normalization_version')
+              and chunks.embedding is not null
+              and versions.embedding_model = btrim(p_embedding_model)
+              and public.has_document_permission(p_actor_id, documents.id, 'READ')
+              and (
+                  chunks.normalized_content_hash =
+                      probe.value ->> 'normalized_content_hash'
+                  or (
+                      (probe.value ->> 'include_fuzzy')::boolean
+                      and (
+                          chunks.candidate_binary_keys && array(
+                              select jsonb_array_elements_text(
+                                  probe.value -> 'binary_keys'
+                              )
+                          )
+                          or (
+                              fts_query.value is not null
+                              and numnode(fts_query.value) > 0
+                              and chunks.search_vector @@ fts_query.value
+                          )
+                      )
+                  )
+              )
+        ),
+        ranked as (
+            select
+                eligible.*,
+                row_number() over (
+                    order by eligible.created_at, eligible.target_chunk_id
+                )::integer as exact_channel_rank,
+                row_number() over (
+                    order by eligible.binary_key_matches desc,
+                        eligible.created_at, eligible.target_chunk_id
+                )::integer as binary_channel_rank,
+                row_number() over (
+                    order by eligible.fts_channel_score desc,
+                        eligible.target_chunk_id
+                )::integer as fts_channel_rank
+            from eligible
+        )
+        select
+            ranked.target_chunk_id,
+            ranked.target_document_id,
+            ranked.target_chunk_index,
+            ranked.canonical_text,
+            ranked.normalized_content_hash,
+            ranked.normalization_version,
+            ranked.loose_content_signature,
+            ranked.embedding_text_checksum,
+            ranked.embedding,
+            ranked.embedding_model,
+            ranked.binary_key_matches as lsh_band_matches,
+            case when ranked.exact_match then ranked.exact_channel_rank end as exact_rank,
+            case when ranked.exact_match then 1.0::double precision end as exact_score,
+            case when ranked.binary_key_matches > 0
+                then ranked.binary_channel_rank end as binary_rank,
+            case when ranked.binary_key_matches > 0
+                then ranked.binary_key_matches::double precision / 64.0 end
+                as binary_score,
+            ranked.binary_key_matches,
+            case when ranked.fts_channel_score > 0
+                then ranked.fts_channel_rank end as fts_rank,
+            case when ranked.fts_channel_score > 0
+                then ranked.fts_channel_score end as fts_score,
+            ranked.target_claim_scope,
+            ranked.target_original_filename,
+            ranked.target_version_group_id
+        from ranked
+        order by
+            ranked.exact_match desc,
+            ranked.binary_key_matches desc,
+            ranked.fts_channel_score desc,
+            ranked.target_chunk_id
+        limit p_limit_per_probe
+    ) as candidate;
+end;
+$$;
+
+revoke all on function public.find_enterprise_chunk_candidates_v2(
+    uuid, uuid, text, jsonb, integer
+) from public, anon, authenticated;
+grant execute on function public.find_enterprise_chunk_candidates_v2(
+    uuid, uuid, text, jsonb, integer
+) to service_role;
+
+create or replace function public.complete_processing_job_v4(
+    p_job_id uuid,
+    p_worker_id text,
+    p_claim_token uuid,
+    p_chunks jsonb,
+    p_normalized_content_hash text,
+    p_normalization_version text,
+    p_loose_content_signature text,
+    p_quality_metadata jsonb,
+    p_quality_mode text,
+    p_relations jsonb default '[]'::jsonb
+)
+returns public.processing_jobs
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    selected_requested_by uuid;
+    selected_version_id uuid;
+    selected_document_id uuid;
+    completed_job public.processing_jobs;
+    relation_count integer := 0;
+begin
+    if auth.role() <> 'service_role' then
+        raise exception 'Service role is required' using errcode = '42501';
+    end if;
+    if p_quality_mode not in ('off', 'shadow', 'on') then
+        raise exception 'Invalid Enterprise knowledge-quality mode'
+            using errcode = '22023';
+    end if;
+    if jsonb_typeof(coalesce(p_quality_metadata, '{}'::jsonb)) <> 'object'
+       or jsonb_typeof(coalesce(p_relations, '[]'::jsonb)) <> 'array'
+       or jsonb_array_length(coalesce(p_relations, '[]'::jsonb)) > 1000 then
+        raise exception 'Invalid Enterprise quality payload'
+            using errcode = '22023';
+    end if;
+    if p_normalized_content_hash is not null and (
+        p_normalized_content_hash !~ '^[0-9a-f]{64}$'
+        or char_length(btrim(coalesce(p_normalization_version, '')))
+            not between 1 and 100
+        or p_loose_content_signature !~ '^[0-9a-f]{16}$'
+    ) then
+        raise exception 'Invalid Enterprise document fingerprint'
+            using errcode = '22023';
+    end if;
+
+    select jobs.requested_by, versions.id, documents.id
+    into selected_requested_by, selected_version_id, selected_document_id
+    from public.processing_jobs as jobs
+    join public.document_versions as versions
+      on versions.id = jobs.document_version_id
+    join public.knowledge_documents as documents
+      on documents.id = versions.document_id
+    where jobs.id = p_job_id
+      and jobs.status = 'RUNNING'
+      and jobs.lease_owner = btrim(p_worker_id)
+      and jobs.claim_token = p_claim_token
+      and jobs.lease_expires_at > now();
+    if not found then
+        raise exception 'Processing lease is stale' using errcode = '40001';
+    end if;
+
+    if exists (
+        select 1
+        from jsonb_array_elements(coalesce(p_relations, '[]'::jsonb))
+            as relation(value)
+        where jsonb_typeof(relation.value) <> 'object'
+           or coalesce(relation.value ->> 'target_document_id', '')
+                !~ '^[0-9a-fA-F-]{36}$'
+           or (relation.value ->> 'target_document_id')::uuid = selected_document_id
+           or relation.value ->> 'relation_type' not in (
+                'exact_content', 'near_duplicate', 'version_candidate', 'version',
+                'conflict_candidate', 'conflict', 'related', 'distinct',
+                'technical_duplicate', 'template_variant', 'temporal_series'
+           )
+           or (relation.value ->> 'confidence')::double precision not between 0 and 1
+           or jsonb_typeof(coalesce(relation.value -> 'signals', '{}'::jsonb))
+                <> 'object'
+           or char_length(btrim(coalesce(relation.value ->> 'detector_version', '')))
+                not between 1 and 100
+    ) then
+        raise exception 'Invalid Enterprise relation payload'
+            using errcode = '22023';
+    end if;
+
+    if exists (
+        select 1
+        from jsonb_array_elements(coalesce(p_relations, '[]'::jsonb))
+            as relation(value)
+        left join public.knowledge_documents as target
+         on target.id = (relation.value ->> 'target_document_id')::uuid
+         and target.status = 'PUBLISHED'
+         and public.has_document_permission(
+             selected_requested_by, target.id, 'READ'
+         )
+        where target.id is null
+    ) then
+        raise exception 'Enterprise relation target is outside the visible ACL scope'
+            using errcode = '23503';
+    end if;
+
+    completed_job := public.complete_processing_job_v3(
+        p_job_id,
+        p_worker_id,
+        p_claim_token,
+        p_chunks
+    );
+
+    update public.document_versions
+    set normalized_content_hash = p_normalized_content_hash,
+        normalization_version = p_normalization_version,
+        loose_content_signature = p_loose_content_signature,
+        quality_metadata = coalesce(p_quality_metadata, '{}'::jsonb)
+            || jsonb_build_object('knowledge_quality_mode', p_quality_mode),
+        metadata_revision = metadata_revision + 1
+    where id = selected_version_id;
+
+    delete from public.knowledge_document_relations as existing
+    where existing.source_document_id = selected_document_id
+      and existing.status in ('pending', 'auto_confirmed')
+      and coalesce(
+          (existing.signals ->> 'enterprise_ingestion_managed')::boolean,
+          false
+      );
+
+    insert into public.knowledge_document_relations (
+        source_document_id,
+        target_document_id,
+        source_document_version_id,
+        target_document_version_id,
+        relation_type,
+        status,
+        confidence,
+        signals,
+        reason,
+        detector_version,
+        resolved_at
+    )
+    select
+        selected_document_id,
+        target.id,
+        selected_version_id,
+        target.current_version_id,
+        relation.value ->> 'relation_type',
+        case
+            when p_quality_mode = 'on'
+             and relation.value ->> 'relation_type' = 'exact_content'
+            then 'auto_confirmed'
+            else 'pending'
+        end,
+        (relation.value ->> 'confidence')::double precision,
+        coalesce(relation.value -> 'signals', '{}'::jsonb)
+            || jsonb_build_object(
+                'enterprise_ingestion_managed', true,
+                'p4_primary_relation', case relation.value ->> 'relation_type'
+                    when 'exact_content' then 'EXACT_DUPLICATE'
+                    when 'technical_duplicate' then 'EXACT_DUPLICATE'
+                    when 'near_duplicate' then 'NEAR_DUPLICATE'
+                    when 'version' then 'VERSION_UPDATE'
+                    when 'temporal_series' then 'TEMPORAL_VARIANT'
+                    when 'template_variant' then 'TEMPLATE_VARIANT'
+                    when 'conflict' then 'CONFLICT'
+                    when 'distinct' then 'DISTINCT'
+                    else 'UNCERTAIN'
+                end,
+                'p4_review_status', case
+                    when p_quality_mode = 'on'
+                     and relation.value ->> 'relation_type' = 'exact_content'
+                    then 'auto_confirmed'
+                    else 'pending'
+                end
+            ),
+        nullif(btrim(relation.value ->> 'reason'), ''),
+        btrim(relation.value ->> 'detector_version'),
+        case
+            when p_quality_mode = 'on'
+             and relation.value ->> 'relation_type' = 'exact_content'
+            then now()
+            else null
+        end
+    from jsonb_array_elements(coalesce(p_relations, '[]'::jsonb))
+        as relation(value)
+    join public.knowledge_documents as target
+     on target.id = (relation.value ->> 'target_document_id')::uuid
+     and target.status = 'PUBLISHED'
+     and public.has_document_permission(
+         selected_requested_by, target.id, 'READ'
+     )
+    on conflict (source_document_id, target_document_id, detector_version)
+    do update set
+        source_document_version_id = excluded.source_document_version_id,
+        target_document_version_id = excluded.target_document_version_id,
+        relation_type = excluded.relation_type,
+        status = excluded.status,
+        confidence = excluded.confidence,
+        signals = excluded.signals,
+        reason = excluded.reason,
+        resolved_by = null,
+        resolved_at = excluded.resolved_at
+    where public.knowledge_document_relations.status
+        in ('pending', 'auto_confirmed');
+    get diagnostics relation_count = row_count;
+
+    update public.knowledge_documents
+    set metadata = metadata || jsonb_build_object(
+            'knowledge_quality', jsonb_build_object(
+                'mode', p_quality_mode,
+                'relation_count', relation_count,
+                'status', case
+                    when exists (
+                        select 1
+                        from public.knowledge_document_relations as relations
+                        where relations.source_document_id = selected_document_id
+                          and relations.status = 'pending'
+                    ) then 'review_required'
+                    else 'ready'
+                end,
+                'updated_at', now()
+            )
+        )
+    where id = selected_document_id;
+
+    return completed_job;
+end;
+$$;
+
+revoke all on function public.complete_processing_job_v4(
+    uuid, text, uuid, jsonb, text, text, text, jsonb, text, jsonb
+) from public, anon, authenticated;
+grant execute on function public.complete_processing_job_v4(
+    uuid, text, uuid, jsonb, text, text, text, jsonb, text, jsonb
+) to service_role;
+
+comment on table public.knowledge_document_relations is
+    'ACL-safe canonical Enterprise duplicate/version/conflict relations emitted by ingestion.';
+comment on function public.complete_processing_job_v4(
+    uuid, text, uuid, jsonb, text, text, text, jsonb, text, jsonb
+) is
+    'Atomically completes Enterprise ingestion and persists canonical identity plus recomputable quality relations.';
+
+-- Reliable Enterprise duplicate/conflict candidates and review workflow.
+-- Run after 35_enterprise_knowledge_quality.sql.
+
+-- Migration 35 ranked every eligible chunk before applying its result limit.
+-- Build a small ID-only pool per indexed channel first, fuse it, and fetch the
+-- large vector/text payload only for the final candidates.
+create or replace function public.find_enterprise_chunk_candidates_v2(
+    p_actor_id uuid,
+    p_document_id uuid,
+    p_embedding_model text,
+    p_probes jsonb,
+    p_limit_per_probe integer default 50
+)
+returns table (
+    source_chunk_index integer,
+    target_chunk_id uuid,
+    target_document_id uuid,
+    target_chunk_index integer,
+    canonical_text text,
+    normalized_content_hash text,
+    normalization_version text,
+    loose_content_signature text,
+    embedding_text_checksum text,
+    embedding text,
+    embedding_model text,
+    lsh_band_matches integer,
+    exact_rank integer,
+    exact_score double precision,
+    binary_rank integer,
+    binary_score double precision,
+    binary_key_matches integer,
+    fts_rank integer,
+    fts_score double precision,
+    target_claim_scope jsonb,
+    target_original_filename text,
+    target_version_group_id uuid
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+begin
+    if auth.role() <> 'service_role' then
+        raise exception 'Service role is required' using errcode = '42501';
+    end if;
+    if p_actor_id is null
+       or p_document_id is null
+       or char_length(btrim(coalesce(p_embedding_model, '')))
+            not between 1 and 200 then
+        raise exception 'Invalid Enterprise candidate scope or embedding model'
+            using errcode = '22023';
+    end if;
+    if p_limit_per_probe is null
+       or p_limit_per_probe < 1
+       or p_limit_per_probe > 50 then
+        raise exception 'Chunk candidate limit must be between 1 and 50'
+            using errcode = '22023';
+    end if;
+    if p_probes is null
+       or jsonb_typeof(p_probes) <> 'array'
+       or jsonb_array_length(p_probes) = 0
+       or jsonb_array_length(p_probes) > 128 then
+        raise exception 'Chunk probes must contain between 1 and 128 items'
+            using errcode = '22023';
+    end if;
+    if exists (
+        select 1
+        from jsonb_array_elements(p_probes) as probe(value)
+        where jsonb_typeof(probe.value) <> 'object'
+           or probe.value ->> 'chunk_index' !~ '^[0-9]+$'
+           or probe.value ->> 'normalized_content_hash' !~ '^[0-9a-f]{64}$'
+           or char_length(btrim(probe.value ->> 'normalization_version'))
+                not between 1 and 100
+           or probe.value ->> 'loose_content_signature' !~ '^[0-9a-f]{16}$'
+           or jsonb_typeof(probe.value -> 'include_fuzzy') <> 'boolean'
+           or jsonb_typeof(probe.value -> 'binary_keys') <> 'array'
+           or jsonb_array_length(probe.value -> 'binary_keys') > 64
+           or jsonb_typeof(probe.value -> 'fts_terms') <> 'array'
+           or jsonb_array_length(probe.value -> 'fts_terms') > 16
+    ) then
+        raise exception 'An Enterprise chunk probe has an invalid candidate payload'
+            using errcode = '22023';
+    end if;
+
+    return query
+    select
+        (probe.value ->> 'chunk_index')::integer,
+        candidate.target_chunk_id,
+        candidate.target_document_id,
+        candidate.target_chunk_index,
+        coalesce(
+            nullif(candidate.metadata ->> 'canonical_text', ''),
+            candidate.content
+        ),
+        candidate.normalized_content_hash,
+        candidate.normalization_version,
+        candidate.loose_content_signature,
+        candidate.embedding_text_checksum,
+        candidate.embedding::text,
+        candidate.embedding_model,
+        candidate.binary_key_matches,
+        candidate.exact_rank,
+        candidate.exact_score,
+        candidate.binary_rank,
+        candidate.binary_score,
+        candidate.binary_key_matches,
+        candidate.fts_rank,
+        candidate.fts_score,
+        candidate.metadata -> 'claim_scope',
+        candidate.original_file_name,
+        candidate.document_version_id
+    from jsonb_array_elements(p_probes) as probe(value)
+    cross join lateral (
+        with fts_query as (
+            select to_tsquery(
+                'simple'::regconfig,
+                string_agg(quote_literal(term.value), ' | ' order by term.ordinality)
+            ) as value
+            from jsonb_array_elements_text(probe.value -> 'fts_terms')
+                with ordinality as term(value, ordinality)
+        ),
+        exact_limited as (
+            select
+                chunks.id as target_chunk_id,
+                row_number() over (
+                    order by documents.created_at, chunks.chunk_index, chunks.id
+                )::integer as channel_rank
+            from public.knowledge_chunks as chunks
+            join public.document_versions as versions
+              on versions.id = chunks.document_version_id
+             and versions.document_id = chunks.document_id
+             and versions.status = 'ACTIVE'
+             and versions.embedding_model = btrim(p_embedding_model)
+            join public.knowledge_documents as documents
+              on documents.id = chunks.document_id
+             and documents.current_version_id = versions.id
+             and documents.status = 'PUBLISHED'
+            where chunks.document_id <> p_document_id
+              and chunks.embedding is not null
+              and chunks.normalization_version =
+                    btrim(probe.value ->> 'normalization_version')
+              and chunks.normalized_content_hash =
+                    probe.value ->> 'normalized_content_hash'
+              and public.has_document_permission(p_actor_id, documents.id, 'READ')
+            order by documents.created_at, chunks.chunk_index, chunks.id
+            limit p_limit_per_probe
+        ),
+        binary_scored as (
+            select
+                chunks.id as target_chunk_id,
+                documents.created_at,
+                chunks.chunk_index,
+                coalesce((
+                    select count(*)::integer
+                    from unnest(chunks.candidate_binary_keys) as stored(key)
+                    where stored.key in (
+                        select jsonb_array_elements_text(
+                            probe.value -> 'binary_keys'
+                        )
+                    )
+                ), 0) as binary_key_matches
+            from public.knowledge_chunks as chunks
+            join public.document_versions as versions
+              on versions.id = chunks.document_version_id
+             and versions.document_id = chunks.document_id
+             and versions.status = 'ACTIVE'
+             and versions.embedding_model = btrim(p_embedding_model)
+            join public.knowledge_documents as documents
+              on documents.id = chunks.document_id
+             and documents.current_version_id = versions.id
+             and documents.status = 'PUBLISHED'
+            where (probe.value ->> 'include_fuzzy')::boolean
+              and chunks.document_id <> p_document_id
+              and chunks.embedding is not null
+              and chunks.normalization_version =
+                    btrim(probe.value ->> 'normalization_version')
+              and chunks.candidate_binary_keys && array(
+                    select jsonb_array_elements_text(
+                        probe.value -> 'binary_keys'
+                    )
+              )
+              and public.has_document_permission(p_actor_id, documents.id, 'READ')
+        ),
+        binary_limited as (
+            select
+                limited.target_chunk_id,
+                limited.binary_key_matches,
+                row_number() over (
+                    order by limited.binary_key_matches desc,
+                        limited.created_at, limited.chunk_index,
+                        limited.target_chunk_id
+                )::integer as channel_rank
+            from (
+                select binary_scored.*
+                from binary_scored
+                order by binary_scored.binary_key_matches desc,
+                    binary_scored.created_at,
+                    binary_scored.chunk_index,
+                    binary_scored.target_chunk_id
+                limit p_limit_per_probe
+            ) as limited
+        ),
+        fts_scored as (
+            select
+                chunks.id as target_chunk_id,
+                ts_rank_cd(
+                    chunks.search_vector,
+                    fts_query.value,
+                    32
+                )::double precision as channel_score
+            from public.knowledge_chunks as chunks
+            join public.document_versions as versions
+              on versions.id = chunks.document_version_id
+             and versions.document_id = chunks.document_id
+             and versions.status = 'ACTIVE'
+             and versions.embedding_model = btrim(p_embedding_model)
+            join public.knowledge_documents as documents
+              on documents.id = chunks.document_id
+             and documents.current_version_id = versions.id
+             and documents.status = 'PUBLISHED'
+            cross join fts_query
+            where (probe.value ->> 'include_fuzzy')::boolean
+              and fts_query.value is not null
+              and numnode(fts_query.value) > 0
+              and chunks.document_id <> p_document_id
+              and chunks.embedding is not null
+              and chunks.normalization_version =
+                    btrim(probe.value ->> 'normalization_version')
+              and chunks.search_vector @@ fts_query.value
+              and public.has_document_permission(p_actor_id, documents.id, 'READ')
+        ),
+        fts_limited as (
+            select
+                limited.target_chunk_id,
+                limited.channel_score,
+                row_number() over (
+                    order by limited.channel_score desc, limited.target_chunk_id
+                )::integer as channel_rank
+            from (
+                select fts_scored.*
+                from fts_scored
+                order by fts_scored.channel_score desc, fts_scored.target_chunk_id
+                limit p_limit_per_probe
+            ) as limited
+        ),
+        channel_rows as (
+            select
+                exact_limited.target_chunk_id,
+                exact_limited.channel_rank as exact_rank,
+                1.0::double precision as exact_score,
+                null::integer as binary_rank,
+                null::double precision as binary_score,
+                0::integer as binary_key_matches,
+                null::integer as fts_rank,
+                null::double precision as fts_score
+            from exact_limited
+            union all
+            select
+                binary_limited.target_chunk_id,
+                null, null,
+                binary_limited.channel_rank,
+                binary_limited.binary_key_matches::double precision / 64.0,
+                binary_limited.binary_key_matches,
+                null, null
+            from binary_limited
+            union all
+            select
+                fts_limited.target_chunk_id,
+                null, null, null, null, 0,
+                fts_limited.channel_rank,
+                fts_limited.channel_score
+            from fts_limited
+        ),
+        fused_limited as (
+            select
+                channel_rows.target_chunk_id,
+                min(channel_rows.exact_rank) as exact_rank,
+                max(channel_rows.exact_score) as exact_score,
+                min(channel_rows.binary_rank) as binary_rank,
+                max(channel_rows.binary_score) as binary_score,
+                max(channel_rows.binary_key_matches)::integer as binary_key_matches,
+                min(channel_rows.fts_rank) as fts_rank,
+                max(channel_rows.fts_score) as fts_score
+            from channel_rows
+            group by channel_rows.target_chunk_id
+            order by
+                min(channel_rows.exact_rank) nulls last,
+                (
+                    coalesce(1.0 / (60 + min(channel_rows.exact_rank)), 0.0)
+                    + coalesce(1.0 / (60 + min(channel_rows.binary_rank)), 0.0)
+                    + coalesce(1.0 / (60 + min(channel_rows.fts_rank)), 0.0)
+                ) desc,
+                channel_rows.target_chunk_id
+            limit p_limit_per_probe
+        )
+        select
+            chunks.id as target_chunk_id,
+            chunks.document_id as target_document_id,
+            chunks.chunk_index as target_chunk_index,
+            chunks.content,
+            chunks.metadata,
+            chunks.normalized_content_hash,
+            chunks.normalization_version,
+            chunks.loose_content_signature,
+            chunks.embedding_text_checksum,
+            chunks.embedding,
+            versions.embedding_model,
+            versions.id as document_version_id,
+            files.original_file_name,
+            fused_limited.exact_rank,
+            fused_limited.exact_score,
+            fused_limited.binary_rank,
+            fused_limited.binary_score,
+            fused_limited.binary_key_matches,
+            fused_limited.fts_rank,
+            fused_limited.fts_score
+        from fused_limited
+        join public.knowledge_chunks as chunks
+          on chunks.id = fused_limited.target_chunk_id
+        join public.document_versions as versions
+          on versions.id = chunks.document_version_id
+        join public.source_files as files
+          on files.id = versions.source_file_id
+        order by
+            fused_limited.exact_rank nulls last,
+            (
+                coalesce(1.0 / (60 + fused_limited.exact_rank), 0.0)
+                + coalesce(1.0 / (60 + fused_limited.binary_rank), 0.0)
+                + coalesce(1.0 / (60 + fused_limited.fts_rank), 0.0)
+            ) desc,
+            chunks.id
+    ) as candidate;
+end;
+$$;
+
+revoke all on function public.find_enterprise_chunk_candidates_v2(
+    uuid, uuid, text, jsonb, integer
+) from public, anon, authenticated;
+grant execute on function public.find_enterprise_chunk_candidates_v2(
+    uuid, uuid, text, jsonb, integer
+) to service_role;
+
+-- Deferred is a durable human review state. It must not be overwritten by a
+-- later automatic detector run.
+alter table public.knowledge_document_relations
+    drop constraint if exists knowledge_document_relations_status;
+alter table public.knowledge_document_relations
+    add constraint knowledge_document_relations_status check (
+        status in (
+            'pending', 'deferred', 'auto_confirmed', 'confirmed', 'dismissed'
+        )
+    );
+
+alter table public.knowledge_document_relations
+    drop constraint if exists knowledge_document_relations_resolution;
+alter table public.knowledge_document_relations
+    add constraint knowledge_document_relations_resolution check (
+        (
+            status in ('pending', 'deferred', 'auto_confirmed')
+            and resolved_by is null
+        )
+        or (
+            status in ('confirmed', 'dismissed')
+            and resolved_by is not null
+        )
+    );
+
+create or replace function public.list_enterprise_document_relations(
+    p_status text default null,
+    p_limit integer default 200,
+    p_offset integer default 0
+)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+    actor uuid := auth.uid();
+    result jsonb;
+begin
+    if actor is null then
+        raise exception 'Authentication is required' using errcode = '42501';
+    end if;
+    if p_status is not null and p_status not in (
+        'pending', 'deferred', 'auto_confirmed', 'confirmed', 'dismissed'
+    ) then
+        raise exception 'Invalid Enterprise relation status'
+            using errcode = '22023';
+    end if;
+    if p_limit is null or p_limit not between 1 and 200
+       or p_offset is null or p_offset < 0 then
+        raise exception 'Invalid Enterprise relation page'
+            using errcode = '22023';
+    end if;
+
+    with visible as (
+        select
+            relations.id,
+            relations.source_document_id,
+            relations.target_document_id,
+            relations.relation_type,
+            relations.status,
+            relations.confidence,
+            relations.reason,
+            relations.created_at,
+            relations.updated_at,
+            nullif(relations.signals ->> 'resolution_action', '')
+                as resolution_action,
+            source_documents.title as source_document_title,
+            target_documents.title as target_document_title
+        from public.knowledge_document_relations as relations
+        join public.knowledge_documents as source_documents
+          on source_documents.id = relations.source_document_id
+        join public.knowledge_documents as target_documents
+          on target_documents.id = relations.target_document_id
+        where (p_status is null or relations.status = p_status)
+          and public.has_document_permission(
+              actor, relations.source_document_id, 'READ'
+          )
+          and public.has_document_permission(
+              actor, relations.target_document_id, 'READ'
+          )
+    ),
+    page as (
+        select visible.*
+        from visible
+        order by visible.created_at desc, visible.id desc
+        limit p_limit offset p_offset
+    )
+    select jsonb_build_object(
+        'items', coalesce(
+            (select jsonb_agg(to_jsonb(page) order by page.created_at desc, page.id desc)
+             from page),
+            '[]'::jsonb
+        ),
+        'total_count', (select count(*) from visible),
+        'limit', p_limit,
+        'offset', p_offset
+    )
+    into result;
+
+    return result;
+end;
+$$;
+
+revoke all on function public.list_enterprise_document_relations(
+    text, integer, integer
+) from public, anon;
+grant execute on function public.list_enterprise_document_relations(
+    text, integer, integer
+) to authenticated;
+
+create or replace function public.get_enterprise_document_relation_evidence(
+    p_relation_id uuid
+)
+returns jsonb
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+    actor uuid := auth.uid();
+    selected_relation public.knowledge_document_relations;
+    source_version_id uuid;
+    target_version_id uuid;
+    source_title text;
+    target_title text;
+    source_version_number integer;
+    target_version_number integer;
+    source_text text;
+    target_text text;
+    source_overlap text;
+    target_overlap text;
+    source_chunk_index integer;
+    target_chunk_index integer;
+begin
+    if actor is null then
+        raise exception 'Authentication is required' using errcode = '42501';
+    end if;
+
+    select relations.*
+    into selected_relation
+    from public.knowledge_document_relations as relations
+    where relations.id = p_relation_id
+      and public.has_document_permission(actor, relations.source_document_id, 'READ')
+      and public.has_document_permission(actor, relations.target_document_id, 'READ');
+    if not found then
+        return null;
+    end if;
+
+    select
+        source_documents.title,
+        target_documents.title,
+        coalesce(
+            selected_relation.source_document_version_id,
+            source_documents.current_version_id
+        ),
+        coalesce(
+            selected_relation.target_document_version_id,
+            target_documents.current_version_id
+        )
+    into source_title, target_title, source_version_id, target_version_id
+    from public.knowledge_documents as source_documents
+    join public.knowledge_documents as target_documents
+      on target_documents.id = selected_relation.target_document_id
+    where source_documents.id = selected_relation.source_document_id;
+
+    select versions.version_number
+    into source_version_number
+    from public.document_versions as versions
+    where versions.id = source_version_id;
+
+    select versions.version_number
+    into target_version_number
+    from public.document_versions as versions
+    where versions.id = target_version_id;
+
+    select left(
+        coalesce(string_agg(chunks.content, E'\n\n' order by chunks.chunk_index), ''),
+        100000
+    )
+    into source_text
+    from public.knowledge_chunks as chunks
+    where chunks.document_id = selected_relation.source_document_id
+      and chunks.document_version_id = source_version_id;
+
+    select left(
+        coalesce(string_agg(chunks.content, E'\n\n' order by chunks.chunk_index), ''),
+        100000
+    )
+    into target_text
+    from public.knowledge_chunks as chunks
+    where chunks.document_id = selected_relation.target_document_id
+      and chunks.document_version_id = target_version_id;
+
+    if selected_relation.signals #>> '{selected_chunk_pair,source_chunk_index}'
+            ~ '^[0-9]+$' then
+        source_chunk_index := (
+            selected_relation.signals
+            #>> '{selected_chunk_pair,source_chunk_index}'
+        )::integer;
+    end if;
+    if selected_relation.signals #>> '{selected_chunk_pair,target_chunk_index}'
+            ~ '^[0-9]+$' then
+        target_chunk_index := (
+            selected_relation.signals
+            #>> '{selected_chunk_pair,target_chunk_index}'
+        )::integer;
+    end if;
+
+    if source_chunk_index is not null then
+        select chunks.content
+        into source_overlap
+        from public.knowledge_chunks as chunks
+        where chunks.document_id = selected_relation.source_document_id
+          and chunks.document_version_id = source_version_id
+          and chunks.chunk_index = source_chunk_index
+        limit 1;
+    end if;
+    if target_chunk_index is not null then
+        select chunks.content
+        into target_overlap
+        from public.knowledge_chunks as chunks
+        where chunks.document_id = selected_relation.target_document_id
+          and chunks.document_version_id = target_version_id
+          and chunks.chunk_index = target_chunk_index
+        limit 1;
+    end if;
+
+    return jsonb_build_object(
+        'relation_id', selected_relation.id,
+        'source_document', jsonb_build_object(
+            'id', selected_relation.source_document_id,
+            'title', source_title,
+            'version_number', coalesce(source_version_number, 1),
+            'text_content', source_text
+        ),
+        'target_document', jsonb_build_object(
+            'id', selected_relation.target_document_id,
+            'title', target_title,
+            'version_number', coalesce(target_version_number, 1),
+            'text_content', target_text
+        ),
+        'overlaps', case
+            when source_overlap is not null and target_overlap is not null
+            then jsonb_build_array(jsonb_build_object(
+                'source_text', source_overlap,
+                'target_text', target_overlap
+            ))
+            else '[]'::jsonb
+        end
+    );
+end;
+$$;
+
+revoke all on function public.get_enterprise_document_relation_evidence(uuid)
+from public, anon;
+grant execute on function public.get_enterprise_document_relation_evidence(uuid)
+to authenticated;
+
+create or replace function public.resolve_enterprise_document_relation(
+    p_relation_id uuid,
+    p_action text,
+    p_reason text default null,
+    p_expected_updated_at timestamptz default null
+)
+returns public.knowledge_document_relations
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    actor uuid := auth.uid();
+    selected_relation public.knowledge_document_relations;
+    resolved_relation public.knowledge_document_relations;
+    normalized_action text := lower(btrim(coalesce(p_action, '')));
+    normalized_reason text := nullif(btrim(coalesce(p_reason, '')), '');
+    next_type text;
+    next_status text;
+    preferred_id uuid;
+begin
+    if actor is null then
+        raise exception 'Authentication is required' using errcode = '42501';
+    end if;
+    if normalized_action not in (
+        'confirm_duplicate', 'mark_version', 'confirm_conflict',
+        'keep_separate', 'prefer_source', 'prefer_target',
+        'dismiss', 'defer_review'
+    ) then
+        raise exception 'Invalid Enterprise relation resolution action'
+            using errcode = '22023';
+    end if;
+    if normalized_action <> 'defer_review' and normalized_reason is null then
+        raise exception 'A resolution reason is required'
+            using errcode = '22023';
+    end if;
+    if char_length(coalesce(normalized_reason, '')) > 2000 then
+        raise exception 'Resolution reason is too long'
+            using errcode = '22023';
+    end if;
+
+    select relations.*
+    into selected_relation
+    from public.knowledge_document_relations as relations
+    where relations.id = p_relation_id
+    for update;
+    if not found then
+        raise exception 'Enterprise relation was not found'
+            using errcode = 'P0002';
+    end if;
+    if not (
+        public.has_document_permission(
+            actor, selected_relation.source_document_id, 'REVIEW'
+        )
+        or public.has_document_permission(
+            actor, selected_relation.source_document_id, 'PUBLISH'
+        )
+        or public.has_document_permission(
+            actor, selected_relation.source_document_id, 'MANAGE'
+        )
+    ) or not public.has_document_permission(
+        actor, selected_relation.target_document_id, 'READ'
+    ) then
+        raise exception 'Enterprise relation review is not permitted'
+            using errcode = '42501';
+    end if;
+    if selected_relation.status not in ('pending', 'deferred') then
+        raise exception 'Enterprise relation was already resolved'
+            using errcode = '40001';
+    end if;
+    if p_expected_updated_at is not null
+       and selected_relation.updated_at <> p_expected_updated_at then
+        raise exception 'Enterprise relation changed during review'
+            using errcode = '40001';
+    end if;
+
+    next_type := case normalized_action
+        when 'confirm_duplicate' then 'exact_content'
+        when 'mark_version' then 'version'
+        when 'confirm_conflict' then 'conflict'
+        when 'prefer_source' then 'conflict'
+        when 'prefer_target' then 'conflict'
+        when 'keep_separate' then 'distinct'
+        else selected_relation.relation_type
+    end;
+    next_status := case normalized_action
+        when 'dismiss' then 'dismissed'
+        when 'defer_review' then 'deferred'
+        else 'confirmed'
+    end;
+    preferred_id := case normalized_action
+        when 'prefer_source' then selected_relation.source_document_id
+        when 'prefer_target' then selected_relation.target_document_id
+        else null
+    end;
+
+    update public.knowledge_document_relations as relations
+    set relation_type = next_type,
+        status = next_status,
+        reason = coalesce(
+            normalized_reason,
+            case when normalized_action = 'defer_review'
+                then 'Deferred for later review' end,
+            relations.reason
+        ),
+        signals = relations.signals || jsonb_strip_nulls(jsonb_build_object(
+            'resolution_action', normalized_action,
+            'resolution_reason', normalized_reason,
+            'resolution_recorded_at', now()
+        )),
+        preferred_document_id = preferred_id,
+        resolved_by = case when next_status in ('confirmed', 'dismissed')
+            then actor else null end,
+        resolved_at = case when next_status in ('confirmed', 'dismissed')
+            then now() else null end
+    where relations.id = selected_relation.id
+    returning relations.* into resolved_relation;
+
+    update public.knowledge_documents as documents
+    set metadata = documents.metadata || jsonb_build_object(
+        'knowledge_quality', jsonb_build_object(
+            'mode', coalesce(
+                documents.metadata #>> '{knowledge_quality,mode}',
+                'on'
+            ),
+            'relation_count', (
+                select count(*)
+                from public.knowledge_document_relations as relations
+                where relations.source_document_id = selected_relation.source_document_id
+            ),
+            'status', case when exists (
+                select 1
+                from public.knowledge_document_relations as relations
+                where relations.source_document_id = selected_relation.source_document_id
+                  and relations.status in ('pending', 'deferred')
+            ) then 'review_required' else 'ready' end,
+            'updated_at', now()
+        )
+    )
+    where documents.id = selected_relation.source_document_id;
+
+    perform public.write_enterprise_audit(
+        'RESOLVE_DOCUMENT_RELATION',
+        'knowledge_document_relation',
+        selected_relation.id,
+        to_jsonb(selected_relation),
+        to_jsonb(resolved_relation),
+        normalized_reason
+    );
+
+    return resolved_relation;
+end;
+$$;
+
+revoke all on function public.resolve_enterprise_document_relation(
+    uuid, text, text, timestamptz
+) from public, anon;
+grant execute on function public.resolve_enterprise_document_relation(
+    uuid, text, text, timestamptz
+) to authenticated;
+
+create or replace function public.queue_enterprise_quality_reprocess(
+    p_document_id uuid
+)
+returns public.processing_jobs
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+    actor uuid := auth.uid();
+    selected_document public.knowledge_documents;
+    selected_version public.document_versions;
+    previous_job public.processing_jobs;
+    created_job public.processing_jobs;
+    next_attempt integer;
+begin
+    if actor is null then
+        raise exception 'Authentication is required' using errcode = '42501';
+    end if;
+
+    select documents.*
+    into selected_document
+    from public.knowledge_documents as documents
+    where documents.id = p_document_id
+      and documents.status = 'PUBLISHED'
+    for update;
+    if not found then
+        raise exception 'Published Enterprise document was not found'
+            using errcode = 'P0002';
+    end if;
+    if not (
+        (
+            public.has_functional_permission(actor, 'REVIEW_DOCUMENT')
+            and public.has_document_permission(actor, p_document_id, 'REVIEW')
+        )
+        or (
+            public.has_functional_permission(actor, 'PUBLISH_DOCUMENT')
+            and public.has_document_permission(actor, p_document_id, 'PUBLISH')
+        )
+        or (
+            public.has_functional_permission(actor, 'MANAGE_DOCUMENT')
+            and public.has_document_permission(actor, p_document_id, 'MANAGE')
+        )
+    ) then
+        raise exception 'Enterprise quality reprocessing is not permitted'
+            using errcode = '42501';
+    end if;
+
+    select versions.*
+    into selected_version
+    from public.document_versions as versions
+    where versions.id = selected_document.current_version_id
+      and versions.document_id = selected_document.id
+      and versions.status = 'ACTIVE'
+    for update;
+    if not found then
+        raise exception 'Active Enterprise document version was not found'
+            using errcode = 'P0002';
+    end if;
+    if exists (
+        select 1
+        from public.processing_jobs as jobs
+        where jobs.document_version_id = selected_version.id
+          and jobs.status in ('PENDING', 'RUNNING')
+    ) then
+        raise exception 'Enterprise document already has an active processing job'
+            using errcode = '55000';
+    end if;
+
+    select jobs.*
+    into previous_job
+    from public.processing_jobs as jobs
+    where jobs.document_version_id = selected_version.id
+      and jobs.status = 'SUCCEEDED'
+    order by jobs.attempt_no desc, jobs.id desc
+    limit 1;
+    if not found then
+        raise exception 'No successful Enterprise job is available to reprocess'
+            using errcode = '55000';
+    end if;
+
+    select coalesce(max(jobs.attempt_no), 0) + 1
+    into next_attempt
+    from public.processing_jobs as jobs
+    where jobs.document_version_id = selected_version.id;
+
+    insert into public.processing_jobs (
+        document_version_id,
+        job_type,
+        status,
+        attempt_no,
+        previous_job_id,
+        requested_by,
+        embedding_model,
+        embedding_dimensions,
+        configuration
+    ) values (
+        selected_version.id,
+        'REPROCESS',
+        'PENDING',
+        next_attempt,
+        previous_job.id,
+        actor,
+        previous_job.embedding_model,
+        previous_job.embedding_dimensions,
+        previous_job.configuration || jsonb_build_object(
+            'knowledge_quality_mode', 'on',
+            'structured_fact_mode', coalesce(
+                previous_job.configuration ->> 'structured_fact_mode',
+                'on'
+            )
+        )
+    )
+    returning * into created_job;
+
+    perform public.write_enterprise_audit(
+        'ENTERPRISE_QUALITY_REPROCESS_QUEUED',
+        'processing_job',
+        created_job.id,
+        jsonb_build_object('previous_job_id', previous_job.id),
+        jsonb_build_object(
+            'document_id', selected_document.id,
+            'document_version_id', selected_version.id,
+            'attempt_no', next_attempt,
+            'knowledge_quality_mode', 'on'
+        ),
+        'Manual duplicate/conflict quality rescan'
+    );
+
+    return created_job;
+end;
+$$;
+
+revoke all on function public.queue_enterprise_quality_reprocess(uuid)
+from public, anon;
+grant execute on function public.queue_enterprise_quality_reprocess(uuid)
+to authenticated;
+
+comment on function public.list_enterprise_document_relations(
+    text, integer, integer
+) is 'Lists canonical ACL-visible Enterprise duplicate/conflict review items.';
+comment on function public.get_enterprise_document_relation_evidence(uuid) is
+    'Returns version-bound, ACL-safe text evidence for one Enterprise relation.';
+comment on function public.resolve_enterprise_document_relation(
+    uuid, text, text, timestamptz
+) is 'Atomically records a reviewer decision with optimistic concurrency and audit.';
+comment on function public.queue_enterprise_quality_reprocess(uuid) is
+    'Queues a new quality-enabled attempt for the active version of a published Enterprise document.';
+
+-- P6 canonical temporal retrieval metadata for Enterprise search and Q&A.
+-- Run after 36_enterprise_relation_review.sql.
+
+create or replace function public.enterprise_chunk_reference_year(
+    p_metadata jsonb
+)
+returns integer
+language sql
+immutable
+set search_path = ''
+as $$
+    select case
+        when coalesce(
+            p_metadata #>> '{retrieval_metadata,year}',
+            p_metadata #>> '{claim_scope,reference_year}',
+            p_metadata #>> '{structured_temporal,reference_year}',
+            p_metadata ->> 'reference_year',
+            p_metadata ->> 'year'
+        ) ~ '^(19|20)[0-9]{2}$'
+        then coalesce(
+            p_metadata #>> '{retrieval_metadata,year}',
+            p_metadata #>> '{claim_scope,reference_year}',
+            p_metadata #>> '{structured_temporal,reference_year}',
+            p_metadata ->> 'reference_year',
+            p_metadata ->> 'year'
+        )::integer
+        else null
+    end;
+$$;
+
+revoke all on function public.enterprise_chunk_reference_year(jsonb)
+from public, anon, authenticated;
+grant execute on function public.enterprise_chunk_reference_year(jsonb)
+to service_role;
+
+alter table public.knowledge_chunks
+    add column if not exists canonical_reference_year integer
+        generated always as (
+            public.enterprise_chunk_reference_year(metadata)
+        ) stored;
+
+alter table public.knowledge_chunks
+    drop constraint if exists knowledge_chunks_canonical_reference_year;
+alter table public.knowledge_chunks
+    add constraint knowledge_chunks_canonical_reference_year check (
+        canonical_reference_year is null
+        or canonical_reference_year between 1900 and 2100
+    );
+
+create index if not exists knowledge_chunks_reference_year_idx
+    on public.knowledge_chunks (
+        canonical_reference_year,
+        document_id,
+        document_version_id
+    )
+    where canonical_reference_year is not null;
+
+-- Sparse and dense search retain their public signatures. P6 adds only
+-- backward-compatible filter keys and enriches the returned metadata object.
+create or replace function public.search_enterprise_retrieval_projection(
+    p_query text,
+    p_limit integer default 20,
+    p_filters jsonb default '{}'::jsonb
+)
+returns table (
+    chunk_id uuid,
+    document_id uuid,
+    document_version_id uuid,
+    title text,
+    chunk_index integer,
+    content text,
+    page_start integer,
+    page_end integer,
+    section_path text,
+    metadata jsonb,
+    score double precision
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+    actor uuid := auth.uid();
+    exact_original_query tsquery;
+    exact_folded_query tsquery;
+    recall_original_query tsquery;
+    recall_folded_query tsquery;
+begin
+    if actor is null
+       or not public.has_functional_permission(actor, 'ASK_KNOWLEDGE') then
+        raise exception 'Knowledge search is not permitted'
+            using errcode = '42501';
+    end if;
+    if p_query is null or btrim(p_query) = '' then
+        return;
+    end if;
+    if p_filters is null or jsonb_typeof(p_filters) <> 'object' then
+        raise exception 'Filters must be a JSON object'
+            using errcode = '22023';
+    end if;
+    if exists (
+        select 1
+        from jsonb_object_keys(p_filters) as filter_key(value)
+        where filter_key.value not in (
+            'document_id', 'document_type', 'category', 'domain',
+            'department_code', 'project_code', 'year', 'reference_years',
+            'year_from', 'year_to', 'effective_at', 'effective_status'
+        )
+    ) then
+        raise exception 'Unsupported canonical metadata filter'
+            using errcode = '22023';
+    end if;
+    if p_filters ? 'reference_years' and (
+        jsonb_typeof(p_filters -> 'reference_years') <> 'array'
+        or jsonb_array_length(p_filters -> 'reference_years') not between 1 and 20
+        or exists (
+            select 1
+            from jsonb_array_elements_text(p_filters -> 'reference_years') as year(value)
+            where year.value !~ '^(19|20)[0-9]{2}$'
+        )
+    ) then
+        raise exception 'reference_years must contain between 1 and 20 valid years'
+            using errcode = '22023';
+    end if;
+
+    exact_original_query := websearch_to_tsquery(
+        'simple', public.normalize_search_text(p_query)
+    );
+    exact_folded_query := websearch_to_tsquery(
+        'simple', public.fold_vietnamese_text(p_query)
+    );
+    recall_original_query := public.enterprise_recall_tsquery(
+        public.normalize_search_text(p_query)
+    );
+    recall_folded_query := public.enterprise_recall_tsquery(
+        public.fold_vietnamese_text(p_query)
+    );
+    if numnode(exact_original_query) = 0
+       and numnode(exact_folded_query) = 0
+       and numnode(recall_original_query) = 0
+       and numnode(recall_folded_query) = 0 then
+        return;
+    end if;
+
+    return query
+    select
+        chunks.id,
+        documents.id,
+        versions.id,
+        documents.title,
+        chunks.chunk_index,
+        chunks.content,
+        chunks.page_start,
+        chunks.page_end,
+        chunks.section_path,
+        chunks.metadata || jsonb_strip_nulls(jsonb_build_object(
+            'parent_id', chunks.parent_id,
+            'section_title', chunks.section_title,
+            'content_kind', chunks.content_kind,
+            'projection_version', projections.projection_version,
+            'metadata_revision', projections.source_metadata_revision,
+            'normalized_content_hash', chunks.normalized_content_hash,
+            'normalization_version', chunks.normalization_version,
+            'exact_duplicate_group_id',
+                nullif(chunks.metadata ->> 'exact_duplicate_group_id', ''),
+            'canonical_reference_year', chunks.canonical_reference_year,
+            'reference_year', chunks.canonical_reference_year,
+            'document_status', lower(documents.status),
+            'version_number', versions.version_number,
+            'effective_from', versions.effective_date,
+            'effective_to', versions.effective_to,
+            'effective_status', public.enterprise_effective_status(
+                versions.effective_date,
+                versions.effective_to,
+                current_date
+            ),
+            'is_current', case
+                when public.enterprise_effective_status(
+                    versions.effective_date,
+                    versions.effective_to,
+                    current_date
+                ) = 'CURRENT' then true
+                when versions.effective_date is null and versions.effective_to is null
+                    then null
+                else false
+            end,
+            'original_file_name', files.original_file_name,
+            'embedding_metadata_stale',
+                projections.embedding_metadata_revision
+                <> documents.metadata_revision
+        )),
+        (
+            0.55 * ts_rank_cd(
+                projections.search_vector_original,
+                exact_original_query,
+                32
+            )
+            + 0.15 * ts_rank_cd(
+                projections.search_vector_folded,
+                exact_folded_query,
+                32
+            )
+            + 0.20 * ts_rank_cd(
+                projections.search_vector_original,
+                recall_original_query,
+                32
+            )
+            + 0.10 * ts_rank_cd(
+                projections.search_vector_folded,
+                recall_folded_query,
+                32
+            )
+        )::double precision
+    from public.chunk_retrieval_projections as projections
+    join public.knowledge_chunks as chunks
+      on chunks.id = projections.chunk_id
+    join public.document_versions as versions
+      on versions.id = chunks.document_version_id
+     and versions.document_id = chunks.document_id
+    join public.knowledge_documents as documents
+      on documents.id = versions.document_id
+     and documents.current_version_id = versions.id
+    join public.source_files as files on files.id = versions.source_file_id
+    where documents.status = 'PUBLISHED'
+      and documents.deleted_at is null
+      and versions.status = 'ACTIVE'
+      and projections.index_status = 'READY'
+      and projections.source_metadata_revision = documents.metadata_revision
+      and public.has_document_permission(actor, documents.id, 'READ')
+      and (
+          projections.search_vector_original @@ exact_original_query
+          or projections.search_vector_folded @@ exact_folded_query
+          or projections.search_vector_original @@ recall_original_query
+          or projections.search_vector_folded @@ recall_folded_query
+      )
+      and (
+          not (p_filters ? 'document_id')
+          or documents.id = (p_filters ->> 'document_id')::uuid
+      )
+      and (
+          not (p_filters ? 'document_type')
+          or documents.document_type = upper(p_filters ->> 'document_type')
+      )
+      and (
+          not (p_filters ? 'department_code')
+          or documents.department_code = upper(p_filters ->> 'department_code')
+      )
+      and (
+          not (p_filters ? 'project_code')
+          or documents.project_code = upper(p_filters ->> 'project_code')
+      )
+      and (
+          not (p_filters ? 'category')
+          or documents.category = p_filters ->> 'category'
+      )
+      and (
+          not (p_filters ? 'domain')
+          or documents.domain = p_filters ->> 'domain'
+      )
+      and (
+          not (p_filters ? 'year')
+          or chunks.canonical_reference_year = (p_filters ->> 'year')::integer
+      )
+      and (
+          not (p_filters ? 'reference_years')
+          or chunks.canonical_reference_year in (
+              select year.value::integer
+              from jsonb_array_elements_text(
+                  p_filters -> 'reference_years'
+              ) as year(value)
+          )
+      )
+      and (
+          not (p_filters ? 'year_from')
+          or chunks.canonical_reference_year >= (p_filters ->> 'year_from')::integer
+      )
+      and (
+          not (p_filters ? 'year_to')
+          or chunks.canonical_reference_year <= (p_filters ->> 'year_to')::integer
+      )
+      and (
+          not (p_filters ? 'effective_at')
+          or (
+              (versions.effective_date is null
+               or versions.effective_date <= (p_filters ->> 'effective_at')::date)
+              and (versions.effective_to is null
+                   or versions.effective_to >= (p_filters ->> 'effective_at')::date)
+          )
+      )
+      and (
+          not (p_filters ? 'effective_status')
+          or public.enterprise_effective_status(
+              versions.effective_date,
+              versions.effective_to,
+              current_date
+          ) = upper(p_filters ->> 'effective_status')
+      )
+    order by score desc, chunks.id
+    limit greatest(1, least(coalesce(p_limit, 20), 200));
+end;
+$$;
+
+create or replace function public.match_enterprise_retrieval_projection(
+    p_query_embedding vector(1536),
+    p_limit integer default 20,
+    p_filters jsonb default '{}'::jsonb
+)
+returns table (
+    chunk_id uuid,
+    document_id uuid,
+    document_version_id uuid,
+    title text,
+    chunk_index integer,
+    content text,
+    page_start integer,
+    page_end integer,
+    section_path text,
+    metadata jsonb,
+    score double precision
+)
+language plpgsql
+stable
+security definer
+set search_path = ''
+as $$
+declare
+    actor uuid := auth.uid();
+begin
+    if actor is null
+       or not public.has_functional_permission(actor, 'ASK_KNOWLEDGE') then
+        raise exception 'Knowledge search is not permitted'
+            using errcode = '42501';
+    end if;
+    if p_query_embedding is null then
+        raise exception 'Query embedding is required'
+            using errcode = '22023';
+    end if;
+    if p_filters is null or jsonb_typeof(p_filters) <> 'object' then
+        raise exception 'Filters must be a JSON object'
+            using errcode = '22023';
+    end if;
+    if exists (
+        select 1
+        from jsonb_object_keys(p_filters) as filter_key(value)
+        where filter_key.value not in (
+            'document_id', 'document_type', 'category', 'domain',
+            'department_code', 'project_code', 'year', 'reference_years',
+            'year_from', 'year_to', 'effective_at', 'effective_status'
+        )
+    ) then
+        raise exception 'Unsupported canonical metadata filter'
+            using errcode = '22023';
+    end if;
+    if p_filters ? 'reference_years' and (
+        jsonb_typeof(p_filters -> 'reference_years') <> 'array'
+        or jsonb_array_length(p_filters -> 'reference_years') not between 1 and 20
+        or exists (
+            select 1
+            from jsonb_array_elements_text(p_filters -> 'reference_years') as year(value)
+            where year.value !~ '^(19|20)[0-9]{2}$'
+        )
+    ) then
+        raise exception 'reference_years must contain between 1 and 20 valid years'
+            using errcode = '22023';
+    end if;
+
+    return query
+    select
+        chunks.id,
+        documents.id,
+        versions.id,
+        documents.title,
+        chunks.chunk_index,
+        chunks.content,
+        chunks.page_start,
+        chunks.page_end,
+        chunks.section_path,
+        chunks.metadata || jsonb_strip_nulls(jsonb_build_object(
+            'parent_id', chunks.parent_id,
+            'section_title', chunks.section_title,
+            'content_kind', chunks.content_kind,
+            'projection_version', projections.projection_version,
+            'metadata_revision', projections.source_metadata_revision,
+            'normalized_content_hash', chunks.normalized_content_hash,
+            'normalization_version', chunks.normalization_version,
+            'exact_duplicate_group_id',
+                nullif(chunks.metadata ->> 'exact_duplicate_group_id', ''),
+            'canonical_reference_year', chunks.canonical_reference_year,
+            'reference_year', chunks.canonical_reference_year,
+            'document_status', lower(documents.status),
+            'version_number', versions.version_number,
+            'effective_from', versions.effective_date,
+            'effective_to', versions.effective_to,
+            'effective_status', public.enterprise_effective_status(
+                versions.effective_date,
+                versions.effective_to,
+                current_date
+            ),
+            'is_current', case
+                when public.enterprise_effective_status(
+                    versions.effective_date,
+                    versions.effective_to,
+                    current_date
+                ) = 'CURRENT' then true
+                when versions.effective_date is null and versions.effective_to is null
+                    then null
+                else false
+            end,
+            'original_file_name', files.original_file_name,
+            'embedding_metadata_stale',
+                projections.embedding_metadata_revision
+                <> documents.metadata_revision
+        )),
+        (
+            1 - (
+                projections.embedding
+                operator(public.<=>)
+                p_query_embedding
+            )
+        )::double precision
+    from public.chunk_retrieval_projections as projections
+    join public.knowledge_chunks as chunks
+      on chunks.id = projections.chunk_id
+    join public.document_versions as versions
+      on versions.id = chunks.document_version_id
+     and versions.document_id = chunks.document_id
+    join public.knowledge_documents as documents
+      on documents.id = versions.document_id
+     and documents.current_version_id = versions.id
+    join public.source_files as files on files.id = versions.source_file_id
+    where documents.status = 'PUBLISHED'
+      and documents.deleted_at is null
+      and versions.status = 'ACTIVE'
+      and projections.embedding is not null
+      and projections.index_status = 'READY'
+      and projections.source_metadata_revision = documents.metadata_revision
+      and public.has_document_permission(actor, documents.id, 'READ')
+      and (
+          not (p_filters ? 'document_id')
+          or documents.id = (p_filters ->> 'document_id')::uuid
+      )
+      and (
+          not (p_filters ? 'document_type')
+          or documents.document_type = upper(p_filters ->> 'document_type')
+      )
+      and (
+          not (p_filters ? 'department_code')
+          or documents.department_code = upper(p_filters ->> 'department_code')
+      )
+      and (
+          not (p_filters ? 'project_code')
+          or documents.project_code = upper(p_filters ->> 'project_code')
+      )
+      and (
+          not (p_filters ? 'category')
+          or documents.category = p_filters ->> 'category'
+      )
+      and (
+          not (p_filters ? 'domain')
+          or documents.domain = p_filters ->> 'domain'
+      )
+      and (
+          not (p_filters ? 'year')
+          or chunks.canonical_reference_year = (p_filters ->> 'year')::integer
+      )
+      and (
+          not (p_filters ? 'reference_years')
+          or chunks.canonical_reference_year in (
+              select year.value::integer
+              from jsonb_array_elements_text(
+                  p_filters -> 'reference_years'
+              ) as year(value)
+          )
+      )
+      and (
+          not (p_filters ? 'year_from')
+          or chunks.canonical_reference_year >= (p_filters ->> 'year_from')::integer
+      )
+      and (
+          not (p_filters ? 'year_to')
+          or chunks.canonical_reference_year <= (p_filters ->> 'year_to')::integer
+      )
+      and (
+          not (p_filters ? 'effective_at')
+          or (
+              (versions.effective_date is null
+               or versions.effective_date <= (p_filters ->> 'effective_at')::date)
+              and (versions.effective_to is null
+                   or versions.effective_to >= (p_filters ->> 'effective_at')::date)
+          )
+      )
+      and (
+          not (p_filters ? 'effective_status')
+          or public.enterprise_effective_status(
+              versions.effective_date,
+              versions.effective_to,
+              current_date
+          ) = upper(p_filters ->> 'effective_status')
+      )
+    order by projections.embedding operator(public.<=>) p_query_embedding,
+        chunks.id
+    limit greatest(1, least(coalesce(p_limit, 20), 200));
+end;
+$$;
+
+revoke all on function public.search_enterprise_retrieval_projection(
+    text, integer, jsonb
+) from public, anon;
+grant execute on function public.search_enterprise_retrieval_projection(
+    text, integer, jsonb
+) to authenticated, service_role;
+
+revoke all on function public.match_enterprise_retrieval_projection(
+    vector, integer, jsonb
+) from public, anon;
+grant execute on function public.match_enterprise_retrieval_projection(
+    vector, integer, jsonb
+) to authenticated, service_role;
+
+comment on function public.enterprise_chunk_reference_year(jsonb) is
+    'Returns the canonical claim/chunk reference year without treating effective date as universal reference time.';
+comment on function public.search_enterprise_retrieval_projection(
+    text, integer, jsonb
+) is
+    'P6 ACL-gated sparse Enterprise retrieval with canonical reference-year filters and duplicate/relation-ready metadata.';
+comment on function public.match_enterprise_retrieval_projection(
+    vector, integer, jsonb
+) is
+    'P6 ACL-gated dense Enterprise retrieval with canonical reference-year filters and duplicate/relation-ready metadata.';

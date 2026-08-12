@@ -24,6 +24,12 @@ import {
   getCurrentEnterpriseConversationId,
   setCurrentEnterpriseConversationId,
 } from "../../lib/enterpriseSession.js";
+import {
+  buildEnterpriseCitationDisplay,
+  buildEnterpriseSourcePreviewUrl,
+  formatEnterpriseCitationReferences,
+  getEnterpriseCitationOrderFromHref,
+} from "./enterpriseCitationDisplay.js";
 
 type ChatRow = AnswerDiagnostics & {
   id: string;
@@ -162,36 +168,90 @@ function AnswerDiagnosticBanner({
   );
 }
 
-function CitationList({ citations, onError }: { citations: EnterpriseCitation[]; onError: (message: string) => void }) {
+function EnterpriseAnswerContent({
+  content,
+  citations,
+  onSelect,
+}: {
+  content: string;
+  citations: EnterpriseCitation[];
+  onSelect: (citation: EnterpriseCitation) => void;
+}) {
+  const display = useMemo(() => buildEnterpriseCitationDisplay(citations), [citations]);
+  const formatted = useMemo(
+    () => formatEnterpriseCitationReferences(content, display),
+    [content, display],
+  );
+
+  return (
+    <div className="markdown-body">
+      <ReactMarkdown
+        components={{
+          a({ href, children }) {
+            const sourceOrder = getEnterpriseCitationOrderFromHref(href);
+            if (sourceOrder) {
+              const item = display.bySourceOrder.get(sourceOrder);
+              if (!item) return <span className="citation-unavailable">[?]</span>;
+              const location = item.citation.page
+                ? `trang ${item.citation.page}`
+                : item.citation.section || "tài liệu nguồn";
+              return (
+                <button
+                  type="button"
+                  className="citation-reference"
+                  aria-label={`Mở nguồn ${item.displayNumber}: ${item.citation.document_title}, ${location}`}
+                  title={`${item.citation.document_title} · ${location}`}
+                  onClick={() => onSelect(item.citation)}
+                >
+                  [{children}]
+                </button>
+              );
+            }
+            return <a href={href}>{children}</a>;
+          },
+        }}
+      >
+        {formatted}
+      </ReactMarkdown>
+    </div>
+  );
+}
+
+function CitationList({
+  citations,
+  selectedCitation,
+  onSelect,
+}: {
+  citations: EnterpriseCitation[];
+  selectedCitation: EnterpriseCitation | null;
+  onSelect: (citation: EnterpriseCitation) => void;
+}) {
   if (!citations.length) return null;
-  async function openSource(citation: EnterpriseCitation) {
-    const target = window.open("", "_blank");
-    if (!target) {
-      onError("Trình duyệt đã chặn tab tài liệu nguồn. Hãy cho phép popup rồi thử lại.");
-      return;
-    }
-    target.opener = null;
-    try {
-      const source = await getDocumentVersionSource(citation.document_id, citation.document_version_id);
-      const suffix = citation.page ? `#page=${citation.page}` : "";
-      target.location.href = `${source.signed_url}${suffix}`;
-    } catch (reason) {
-      target.close();
-      onError(reason instanceof Error ? reason.message : "Không thể mở tài liệu nguồn");
-    }
-  }
+  const display = buildEnterpriseCitationDisplay(citations);
   return (
     <div className="mt-4 border-t border-border pt-3">
       <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-faint">Nguồn đã kiểm chứng</div>
       <div className="flex flex-wrap gap-2">
-        {citations.map((citation, index) => (
+        {display.items.map(({ citation, displayNumber }) => (
           <button
-            key={`${citation.chunk_id}-${index}`}
-            onClick={() => void openSource(citation)}
-            className="inline-flex max-w-full items-center gap-2 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-left text-xs text-accent hover:bg-accent/15"
+            key={citation.chunk_id}
+            type="button"
+            onClick={() => onSelect(citation)}
+            aria-pressed={selectedCitation?.chunk_id === citation.chunk_id}
+            className={`inline-flex max-w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-xs transition-colors ${
+              selectedCitation?.chunk_id === citation.chunk_id
+                ? "border-accent bg-accent text-accent-foreground shadow-sm"
+                : "border-accent/30 bg-accent/10 text-accent hover:bg-accent/15"
+            }`}
           >
-            <Icon icon="lucide:file-check-2" width={14} />
-            <span className="truncate">[{index + 1}] {citation.document_title}</span>
+            <span className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+              selectedCitation?.chunk_id === citation.chunk_id
+                ? "bg-background/20"
+                : "bg-accent text-accent-foreground"
+            }`}>
+              {displayNumber}
+            </span>
+            <span className="truncate">{citation.document_title}</span>
             <span className="shrink-0 text-[10px] opacity-70">
               {citation.page ? `tr. ${citation.page}` : citation.section || "nguồn"}
             </span>
@@ -199,6 +259,144 @@ function CitationList({ citations, onError }: { citations: EnterpriseCitation[];
         ))}
       </div>
     </div>
+  );
+}
+
+function CitationSourcePanel({
+  citation,
+  onClose,
+  onError,
+}: {
+  citation: EnterpriseCitation;
+  onClose: () => void;
+  onError: (message: string) => void;
+}) {
+  const [sourceUrl, setSourceUrl] = useState("");
+  const [mimeType, setMimeType] = useState("");
+  const [fileName, setFileName] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [previewError, setPreviewError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setPreviewError("");
+    setSourceUrl("");
+    void getDocumentVersionSource(citation.document_id, citation.document_version_id)
+      .then((source) => {
+        if (cancelled) return;
+        setMimeType(source.mime_type);
+        setFileName(source.original_file_name);
+        setSourceUrl(buildEnterpriseSourcePreviewUrl(
+          source.signed_url,
+          citation.page,
+          citation.quote_text,
+          source.mime_type,
+        ));
+      })
+      .catch((reason) => {
+        if (cancelled) return;
+        const message = reason instanceof Error ? reason.message : "Không thể tải tài liệu nguồn";
+        setPreviewError(message);
+        onError(message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [citation, onError]);
+
+  const isPdf = mimeType.toLowerCase().includes("pdf");
+  const isImage = mimeType.toLowerCase().startsWith("image/");
+  const canEmbed = isPdf || isImage || mimeType.toLowerCase().startsWith("text/");
+
+  return (
+    <aside className="fixed inset-y-0 right-0 z-50 flex w-[min(92vw,520px)] shrink-0 flex-col border-l border-border bg-panel shadow-2xl xl:relative xl:inset-auto xl:z-auto xl:w-[460px] xl:shadow-none">
+      <div className="flex items-start justify-between gap-4 border-b border-border p-4">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-accent">
+            <Icon icon="lucide:quote" width={13} /> Nguồn trích dẫn
+          </div>
+          <h2 className="mt-1.5 truncate font-heading text-sm font-bold text-foreground" title={citation.document_title}>
+            {citation.document_title || fileName || "Tài liệu nguồn"}
+          </h2>
+          <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-faint">
+            {citation.page && <span className="rounded-full border border-border px-2 py-0.5">Trang {citation.page}</span>}
+            {citation.section && <span className="truncate">{citation.section}</span>}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Đóng tài liệu nguồn"
+          className="rounded-lg border border-border p-2 text-dim hover:bg-inset hover:text-foreground"
+        >
+          <Icon icon="lucide:x" width={16} />
+        </button>
+      </div>
+
+      {citation.quote_text && (
+        <div className="border-b border-yellow/30 bg-yellow/10 p-4">
+          <div className="mb-2 flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-yellow">
+            <Icon icon="lucide:highlighter" width={13} /> Đoạn được dùng để trả lời
+          </div>
+          <mark className="block max-h-36 overflow-y-auto whitespace-pre-wrap rounded-lg border border-yellow/30 bg-yellow/15 px-3 py-2.5 text-xs leading-5 text-foreground">
+            {citation.quote_text}
+          </mark>
+        </div>
+      )}
+
+      <div className="relative min-h-0 flex-1 bg-inset">
+        {loading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-xs text-faint">
+            <span className="h-7 w-7 animate-spin rounded-full border-2 border-border border-t-accent" />
+            Đang mở đúng trang tài liệu…
+          </div>
+        )}
+        {!loading && previewError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-8 text-center text-xs leading-5 text-faint">
+            <Icon icon="lucide:file-warning" width={28} />
+            {previewError}
+          </div>
+        )}
+        {!loading && !previewError && sourceUrl && canEmbed && (
+          isImage ? (
+            <div className="h-full overflow-auto p-4">
+              <img src={sourceUrl} alt={citation.document_title || fileName} className="mx-auto max-w-full rounded-lg bg-white shadow" />
+            </div>
+          ) : (
+            <iframe
+              key={sourceUrl}
+              src={sourceUrl}
+              title={`${citation.document_title} — ${citation.page ? `trang ${citation.page}` : "tài liệu nguồn"}`}
+              className="h-full w-full border-0 bg-white"
+              sandbox={isPdf ? undefined : ""}
+            />
+          )
+        )}
+        {!loading && !previewError && sourceUrl && !canEmbed && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 px-8 text-center">
+            <Icon icon="lucide:file-down" width={34} className="text-accent" />
+            <div className="text-sm font-semibold text-foreground">Định dạng này không thể hiển thị trực tiếp</div>
+            <p className="text-xs leading-5 text-faint">Đoạn trích đã được tô sáng ở phía trên. Bạn có thể mở file gốc để kiểm tra toàn bộ nội dung.</p>
+          </div>
+        )}
+      </div>
+
+      {sourceUrl && (
+        <div className="border-t border-border bg-panel p-3">
+          <a
+            href={sourceUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border border-accent/30 bg-accent/10 px-3 py-2 text-xs font-semibold text-accent hover:bg-accent/15"
+          >
+            <Icon icon="lucide:external-link" width={14} />
+            Mở tài liệu gốc {citation.page ? `tại trang ${citation.page}` : ""}
+          </a>
+        </div>
+      )}
+    </aside>
   );
 }
 
@@ -255,6 +453,7 @@ export default function EmployeeKnowledgePortal() {
   const [error, setError] = useState<string | null>(null);
   const [enterpriseUserId, setEnterpriseUserId] = useState<string | null>(null);
   const [identity, setIdentity] = useState<string>("Nhân viên");
+  const [selectedCitation, setSelectedCitation] = useState<EnterpriseCitation | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -394,6 +593,7 @@ export default function EmployeeKnowledgePortal() {
     setMessages([]);
     setQuery("");
     setError(null);
+    setSelectedCitation(null);
   }
 
   async function rate(messageId: string, rating: "UP" | "DOWN") {
@@ -469,7 +669,10 @@ export default function EmployeeKnowledgePortal() {
                 {(["CHAT", "SEARCH"] as const).map((mode) => (
                   <button
                     key={mode}
-                    onClick={() => setActiveMode(mode)}
+                    onClick={() => {
+                      setActiveMode(mode);
+                      if (mode !== "CHAT") setSelectedCitation(null);
+                    }}
                     className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${activeMode === mode ? "bg-accent text-accent-foreground" : "text-dim"}`}
                   >
                     {mode === "CHAT" ? "Hỏi đáp" : "Tìm kiếm"}
@@ -534,10 +737,22 @@ export default function EmployeeKnowledgePortal() {
                         message={message}
                         hasReadableDocuments={documents.length > 0}
                       />
-                      <div className="markdown-body"><ReactMarkdown>{message.content}</ReactMarkdown></div>
+                      {message.role === "ASSISTANT" ? (
+                        <EnterpriseAnswerContent
+                          content={message.content}
+                          citations={message.citations || []}
+                          onSelect={setSelectedCitation}
+                        />
+                      ) : (
+                        <div className="markdown-body"><ReactMarkdown>{message.content}</ReactMarkdown></div>
+                      )}
                       {message.role === "ASSISTANT" && (
                         <>
-                          <CitationList citations={message.citations || []} onError={setError} />
+                          <CitationList
+                            citations={message.citations || []}
+                            selectedCitation={selectedCitation}
+                            onSelect={setSelectedCitation}
+                          />
                           {message.persisted !== false && <div className="mt-3 flex items-center gap-1 border-t border-border pt-2 text-faint">
                             <button onClick={() => void rate(message.id, "UP")} title="Hữu ích" className="rounded-md p-1.5 hover:bg-inset hover:text-green"><Icon icon="lucide:thumbs-up" width={14} /></button>
                             <button onClick={() => void rate(message.id, "DOWN")} title="Không hữu ích" className="rounded-md p-1.5 hover:bg-inset hover:text-red"><Icon icon="lucide:thumbs-down" width={14} /></button>
@@ -573,6 +788,22 @@ export default function EmployeeKnowledgePortal() {
           </form>
         </div>
       </main>
+
+      {selectedCitation && (
+        <>
+          <button
+            type="button"
+            aria-label="Đóng khung tài liệu nguồn"
+            onClick={() => setSelectedCitation(null)}
+            className="fixed inset-0 z-40 bg-black/35 xl:hidden"
+          />
+          <CitationSourcePanel
+            citation={selectedCitation}
+            onClose={() => setSelectedCitation(null)}
+            onError={setError}
+          />
+        </>
+      )}
     </div>
   );
 }

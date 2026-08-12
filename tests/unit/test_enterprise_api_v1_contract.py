@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, datetime
 from uuid import UUID
 
@@ -39,7 +40,11 @@ from app.governance.domain.models import (
     ConversationDetail,
     EnterpriseCitation,
     EnterpriseConversation,
+    EnterpriseDocumentRelation,
+    EnterpriseDocumentRelationEvidence,
     EnterpriseMessage,
+    EnterpriseRelationDocumentEvidence,
+    EnterpriseRelationOverlap,
     SearchHit,
 )
 from app.identity.domain.models import PrincipalContext
@@ -53,6 +58,8 @@ USER_MESSAGE_ID = UUID("60000000-0000-0000-0000-000000000006")
 ANSWER_MESSAGE_ID = UUID("70000000-0000-0000-0000-000000000007")
 CITATION_ID = UUID("80000000-0000-0000-0000-000000000008")
 NOW = datetime(2026, 8, 8, tzinfo=UTC)
+RELATION_ID = UUID("90000000-0000-0000-0000-000000000009")
+TARGET_DOCUMENT_ID = UUID("a0000000-0000-0000-0000-000000000010")
 
 
 class IdentityServiceStub:
@@ -170,6 +177,10 @@ class DocumentServiceStub:
             ),
         )
 
+    async def queue_quality_reprocess(self, document_id: UUID) -> ProcessingJob:
+        assert document_id == DOCUMENT_ID
+        return _processing_job(status="PENDING")
+
 
 class SourceFileServiceStub:
     async def upload_initial_document(
@@ -206,6 +217,78 @@ class SourceFileServiceStub:
 
 
 class GovernanceServiceStub:
+    async def list_document_relations(
+        self,
+        *,
+        relation_status: str | None,
+        limit: int,
+        offset: int,
+    ) -> tuple[list[EnterpriseDocumentRelation], int]:
+        assert relation_status == "pending"
+        assert limit == 200
+        assert offset == 0
+        return [self._relation()], 1
+
+    async def get_document_relation_evidence(
+        self, relation_id: UUID
+    ) -> EnterpriseDocumentRelationEvidence | None:
+        assert relation_id == RELATION_ID
+        return EnterpriseDocumentRelationEvidence(
+            relation_id=RELATION_ID,
+            source_document=EnterpriseRelationDocumentEvidence(
+                id=DOCUMENT_ID,
+                title="Vinhomes 2026",
+                version_number=1,
+                text_content="Giá 106 triệu/m²",
+            ),
+            target_document=EnterpriseRelationDocumentEvidence(
+                id=TARGET_DOCUMENT_ID,
+                title="Vinhomes 2026 copy",
+                version_number=1,
+                text_content="Giá 103 triệu/m²",
+            ),
+            overlaps=(
+                EnterpriseRelationOverlap(
+                    source_text="106 triệu/m²",
+                    target_text="103 triệu/m²",
+                ),
+            ),
+        )
+
+    async def resolve_document_relation(
+        self,
+        relation_id: UUID,
+        *,
+        action: str,
+        reason: str | None,
+        expected_updated_at: str | None,
+    ) -> EnterpriseDocumentRelation:
+        assert relation_id == RELATION_ID
+        assert action == "confirm_conflict"
+        assert reason == "Same period, different price"
+        assert expected_updated_at == NOW.isoformat()
+        return replace(
+            self._relation(),
+            relation_type="conflict",
+            status="confirmed",
+            reason=reason,
+            resolution_action=action,
+        )
+
+    @staticmethod
+    def _relation() -> EnterpriseDocumentRelation:
+        return EnterpriseDocumentRelation(
+            id=RELATION_ID,
+            source_document_id=DOCUMENT_ID,
+            target_document_id=TARGET_DOCUMENT_ID,
+            relation_type="conflict_candidate",
+            status="pending",
+            confidence=0.91,
+            reason="semantic_quantity_mismatch",
+            created_at=NOW,
+            updated_at=NOW,
+        )
+
     async def search(
         self, query: str, *, limit: int, filters: dict[str, object]
     ) -> list[SearchHit]:
@@ -429,6 +512,19 @@ async def test_document_list_accepts_admin_portal_page_size() -> None:
 
 
 @pytest.mark.anyio
+async def test_quality_reprocess_endpoint_queues_new_attempt() -> None:
+    transport = httpx.ASGITransport(app=_app(_document(status="PUBLISHED")))
+    async with httpx.AsyncClient(transport=transport, base_url="https://api.test") as client:
+        response = await client.post(
+            f"/api/v1/documents/{DOCUMENT_ID}/quality/reprocess"
+        )
+
+    assert response.status_code == 202
+    assert response.json()["status"] == "PENDING"
+    assert response.json()["document_version_id"] == str(VERSION_ID)
+
+
+@pytest.mark.anyio
 async def test_v1_not_found_uses_standard_error_contract() -> None:
     transport = httpx.ASGITransport(app=_app(None))
     async with httpx.AsyncClient(transport=transport, base_url="https://api.test") as client:
@@ -478,6 +574,8 @@ async def test_question_endpoint_returns_frontend_answer_contract() -> None:
         "document_version_id": str(VERSION_ID),
         "document_title": "Policy",
         "chunk_id": str(CHUNK_ID),
+        "citation_order": 1,
+        "quote_text": "Grounded evidence",
         "page": 2,
         "section": "Scope",
     }
@@ -496,6 +594,8 @@ async def test_conversation_history_normalizes_internal_answer_statuses() -> Non
     assert messages[1]["answer_status"] == "ANSWERED"
     assert messages[1]["error_code"] == "CITATION_RETRY_RECOVERED"
     assert messages[1]["citations"][0]["document_version_id"] == str(VERSION_ID)
+    assert messages[1]["citations"][0]["citation_order"] == 1
+    assert messages[1]["citations"][0]["quote_text"] == "Grounded evidence"
 
 
 @pytest.mark.anyio
@@ -578,3 +678,28 @@ async def test_text_comparison_preview_rejects_blank_content() -> None:
         )
 
     assert response.status_code == 422
+
+
+@pytest.mark.anyio
+async def test_enterprise_relation_review_endpoints_use_persisted_service() -> None:
+    transport = httpx.ASGITransport(app=_app())
+    async with httpx.AsyncClient(transport=transport, base_url="https://api.test") as client:
+        listed = await client.get("/api/v1/quality/relations?status=pending")
+        evidence = await client.get(
+            f"/api/v1/quality/relations/{RELATION_ID}/evidence"
+        )
+        resolved = await client.post(
+            f"/api/v1/quality/relations/{RELATION_ID}/resolve",
+            json={
+                "action": "confirm_conflict",
+                "reason": "Same period, different price",
+                "expected_updated_at": NOW.isoformat(),
+            },
+        )
+
+    assert listed.status_code == 200
+    assert listed.json()["items"][0]["status"] == "pending"
+    assert evidence.status_code == 200
+    assert evidence.json()["overlaps"][0]["target_text"] == "103 triệu/m²"
+    assert resolved.status_code == 200
+    assert resolved.json()["status"] == "confirmed"

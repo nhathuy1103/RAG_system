@@ -246,6 +246,13 @@ def get_enterprise_question_service(
         mmr_lambda=settings.retrieval_mmr_lambda,
         max_chunks_per_document=settings.retrieval_max_chunks_per_document,
         history_limit=settings.chat_history_max_turns,
+        rag_mode=settings.rag_p5_mode,
+        context_max_items=settings.rag_p5_context_max_items,
+        context_max_characters=settings.rag_p5_context_max_characters,
+        context_characters_per_token=settings.rag_p5_characters_per_token,
+        near_duplicate_representatives=(
+            settings.rag_p5_near_duplicate_representatives
+        ),
         telemetry=telemetry,
     )
 
