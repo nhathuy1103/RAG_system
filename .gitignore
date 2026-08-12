@@ -24,6 +24,7 @@ site/
 # Python tooling, tests and coverage
 .mypy_cache/
 .pytest_cache/
+.pytest-*/
 .ruff_cache/
 .tox/
 .nox/

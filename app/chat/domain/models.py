@@ -92,6 +92,18 @@ class AnswerCitation:
     document_version: int
     excerpt: str
     retrieval_score: float | None
+    claim_ids: tuple[str, ...] = ()
+    table_id: str | None = None
+    row_ordinal: int | None = None
+    evidence_group_id: str | None = None
+    occurrence_count: int = 1
+    independent_source_count: int = 1
+    relation_type: str | None = None
+    evidence_status: str | None = None
+    authority_level: int | None = None
+    source_type: str | None = None
+    approval_status: str | None = None
+    authority_reason: str | None = None
 
 
 @dataclass(frozen=True)

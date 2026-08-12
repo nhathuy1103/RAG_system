@@ -36,8 +36,15 @@ from app.generation.application.citation_validation import (
     build_evidence_aliases,
     validate_answer_citations,
     validate_citation_hit,
+    validate_p5_citation_contract,
 )
+from app.generation.application.evidence_context import (
+    EvidenceContextPolicy,
+    build_generation_context,
+)
+from app.generation.application.no_answer_policy import no_answer_message
 from app.generation.domain import CitationHit, TokenChunk, UsageInfo
+from app.generation.domain.evidence import GenerationContext, NoAnswerReason
 from app.generation.ports import AnswerGeneratorPort
 from app.infrastructure.telemetry import Observation, Telemetry
 from app.knowledge_quality.domain.models import (
@@ -57,6 +64,11 @@ from app.retrieval.application.handle_retrieval_request import (
     ClarificationNeeded,
     FixedAnswer,
     RetrievalRequestHandler,
+)
+from app.retrieval.application.query_context import (
+    QueryContext,
+    QueryIntent,
+    parse_query_context,
 )
 from app.retrieval.application.temporal_query import (
     QueryTimeRange,
@@ -122,6 +134,7 @@ class ChatContext:
     structured_query: StructuredFactQueryIntent | None = None
     structured_document_ids: tuple[UUID, ...] | None = None
     trace_id: str = ""
+    query_context: QueryContext | None = None
 
 
 def _derive_title(question: str) -> str:
@@ -231,6 +244,33 @@ def _resolve_structured_document_ids(
         else:
             allowed_ids.add(document.id)
     return tuple(sorted(allowed_ids, key=str))
+
+
+def _resolve_p5_document_ids(
+    documents: Sequence[Document],
+    requested_document_ids: tuple[UUID, ...] | None,
+    query: QueryContext,
+) -> tuple[UUID, ...]:
+    """Keep active historical/version candidates only when query semantics require them."""
+
+    if requested_document_ids is not None:
+        return _resolve_allowed_document_ids(documents, requested_document_ids)
+    if query.intent not in {
+        QueryIntent.HISTORICAL_FACT,
+        QueryIntent.TEMPORAL_COMPARISON,
+        QueryIntent.VERSION_COMPARISON,
+    }:
+        return _resolve_allowed_document_ids(documents, None)
+    return tuple(
+        sorted(
+            (
+                document.id
+                for document in documents
+                if document.is_active and document.canonical_document_id is None
+            ),
+            key=str,
+        )
+    )
 
 
 def _build_structured_fact_search(
@@ -384,7 +424,12 @@ def _structured_candidates(
                             "document_version": fact.document_version,
                             "content_kind": "structured_fact",
                             "structured_claim_id": fact.claim_id,
+                            "structured_subject": fact.subject_key,
                             "structured_predicate": fact.predicate,
+                            "structured_value": dict(fact.normalized_value),
+                            "structured_qualifiers": dict(fact.qualifiers),
+                            "structured_temporal": dict(fact.temporal),
+                            "structured_provenance": dict(fact.provenance),
                             "structured_relation_warnings": relation_warnings,
                             "structured_authority": authority,
                         }
@@ -499,6 +544,8 @@ class ChatService:
     telemetry: Telemetry = field(default_factory=Telemetry)
     document_scope_planner: DeterministicDocumentScopePlanner | None = None
     document_scope_planner_mode: Literal["off", "shadow", "on"] = "off"
+    p5_mode: Literal["off", "shadow", "on"] = "shadow"
+    p5_context_policy: EvidenceContextPolicy = field(default_factory=EvidenceContextPolicy)
 
     def __post_init__(self) -> None:
         if self.knowledge_quality_mode not in {"off", "shadow", "on"}:
@@ -507,6 +554,8 @@ class ChatService:
             raise ValueError("structured_fact_mode must be off, shadow, or on")
         if self.document_scope_planner_mode not in {"off", "shadow", "on"}:
             raise ValueError("document_scope_planner_mode must be off, shadow, or on")
+        if self.p5_mode not in {"off", "shadow", "on"}:
+            raise ValueError("p5_mode must be off, shadow, or on")
 
     async def prepare(
         self,
@@ -613,6 +662,11 @@ class ChatService:
         except DocumentRepositoryError as exc:
             raise ChatServiceError("Document storage is unavailable") from exc
 
+        query_context = parse_query_context(
+            question,
+            owner_id=str(owner_id),
+            notebook_id=str(notebook_id),
+        )
         legacy_allowed_ids = _resolve_legacy_document_ids(
             documents,
             requested_document_ids,
@@ -633,9 +687,13 @@ class ChatService:
             valid_time=valid_time,
         )
         allowed_ids = (
-            quality_allowed_ids
-            if self.knowledge_quality_mode == "on" or valid_time is not None
-            else legacy_allowed_ids
+            _resolve_p5_document_ids(documents, requested_document_ids, query_context)
+            if self.p5_mode == "on"
+            else (
+                quality_allowed_ids
+                if self.knowledge_quality_mode == "on" or valid_time is not None
+                else legacy_allowed_ids
+            )
         )
         scope_plan: DocumentScopePlan | None = None
         with self.telemetry.observe(
@@ -766,6 +824,7 @@ class ChatService:
             structured_query=structured_query,
             structured_document_ids=structured_document_ids,
             trace_id=trace_id,
+            query_context=query_context,
         )
 
     async def _load_confirmed_conflict_pairs(
@@ -1017,6 +1076,65 @@ class ChatService:
             evidence,
             context.confirmed_conflict_pairs,
         )
+        p5_context: GenerationContext | None = None
+        if self.p5_mode != "off":
+            query_context = context.query_context or parse_query_context(
+                context.question,
+                owner_id=str(context.owner_id),
+                notebook_id=str(context.notebook_id),
+            )
+            with self.telemetry.observe(
+                "generation.p5_evidence_context",
+                as_type="chain",
+                input={
+                    "mode": self.p5_mode,
+                    "query_intent": query_context.intent,
+                    "evidence_count": len(evidence),
+                },
+            ) as observation:
+                p5_context = build_generation_context(
+                    query_context,
+                    evidence,
+                    authorized_document_ids=frozenset(
+                        str(document_id) for document_id in authorized_document_ids
+                    ),
+                    policy=self.p5_context_policy,
+                )
+                observation.update(
+                    output={
+                        "selected_evidence_ids": [item.evidence_id for item in p5_context.evidence],
+                        "selected_chunk_ids": [item.chunk_id for item in p5_context.evidence],
+                        "suppressed_ids": list(p5_context.diagnostics.suppressed_ids),
+                        "unauthorized_ids": list(p5_context.diagnostics.unauthorized_ids),
+                        "conflicts_preserved": (p5_context.diagnostics.conflict_pair_count),
+                        "context_tokens_before": (p5_context.diagnostics.estimated_input_tokens),
+                        "context_tokens_after": (p5_context.diagnostics.estimated_selected_tokens),
+                        "no_answer_reason": p5_context.no_answer_reason,
+                    }
+                )
+            if self.p5_mode == "on" and p5_context.no_answer_reason is not None:
+                safe_answer = no_answer_message(
+                    p5_context.no_answer_reason,
+                    follow_up=p5_context.follow_up,
+                )
+                yield AnswerToken(text=safe_answer)
+                await self._safe_complete(
+                    context,
+                    content=safe_answer,
+                    model=None,
+                    tokens=None,
+                )
+                root_observation.update(
+                    output={
+                        "status": "p5_controlled_no_answer",
+                        "no_answer_reason": p5_context.no_answer_reason,
+                        "generator_called": False,
+                    }
+                )
+                yield AnswerDone()
+                return
+            if self.p5_mode == "on":
+                evidence = p5_context.candidates
         evidence_by_alias = build_evidence_aliases(evidence)
         text_parts: list[str] = []
         new_citations: list[NewCitation] = []
@@ -1025,12 +1143,23 @@ class ChatService:
         usage: UsageInfo | None = None
 
         try:
-            async for event in self.answer_generator.stream(
-                question=context.question, evidence=evidence
-            ):
+            generation_stream = (
+                self.answer_generator.stream(
+                    question=context.question,
+                    evidence=evidence,
+                    generation_context=p5_context,
+                )
+                if self.p5_mode == "on" and p5_context is not None
+                else self.answer_generator.stream(
+                    question=context.question,
+                    evidence=evidence,
+                )
+            )
+            async for event in generation_stream:
                 if isinstance(event, TokenChunk):
                     text_parts.append(event.text)
-                    yield AnswerToken(text=event.text)
+                    if self.p5_mode != "on":
+                        yield AnswerToken(text=event.text)
                 elif isinstance(event, CitationHit):
                     candidate = validate_citation_hit(
                         event,
@@ -1042,6 +1171,15 @@ class ChatService:
                     document_id = UUID(chunk.document_id)
                     page_number = _parse_page_number(chunk.metadata)
                     section_title = _parse_section_title(chunk.metadata)
+                    semantic_evidence = (
+                        p5_context.evidence_by_id.get(event.source_id)
+                        if p5_context is not None
+                        else None
+                    )
+                    raw_provenance = chunk.metadata.get("structured_provenance")
+                    structured_provenance = (
+                        raw_provenance if isinstance(raw_provenance, Mapping) else {}
+                    )
                     new_citations.append(
                         NewCitation(
                             document_id=document_id,
@@ -1065,21 +1203,118 @@ class ChatService:
                             document_version=chunk.typed_metadata.document_version,
                             excerpt=chunk.text,
                             retrieval_score=candidate.score,
+                            claim_ids=(
+                                semantic_evidence.claim_ids if semantic_evidence is not None else ()
+                            ),
+                            table_id=(
+                                str(structured_provenance.get("table_id") or "").strip() or None
+                            ),
+                            row_ordinal=_safe_positive_int(
+                                structured_provenance.get(
+                                    "data_row_ordinal",
+                                    structured_provenance.get("row_index"),
+                                )
+                            ),
+                            evidence_group_id=(
+                                semantic_evidence.evidence_group_id
+                                if semantic_evidence is not None
+                                else None
+                            ),
+                            occurrence_count=(
+                                semantic_evidence.provenance.occurrence_count
+                                if semantic_evidence is not None
+                                else 1
+                            ),
+                            independent_source_count=(
+                                semantic_evidence.independent_source_count
+                                if semantic_evidence is not None
+                                else 1
+                            ),
+                            relation_type=(
+                                semantic_evidence.relation_type
+                                if semantic_evidence is not None
+                                else None
+                            ),
+                            evidence_status=(
+                                semantic_evidence.status if semantic_evidence is not None else None
+                            ),
+                            authority_level=(
+                                semantic_evidence.authority.authority_level
+                                if semantic_evidence is not None
+                                else None
+                            ),
+                            source_type=(
+                                semantic_evidence.authority.source_type
+                                if semantic_evidence is not None
+                                else None
+                            ),
+                            approval_status=(
+                                semantic_evidence.authority.approval_status
+                                if semantic_evidence is not None
+                                else None
+                            ),
+                            authority_reason=(
+                                semantic_evidence.authority.authority_reason
+                                if semantic_evidence is not None
+                                else None
+                            ),
                         )
                     )
                 elif isinstance(event, UsageInfo):
                     usage = event
-            validate_answer_citations(
-                "".join(text_parts),
-                evidence_by_alias=evidence_by_alias,
-                accepted_source_ids=accepted_source_ids,
-            )
-        except CitationValidationError:
+            if self.p5_mode == "on" and p5_context is not None:
+                citation_diagnostics = validate_p5_citation_contract(
+                    "".join(text_parts),
+                    context=p5_context,
+                    accepted_source_ids=accepted_source_ids,
+                )
+                root_observation.update(
+                    metadata={
+                        "p5_citation_coverage": citation_diagnostics.citation_coverage,
+                        "p5_numeric_support_accuracy": (
+                            citation_diagnostics.numeric_support_accuracy
+                        ),
+                        "p5_conflict_citations_complete": (
+                            citation_diagnostics.complete_conflict_bundle_count
+                        ),
+                    }
+                )
+            else:
+                validate_answer_citations(
+                    "".join(text_parts),
+                    evidence_by_alias=evidence_by_alias,
+                    accepted_source_ids=accepted_source_ids,
+                )
+        except CitationValidationError as exc:
             LOGGER.warning(
                 "Citation validation rejected an answer for conversation %s",
                 context.conversation_id,
                 exc_info=True,
             )
+            if self.p5_mode == "on":
+                safe_answer = no_answer_message(
+                    p5_context.no_answer_reason
+                    if p5_context and p5_context.no_answer_reason
+                    else NoAnswerReason.LOW_CONFIDENCE_EVIDENCE
+                )
+                yield AnswerToken(text=safe_answer)
+                await self._safe_complete(
+                    context,
+                    content=safe_answer,
+                    model=None,
+                    tokens=usage,
+                )
+                root_observation.update(
+                    output={
+                        "status": "p5_citation_validation_abstention",
+                        "citation_validation_code": exc.code,
+                        "citation_count": 0,
+                    },
+                    level="WARNING",
+                    status_message="P5 returned controlled uncertainty",
+                )
+                yield AnswerDone()
+                return
             await self._safe_fail(context, CITATION_VALIDATION_FAILURE)
             root_observation.update(
                 output={
@@ -1111,6 +1346,8 @@ class ChatService:
             yield AnswerFailed(message="Không thể sinh câu trả lời")
             return
 
+        if self.p5_mode == "on":
+            yield AnswerToken(text="".join(text_parts))
         for citation_event in pending_citation_events:
             yield citation_event
         persisted_citations = _deduplicate_citations(new_citations)

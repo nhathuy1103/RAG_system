@@ -1,6 +1,7 @@
 """Public structured-fact domain contracts."""
 
 from app.structured_facts.domain.models import (
+    CLAIM_COMPARABLE_KEY_VERSION,
     BusinessScope,
     ClaimDerivation,
     ClaimProvenance,
@@ -24,6 +25,9 @@ from app.structured_facts.domain.models import (
     TemporalContext,
     TemporalPoint,
     TemporalRelation,
+    ValueExpression,
+    ValueExpressionRelation,
+    ValueOperator,
     VehicleScope,
 )
 from app.structured_facts.domain.review import (
@@ -38,6 +42,7 @@ from app.structured_facts.domain.review import (
 
 __all__ = [
     "BusinessScope",
+    "CLAIM_COMPARABLE_KEY_VERSION",
     "ClaimDerivation",
     "ClaimProvenance",
     "ClaimQualifiers",
@@ -67,5 +72,8 @@ __all__ = [
     "TemporalContext",
     "TemporalPoint",
     "TemporalRelation",
+    "ValueExpression",
+    "ValueExpressionRelation",
+    "ValueOperator",
     "VehicleScope",
 ]

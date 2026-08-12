@@ -1,4 +1,4 @@
-"""Map structured-table analyses to migration-16 persistence payloads.
+"""Map unified table/prose claims to migration-16 persistence payloads.
 
 The domain models intentionally serialize as nested, review-friendly objects.
 Migration 16 uses an indexed flat schema.  This module is the single explicit
@@ -14,13 +14,14 @@ import math
 import re
 import unicodedata
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from uuid import NAMESPACE_URL, uuid5
 
 from app.pipeline.documents.domain.parsed import ParsedTable
 from app.pipeline.indexing.domain.embedded_chunk import EmbeddedChunk
+from app.structured_facts.application.claim_extraction import canonicalize_table_claims
 from app.structured_facts.application.table_analyzer import TableAnalysis
 from app.structured_facts.domain.models import (
     ClaimProvenance,
@@ -53,8 +54,9 @@ def build_structured_fact_persistence_batch(
     tables: Sequence[ParsedTable],
     embedded_chunks: Sequence[EmbeddedChunk],
     template_fingerprint: str | Mapping[str, str] | None = None,
+    prose_claims: Sequence[StructuredClaim] = (),
 ) -> StructuredFactPersistenceBatch:
-    """Build deterministic migration-16 payloads without storing raw tables.
+    """Build deterministic migration-16 payloads without storing raw sources.
 
     A claim citation is emitted only when its table source block and data-row
     ordinal can be proven to fall inside an embedded chunk.  An unproven
@@ -62,7 +64,10 @@ def build_structured_fact_persistence_batch(
     """
 
     table_by_id = _unique_tables(tables)
-    document_ids = {analysis.document_id.strip() for analysis in analyses}
+    document_ids = {
+        *(analysis.document_id.strip() for analysis in analyses),
+        *(claim.document_id.strip() for claim in prose_claims),
+    }
     if "" in document_ids:
         raise ValueError("analysis document_id cannot be blank")
     if len(document_ids) > 1:
@@ -84,27 +89,61 @@ def build_structured_fact_persistence_batch(
         if not analysis.extractor_version.strip():
             raise ValueError("analysis extractor_version cannot be blank")
 
+        persisted_claims = canonicalize_table_claims(analysis)
+        persisted_analysis = replace(
+            analysis,
+            claims=persisted_claims,
+            extractor_version=(
+                persisted_claims[0].extractor_version
+                if persisted_claims
+                else f"{analysis.extractor_version}+p3-bridge-v1"
+            ),
+        )
+
         table_chunks = tuple(
             chunk for chunk in embedded_chunks if chunk.document_id == analysis.document_id
         )
         snapshots.append(
             _snapshot_payload(
-                analysis=analysis,
+                analysis=persisted_analysis,
                 table=table,
                 table_index=table_indexes[table.table_id],
                 chunks=table_chunks,
                 template_fingerprint=fingerprints.get(table.table_id),
             )
         )
-        for claim in analysis.claims:
+        for claim in persisted_analysis.claims:
             claims.append(
                 _claim_payload(
                     claim=claim,
-                    analysis=analysis,
+                    analysis=persisted_analysis,
                     table=table,
                     chunks=table_chunks,
                 )
             )
+
+    prose_by_chunk: dict[str, list[StructuredClaim]] = {}
+    for claim in prose_claims:
+        chunk_id = claim.provenance.chunk_id
+        if not chunk_id:
+            raise ValueError("prose claim provenance chunk_id is required for persistence")
+        prose_by_chunk.setdefault(chunk_id, []).append(claim)
+    chunks_by_id = {chunk.id: chunk for chunk in embedded_chunks}
+    for chunk_id in sorted(prose_by_chunk):
+        chunk = chunks_by_id.get(chunk_id)
+        if chunk is None:
+            raise ValueError(f"prose claim references unknown embedded chunk: {chunk_id}")
+        chunk_claims = tuple(prose_by_chunk[chunk_id])
+        snapshot = _prose_snapshot_payload(chunk=chunk, claims=chunk_claims)
+        snapshots.append(snapshot)
+        claims.extend(
+            _prose_claim_payload(
+                claim=claim,
+                chunk=chunk,
+                snapshot_key=str(snapshot["snapshot_key"]),
+            )
+            for claim in chunk_claims
+        )
 
     return StructuredFactPersistenceBatch(
         table_snapshots=tuple(snapshots),
@@ -121,6 +160,7 @@ def _snapshot_payload(
     template_fingerprint: str | None,
 ) -> dict[str, object]:
     normalized_schema: dict[str, object] = {
+        "source_form": "table",
         "columns": list(analysis.normalized_schema),
         "header_mapping": dict(sorted(analysis.header_mapping.items())),
     }
@@ -188,8 +228,18 @@ def _claim_payload(
     )
     source_chunk_id = _persisted_chunk_id(source_chunk) if source_chunk is not None else None
     persisted_provenance = _provenance_payload(provenance, source_chunk, source_chunk_id)
+    persisted_provenance["source_form"] = "table"
+    persisted_provenance["claim_extractor_version"] = claim.extractor_version
+    persisted_provenance["claim_temporal"] = claim.temporal.to_payload()
+    persisted_provenance["claim_evidence"] = list(claim.evidence)
     subject_identity = _subject_identity(claim)
-    normalized_value = claim.value.to_payload()
+    expression = claim.value_expression
+    if expression is None:  # pragma: no cover - guaranteed by StructuredClaim
+        raise RuntimeError("StructuredClaim value expression invariant was violated")
+    normalized_value = {
+        **claim.value.to_payload(),
+        **expression.to_payload(),
+    }
     value_type = _migration_value_type(claim.value, claim.predicate)
     numeric_value = _numeric_value(claim.value, value_type)
     row_identity_hash = _text_hash(claim.subject_key)
@@ -203,6 +253,7 @@ def _claim_payload(
         "subject_key": claim.subject_key,
         "scope": claim.scope.to_payload(),
         "value": normalized_value,
+        "value_expression": expression.to_payload(),
         "temporal": claim.temporal.to_payload(),
         "authority": claim.authority.to_payload(),
         "claim_identity_hash": claim.claim_identity_hash,
@@ -232,14 +283,134 @@ def _claim_payload(
         **_flat_temporal(claim.temporal),
         **_flat_authority(claim.authority),
         # Keep the domain spelling alongside the indexed SQL column spelling.
-        # The RPC accepts both, and the former makes this anti-corruption payload
-        # safe to inspect or rehydrate without silently losing confidence.
         "extraction_confidence": claim.extraction_confidence,
         "confidence": claim.extraction_confidence,
         "is_derived": claim.derivation is not None,
         "derivation": claim.derivation.to_payload() if claim.derivation else {},
         "extractor_version": claim.extractor_version,
     }
+
+
+def _prose_snapshot_payload(
+    *,
+    chunk: EmbeddedChunk,
+    claims: Sequence[StructuredClaim],
+) -> dict[str, object]:
+    persisted_chunk_id = _persisted_chunk_id(chunk)
+    snapshot_key = f"prose:{persisted_chunk_id}"
+    schema = {
+        "source_form": "prose",
+        "predicates": sorted({claim.predicate for claim in claims}),
+        "claim_extractor_versions": sorted({claim.extractor_version for claim in claims}),
+    }
+    confidence = min((claim.extraction_confidence for claim in claims), default=0.0)
+    temporal = _common_temporal(claims)
+    authority = _common_authority(claims)
+    return {
+        "table_id": snapshot_key,
+        "snapshot_key": snapshot_key,
+        "input_content_hash": (
+            chunk.checksum if _SHA256_PATTERN.fullmatch(chunk.checksum) else _text_hash(chunk.text)
+        ),
+        "schema_fingerprint": _stable_hash(schema),
+        "template_fingerprint": None,
+        "table_index": chunk.chunk_index,
+        "page_from": chunk.page_number,
+        "page_to": chunk.page_number,
+        "source_chunk_id": persisted_chunk_id,
+        "source_locator": {
+            "source_form": "prose",
+            "embedded_chunk_id": chunk.id,
+            "persisted_chunk_id": persisted_chunk_id,
+        },
+        "normalized_schema": schema,
+        "row_count": len(claims),
+        "column_count": 0,
+        "extractor_name": "p3-prose-claim-extractor",
+        "extractor_version": sorted({claim.extractor_version for claim in claims})[0],
+        **_flat_temporal(temporal),
+        **_flat_authority(authority),
+        "extraction_confidence": confidence,
+        "warnings": [],
+    }
+
+
+def _prose_claim_payload(
+    *,
+    claim: StructuredClaim,
+    chunk: EmbeddedChunk,
+    snapshot_key: str,
+) -> dict[str, object]:
+    if claim.document_id != chunk.document_id:
+        raise ValueError("prose claim document_id does not match its embedded chunk")
+    expression = claim.value_expression
+    if expression is None:  # pragma: no cover - guaranteed by StructuredClaim
+        raise RuntimeError("StructuredClaim value expression invariant was violated")
+    source_chunk_id = _persisted_chunk_id(chunk)
+    provenance = _provenance_payload(claim.provenance, chunk, source_chunk_id)
+    provenance.update(
+        {
+            "source_form": "prose",
+            "claim_extractor_version": claim.extractor_version,
+            "claim_temporal": claim.temporal.to_payload(),
+            "claim_evidence": list(claim.evidence),
+        }
+    )
+    normalized_value = {**claim.value.to_payload(), **expression.to_payload()}
+    value_type = _migration_value_type(claim.value, claim.predicate)
+    subject_identity = _subject_identity(claim)
+    source_text = _claim_source_text(claim, chunk)
+    return {
+        "id": claim.id,
+        "document_id": claim.document_id,
+        "subject_key": claim.subject_key,
+        "scope": claim.scope.to_payload(),
+        "value": normalized_value,
+        "value_expression": expression.to_payload(),
+        "temporal": claim.temporal.to_payload(),
+        "authority": claim.authority.to_payload(),
+        "claim_identity_hash": claim.claim_identity_hash,
+        "snapshot_key": snapshot_key,
+        "claim_key": claim.claim_identity_hash,
+        "row_identity": claim.subject_key,
+        "row_identity_hash": _text_hash(claim.subject_key),
+        "row_index": chunk.chunk_index,
+        "data_row_ordinal": None,
+        "page_number": claim.provenance.page_number or chunk.page_number,
+        "source_text": source_text,
+        "source_cells": [],
+        "source_chunk_id": source_chunk_id,
+        "provenance": provenance,
+        "subject_identity": subject_identity,
+        "subject_identity_hash": _stable_hash(subject_identity),
+        "candidate_identity_hash": claim.candidate_identity_hash,
+        "predicate": claim.predicate,
+        "value_type": value_type,
+        "normalized_value": normalized_value,
+        "numeric_value": _numeric_value(claim.value, value_type),
+        "unit": expression.unit,
+        "currency": expression.currency.upper() if expression.currency else None,
+        "qualifiers": claim.qualifiers.to_payload(),
+        "qualifier_hash": claim.qualifiers.stable_identity_hash,
+        **_flat_temporal(claim.temporal),
+        **_flat_authority(claim.authority),
+        "extraction_confidence": claim.extraction_confidence,
+        "confidence": claim.extraction_confidence,
+        "is_derived": claim.derivation is not None,
+        "derivation": claim.derivation.to_payload() if claim.derivation else {},
+        "extractor_version": claim.extractor_version,
+    }
+
+
+def _claim_source_text(claim: StructuredClaim, chunk: EmbeddedChunk) -> str:
+    canonical_text = str(chunk.canonical_text)
+    span = claim.provenance.source_span
+    if span is None:
+        return claim.value.raw_value or canonical_text
+    start, end = span
+    if 0 <= start < end <= len(canonical_text):
+        return canonical_text[start:end]
+    return claim.value.raw_value or canonical_text
 
 
 def _unique_tables(tables: Sequence[ParsedTable]) -> dict[str, ParsedTable]:
@@ -299,6 +470,10 @@ def _subject_identity(claim: StructuredClaim) -> dict[str, object]:
         "location": claim.scope.location.to_payload(),
         "product": claim.scope.product.to_payload(),
         "commercial": claim.scope.commercial.to_payload(),
+        "vehicle": claim.scope.vehicle.to_payload(),
+        "entities": [entity.to_payload() for entity in claim.scope.entities],
+        "explicit_breadth": list(claim.scope.explicit_breadth),
+        "scope_identity_hash": claim.scope.scope_identity_hash,
     }
 
 

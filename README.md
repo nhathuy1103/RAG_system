@@ -157,6 +157,11 @@ Trong SQL Editor của một Supabase project mới, chạy lần lượt các f
 27. `supabase/migrations/27_fix_complete_processing_job_v2_digest.sql`
 28. `supabase/migrations/28_guided_document_publish.sql`
 29. `supabase/migrations/29_allow_reupload_after_archive.sql`
+30. `supabase/migrations/30_auto_publish_processed_documents.sql`
+31. `supabase/migrations/31_retrieval_reliability_hardening.sql`
+32. `supabase/migrations/32_high_recall_chunk_candidates.sql`
+33. `supabase/migrations/33_domain_entity_scope_metadata.sql`
+34. `supabase/migrations/34_p4_relation_replacement.sql`
 
 Các migration tạo schema ứng dụng, RLS, hai private bucket `documents` và
 `knowledge-source-files`, pgvector search RPC, Enterprise IAM/ACL/lifecycle,
@@ -164,8 +169,8 @@ document identity/version/conflict, audit và guarded reversal. Đọc
 [hướng dẫn migration 08/09](docs/migrations/08-09-knowledge-quality.md) trước khi cập nhật một
 project đang có dữ liệu và [runbook Enterprise](docs/operations/enterprise-knowledge-runbook.md)
 trước khi rollout. Không chạy `RESET_AND_REBUILD.sql` trên project có dữ liệu cần giữ: script đó
-xóa dữ liệu ứng dụng trước khi dựng lại schema 01–29. Sau khi đổi migration, sinh lại file reset
-bằng lệnh dưới đây; phần canonical phải khớp nguyên văn, đúng thứ tự với các migration 01–29.
+xóa dữ liệu ứng dụng trước khi dựng lại schema 01–34. Sau khi đổi migration, sinh lại file reset
+bằng lệnh dưới đây; phần canonical phải khớp nguyên văn, đúng thứ tự với các migration 01–34.
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\regenerate_enterprise_reset.ps1
@@ -326,6 +331,9 @@ signature, Office file được kiểm tra cấu trúc ZIP và text file phải 
 | `KNOWLEDGE_QUALITY_CANDIDATES_PER_PROBE` | `5` | Số neighbor tối đa cho mỗi probe |
 | `KNOWLEDGE_QUALITY_CONFLICT_PROMPT_ENABLED` | `true` | Đưa structured conflict notice vào generation; không xóa phía nào |
 | `STRUCTURED_FACT_MODE` | `off` | `off`: tắt; `shadow`: trích xuất/lưu/đo nhưng không dùng trong câu trả lời; `on`: ưu tiên exact fact evidence có scope/thời gian trước vector retrieval |
+| `RAG_P5_MODE` | `shadow` | `off`: pipeline P4 hiện tại; `shadow`: đo evidence/context P5 nhưng giữ câu trả lời cũ; `on`: dùng context, prompt và citation guard P5 |
+| `RAG_P5_CONTEXT_MAX_ITEMS` | `10` | Ngân sách số semantic evidence items trước generation |
+| `RAG_P5_CONTEXT_MAX_CHARACTERS` | `12000` | Ngân sách ký tự; conflict và comparison bắt buộc được giữ atomically |
 
 Fuzzy duplicate/version/conflict luôn cần review. `shadow` phải có cùng retrieval behavior với
 `off`; chỉ chuyển sang `on` sau khi benchmark, migration, concurrency và RLS gates đều đạt.
@@ -352,7 +360,11 @@ qualifier, effective time và provenance dòng/ô; tải candidate cũ theo iden
 theo row key với độ phức tạp `O(n + m)`. `conflict_candidate`/`uncertain` cần review, còn nguồn ở hai
 phía luôn được giữ. Nếu phân tích, ghi fact hoặc exact lookup lỗi, hệ thống ghi log và tiếp tục ingestion
 hay hybrid/vector retrieval hiện có. Xem [kiến trúc structured facts](docs/architecture/structured-facts.md)
-và chạy migration 16 sau migration 15 trước khi bật `shadow` hoặc `on`.
+và [P3 unified structured claims](docs/evaluation/p3-unified-structured-claims.md). P3 tái sử dụng
+migration 16, không tạo claim database thứ hai; chạy migration 16 sau migration 15 trước khi bật
+`shadow` hoặc `on`. P4 materialize relation sau khi P3 commit qua migration 34 và áp dụng
+post-processing retrieval theo quyền; xem
+[P4 relation aggregation và retrieval policy](docs/evaluation/p4-relation-aggregation-retrieval-policy.md).
 
 ### OpenAI, pgvector và retrieval
 

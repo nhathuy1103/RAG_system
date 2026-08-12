@@ -68,6 +68,11 @@ class Settings(BaseSettings):
     knowledge_candidate_final_top_k: int = Field(default=50, ge=1, le=50)
     knowledge_quality_conflict_prompt_enabled: bool = True
     structured_fact_mode: Literal["off", "shadow", "on"] = "off"
+    rag_p5_mode: Literal["off", "shadow", "on"] = "shadow"
+    rag_p5_context_max_items: int = Field(default=10, ge=1, le=50)
+    rag_p5_context_max_characters: int = Field(default=12_000, ge=500, le=200_000)
+    rag_p5_characters_per_token: float = Field(default=4.0, gt=0)
+    rag_p5_near_duplicate_representatives: int = Field(default=1, ge=1, le=5)
 
     langfuse_enabled: bool = False
     langfuse_public_key: str | None = None

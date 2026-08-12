@@ -44,6 +44,9 @@ from app.knowledge_quality.application.detection import (
     detect_document_relation_candidates,
     detect_fused_document_relation_candidates,
 )
+from app.knowledge_quality.application.persisted_relation_aggregation import (
+    aggregate_persisted_claim_relations,
+)
 from app.knowledge_quality.application.scope import extract_claim_scope
 from app.knowledge_quality.domain.models import (
     LEGACY_DOCUMENT_NORMALIZATION_VERSION,
@@ -54,6 +57,8 @@ from app.knowledge_quality.domain.models import (
     QualityRelationCandidate,
     RelationType,
 )
+from app.knowledge_quality.domain.relation_models import AGGREGATION_POLICY_VERSION
+from app.knowledge_quality.ports.repositories import KnowledgeRelationWriter
 from app.pipeline.bootstrap.settings import Settings as IngestionSettings
 from app.pipeline.documents.application.content_identity import (
     build_parsed_document_fingerprint,
@@ -74,8 +79,13 @@ from app.pipeline.indexing.application.pipeline import (
 from app.pipeline.indexing.domain.embedded_chunk import EmbeddedChunk
 from app.pipeline.shared.text_utils import compute_checksum_text
 from app.shared.contextual_text import CONTEXTUAL_TEXT_VERSION
+from app.structured_facts.application.claim_extraction import (
+    CLAIM_EXTRACTOR_VERSION,
+    extract_structured_claims,
+)
 from app.structured_facts.application.comparison import (
     build_structured_relation_payloads,
+    build_unified_claim_relation_payloads,
 )
 from app.structured_facts.application.persistence import (
     build_structured_fact_persistence_batch,
@@ -89,6 +99,7 @@ from app.structured_facts.domain.models import (
     BusinessScope,
     EntityEvidenceSource,
     LocationScope,
+    StructuredClaim,
 )
 from app.structured_facts.ports.repositories import (
     StructuredClaimCandidate,
@@ -674,7 +685,11 @@ class IngestionWorker:
                 current_stage,
                 ProcessingStageStatus.SUCCEEDED,
             )
-            result = self._attach_claim_scope(result, source_scope)
+            result = self._attach_claim_scope(
+                result,
+                source_scope,
+                structured_fact_mode=structured_mode,
+            )
             if (
                 not is_repair_job
                 and fingerprint is not None
@@ -827,6 +842,7 @@ class IngestionWorker:
                     result=result,
                     analyses=structured_analyses,
                     template_fingerprint=structured_template_fingerprint,
+                    fingerprint=fingerprint,
                 )
             structured_output: dict[str, object] = {
                 "structured_fact_mode": structured_mode,
@@ -1028,6 +1044,7 @@ class IngestionWorker:
         result: IngestionEmbeddingResult,
         analyses: Sequence[TableAnalysis],
         template_fingerprint: str | None,
+        fingerprint: DocumentFingerprint | None,
     ) -> StructuredFactWriteResult | None:
         """Persist facts after ingestion commit without changing its outcome."""
 
@@ -1044,6 +1061,7 @@ class IngestionWorker:
                 tables=result.parsed_document.tables,
                 embedded_chunks=result.embedded_chunks,
                 template_fingerprint=template_fingerprint,
+                prose_claims=_persistable_p3_claims(result.embedded_chunks),
             )
             candidate_hashes = tuple(
                 sorted(
@@ -1085,13 +1103,20 @@ class IngestionWorker:
                             ),
                             job.document_id,
                         )
-                relation_payloads = build_structured_relation_payloads(
-                    analyses=analyses,
-                    table_snapshots=batch.table_snapshots,
-                    candidates=candidates,
+                relation_payloads = (
+                    *build_structured_relation_payloads(
+                        analyses=analyses,
+                        table_snapshots=batch.table_snapshots,
+                        candidates=candidates,
+                    ),
+                    *build_unified_claim_relation_payloads(
+                        current_claims=batch.claims,
+                        table_snapshots=batch.table_snapshots,
+                        candidates=candidates,
+                    ),
                 )
                 if write_result is not None and relation_payloads == last_written_relations:
-                    return write_result
+                    break
                 try:
                     write_result = await store.replace_for_document(
                         job_id=job.id,
@@ -1116,6 +1141,33 @@ class IngestionWorker:
                     continue
                 successful_writes += 1
                 last_written_relations = relation_payloads
+            if write_result is not None and isinstance(store, KnowledgeRelationWriter):
+                try:
+                    p4_relations = aggregate_persisted_claim_relations(
+                        owner_id=job.owner_id,
+                        notebook_id=job.notebook_id,
+                        source_document_id=job.document_id,
+                        current_claims=batch.claims,
+                        candidates=candidates,
+                        relation_payloads=last_written_relations or (),
+                        strict_content_hash=(fingerprint.strict_hash if fingerprint else None),
+                        normalization_version=(
+                            fingerprint.normalization_version if fingerprint else None
+                        ),
+                    )
+                    await store.replace_p4_relations(
+                        source_document_id=job.document_id,
+                        detector_version=AGGREGATION_POLICY_VERSION,
+                        relations=p4_relations,
+                    )
+                except Exception:
+                    LOGGER.exception(
+                        (
+                            "P4 document relation materialization failed for document %s; "
+                            "P3 facts and vector retrieval remain available"
+                        ),
+                        job.document_id,
+                    )
             return write_result
         except Exception:
             LOGGER.exception(
@@ -1323,6 +1375,8 @@ class IngestionWorker:
     def _attach_claim_scope(
         result: IngestionEmbeddingResult,
         scope: ClaimScope,
+        *,
+        structured_fact_mode: StructuredFactMode = "off",
     ) -> IngestionEmbeddingResult:
         scope_metadata = scope.to_metadata()
         enriched_chunks: list[EmbeddedChunk] = []
@@ -1353,6 +1407,36 @@ class IngestionWorker:
                 chunk.canonical_text,
                 contexts=tuple(contexts),
             )
+            p3_metadata: dict[str, object] = {}
+            if structured_fact_mode != "off":
+                if chunk.metadata.get("table_atomic") or chunk.metadata.get("table_row_group"):
+                    p3_metadata = {
+                        "p3_claim_extractor_version": CLAIM_EXTRACTOR_VERSION,
+                        "p3_structured_claims": [],
+                        "p3_claim_warnings": ["delegated_to_table_analyzer"],
+                        "p3_claim_mode": structured_fact_mode,
+                    }
+                else:
+                    p3_result = extract_structured_claims(
+                        chunk.canonical_text,
+                        document_id=chunk.document_id,
+                        contexts=tuple(contexts),
+                        owner_id=chunk.owner_id,
+                        notebook_id=(
+                            str(chunk.metadata["notebook_id"])
+                            if chunk.metadata.get("notebook_id") is not None
+                            else None
+                        ),
+                        chunk_id=chunk.id,
+                        page_number=chunk.page_number,
+                        ocr_noise_level=("medium" if result.parsed_document.ocr_used else "none"),
+                    )
+                    p3_metadata = {
+                        "p3_claim_extractor_version": CLAIM_EXTRACTOR_VERSION,
+                        "p3_structured_claims": [claim.to_payload() for claim in p3_result.claims],
+                        "p3_claim_warnings": list(p3_result.warnings),
+                        "p3_claim_mode": structured_fact_mode,
+                    }
             enriched_chunks.append(
                 replace(
                     chunk,
@@ -1360,6 +1444,7 @@ class IngestionWorker:
                         **chunk.metadata,
                         "claim_scope": scope_metadata,
                         "entity_scope": entity_scope.to_metadata(),
+                        **p3_metadata,
                     },
                 )
             )
@@ -1473,6 +1558,19 @@ def _retrieval_metadata_fill_statistics(
             "rate": round(filled / total, 4) if total else 0.0,
         }
     return statistics
+
+
+def _persistable_p3_claims(
+    chunks: Sequence[EmbeddedChunk],
+) -> tuple[StructuredClaim, ...]:
+    claims: list[StructuredClaim] = []
+    for chunk in chunks:
+        raw_claims = chunk.metadata.get("p3_structured_claims", [])
+        if not isinstance(raw_claims, list | tuple):
+            raise ValueError("p3_structured_claims metadata must be an array")
+        for raw_claim in raw_claims:
+            claims.append(StructuredClaim.from_payload(raw_claim))
+    return tuple(claims)
 
 
 def _parent_persistence_payload(metadata: Mapping[str, object]) -> dict[str, object] | None:

@@ -1,13 +1,15 @@
 """Persistence contracts for document quality decisions."""
 
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Protocol
+from typing import Protocol, runtime_checkable
 from uuid import UUID
 
 from app.knowledge_quality.domain.models import (
     DocumentRelation,
     DocumentRelationEvidence,
     KnowledgeQualityAudit,
+    QualityRelationCandidate,
     RelationStatus,
     RelationType,
     ResolutionAction,
@@ -68,8 +70,22 @@ class KnowledgeQualityRepository(Protocol):
     ) -> DocumentRelationEvidence | None: ...
 
 
+@runtime_checkable
+class KnowledgeRelationWriter(Protocol):
+    """Trusted post-ingestion writer for recomputable P4 relations."""
+
+    async def replace_p4_relations(
+        self,
+        *,
+        source_document_id: UUID,
+        detector_version: str,
+        relations: Sequence[QualityRelationCandidate],
+    ) -> int: ...
+
+
 __all__ = [
     "KnowledgeQualityConflictError",
     "KnowledgeQualityRepository",
     "KnowledgeQualityRepositoryError",
+    "KnowledgeRelationWriter",
 ]

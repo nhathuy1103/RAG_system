@@ -15,6 +15,9 @@ from app.retrieval.adapters.local_sufficiency import KeywordOverlapSufficiencyCh
 from app.retrieval.adapters.postgrest_full_text_search import (
     PostgrestFullTextRetrievalAdapter,
 )
+from app.retrieval.adapters.postgrest_relation_metadata import (
+    PostgrestRelationMetadataAdapter,
+)
 
 __all__ = [
     "FallbackQueryReformulator",
@@ -27,5 +30,6 @@ __all__ = [
     "InMemoryBM25RetrievalAdapter",
     "KeywordOverlapSufficiencyChecker",
     "PostgrestFullTextRetrievalAdapter",
+    "PostgrestRelationMetadataAdapter",
     "ReciprocalRankFusion",
 ]

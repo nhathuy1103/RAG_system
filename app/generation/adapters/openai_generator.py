@@ -15,7 +15,12 @@ from datetime import UTC, datetime
 from typing import Any
 
 from app.generation.application.citation_validation import build_evidence_aliases
+from app.generation.application.prompt_policy import (
+    P5_SYSTEM_PROMPT,
+    build_p5_user_prompt,
+)
 from app.generation.domain import CitationHit, GenerationEvent, TokenChunk, UsageInfo
+from app.generation.domain.evidence import EvidenceBundleType, GenerationContext
 from app.infrastructure.telemetry import Telemetry
 from app.knowledge_quality.application.analysis import detect_conflicts
 from app.retrieval.domain.models import RetrievalCandidate
@@ -87,20 +92,40 @@ class OpenAIAnswerGenerator:
         *,
         question: str,
         evidence: tuple[RetrievalCandidate, ...],
+        generation_context: GenerationContext | None = None,
     ) -> AsyncIterator[GenerationEvent]:
-        evidence_by_alias = build_evidence_aliases(evidence)
+        evidence_by_alias = (
+            {item.evidence_id: item.candidate for item in generation_context.evidence}
+            if generation_context is not None
+            else build_evidence_aliases(evidence)
+        )
         evidence_trace_metadata = _evidence_trace_metadata(evidence)
         conflict_alias_pairs = (
-            _conflict_alias_pairs(evidence_by_alias) if self._conflict_annotations_enabled else ()
+            _p5_conflict_alias_pairs(generation_context)
+            if generation_context is not None
+            else (
+                _conflict_alias_pairs(evidence_by_alias)
+                if self._conflict_annotations_enabled
+                else ()
+            )
         )
         messages = [
-            {"role": "system", "content": self._system_prompt},
+            {
+                "role": "system",
+                "content": (
+                    P5_SYSTEM_PROMPT if generation_context is not None else self._system_prompt
+                ),
+            },
             {
                 "role": "user",
-                "content": _build_user_prompt(
-                    question,
-                    evidence_by_alias,
-                    include_conflict_notice=self._conflict_annotations_enabled,
+                "content": (
+                    build_p5_user_prompt(generation_context)
+                    if generation_context is not None
+                    else _build_user_prompt(
+                        question,
+                        evidence_by_alias,
+                        include_conflict_notice=self._conflict_annotations_enabled,
+                    )
                 ),
             },
         ]
@@ -126,6 +151,10 @@ class OpenAIAnswerGenerator:
             },
             metadata={
                 "evidence_count": len(evidence),
+                "p5_generation_context": generation_context is not None,
+                "p5_query_intent": (
+                    generation_context.query.intent if generation_context else None
+                ),
                 **evidence_trace_metadata,
             },
             model=self._model,
@@ -351,6 +380,19 @@ def _conflict_alias_pairs(
         if pair not in seen:
             seen.add(pair)
             pairs.append(pair)
+    return tuple(pairs)
+
+
+def _p5_conflict_alias_pairs(
+    context: GenerationContext,
+) -> tuple[tuple[str, str], ...]:
+    pairs: list[tuple[str, str]] = []
+    for bundle in context.bundles:
+        if bundle.bundle_type is not EvidenceBundleType.CONFLICT_SET:
+            continue
+        aliases = bundle.evidence_ids
+        for index, left in enumerate(aliases):
+            pairs.extend((left, right) for right in aliases[index + 1 :])
     return tuple(pairs)
 
 

@@ -4,9 +4,14 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from uuid import UUID
 
+from app.structured_facts.application.claim_alignment import (
+    CLAIM_ALIGNMENT_VERSION,
+    align_claims,
+)
+from app.structured_facts.application.claim_extraction import canonicalize_table_claims
 from app.structured_facts.application.table_analyzer import TableAnalysis
 from app.structured_facts.application.table_diff import diff_table_analyses
 from app.structured_facts.domain.models import (
@@ -79,6 +84,157 @@ def build_structured_relation_payloads(
     return tuple(payloads)
 
 
+def build_unified_claim_relation_payloads(
+    *,
+    current_claims: Sequence[Mapping[str, object]],
+    table_snapshots: Sequence[Mapping[str, object]],
+    candidates: Sequence[StructuredClaimCandidate],
+) -> tuple[dict[str, object], ...]:
+    """Compare snapshot claim groups when either source form is prose.
+
+    Candidate snapshot pairs are seeded only by an exact, value-free P3
+    candidate identity overlap. This is deliberately stricter than schema
+    similarity and prevents P3 from bypassing the authoritative entity/scope
+    gate. Once seeded, every claim in the two bounded snapshots is aligned so
+    added/removed evidence remains available to P4.
+    """
+    snapshots_by_key = {
+        str(snapshot.get("snapshot_key") or snapshot.get("table_id") or ""): snapshot
+        for snapshot in table_snapshots
+        if str(snapshot.get("snapshot_key") or snapshot.get("table_id") or "").strip()
+    }
+    current_by_snapshot: dict[str, list[tuple[StructuredClaim, str]]] = defaultdict(list)
+    current_keys_by_hash: dict[str, set[str]] = defaultdict(set)
+    for payload in current_claims:
+        snapshot_key = str(payload.get("snapshot_key") or "").strip()
+        claim_key = str(
+            payload.get("claim_key") or payload.get("claim_identity_hash") or ""
+        ).strip()
+        if not snapshot_key or not claim_key:
+            continue
+        claim = StructuredClaim.from_payload(payload)
+        current_by_snapshot[snapshot_key].append((claim, claim_key))
+        current_keys_by_hash[claim.candidate_identity_hash].add(snapshot_key)
+
+    prior_by_snapshot: dict[UUID, list[tuple[StructuredClaim, str]]] = defaultdict(list)
+    prior_row_by_snapshot: dict[UUID, StructuredClaimCandidate] = {}
+    pair_keys: set[tuple[str, UUID]] = set()
+    for candidate in candidates:
+        source_form = _source_form(candidate.normalized_schema)
+        claim = StructuredClaim.from_payload(candidate.claim)
+        if source_form == "table" and "+p3-bridge-v1" not in claim.extractor_version:
+            claim = canonicalize_table_claims(
+                TableAnalysis(
+                    document_id=claim.document_id,
+                    table_id=candidate.snapshot_key,
+                    claims=(claim,),
+                    row_count=1,
+                    normalized_schema=_schema_columns(candidate.normalized_schema),
+                    header_mapping=_header_mapping(candidate.normalized_schema),
+                    confidence=claim.extraction_confidence,
+                    warnings=(),
+                    extractor_version=claim.extractor_version,
+                )
+            )[0]
+        claim_key = str(
+            candidate.claim.get("claim_identity_hash")
+            or candidate.claim.get("id")
+            or claim.claim_identity_hash
+        )
+        prior_by_snapshot[candidate.snapshot_id].append((claim, claim_key))
+        prior_row_by_snapshot.setdefault(candidate.snapshot_id, candidate)
+        for source_snapshot_key in current_keys_by_hash.get(claim.candidate_identity_hash, ()):
+            pair_keys.add((source_snapshot_key, candidate.snapshot_id))
+
+    payloads: list[dict[str, object]] = []
+    for source_snapshot_key, target_snapshot_id in sorted(
+        pair_keys,
+        key=lambda item: (item[0], str(item[1])),
+    ):
+        source_snapshot = snapshots_by_key.get(source_snapshot_key, {})
+        target_row = prior_row_by_snapshot[target_snapshot_id]
+        source_form = _source_form(source_snapshot.get("normalized_schema"))
+        target_form = _source_form(target_row.normalized_schema)
+        if source_form != "prose" and target_form != "prose":
+            continue
+        source_rows = current_by_snapshot[source_snapshot_key]
+        target_rows = prior_by_snapshot[target_snapshot_id]
+        alignment = align_claims(
+            tuple(claim for claim, _ in source_rows),
+            tuple(claim for claim, _ in target_rows),
+        )
+        source_key_by_id = {
+            claim.id: claim_key for claim, claim_key in source_rows if claim.id is not None
+        }
+        target_key_by_id = {
+            claim.id: claim_key for claim, claim_key in target_rows if claim.id is not None
+        }
+        for relation in alignment.relations:
+            source_claim_key = (
+                source_key_by_id.get(relation.source_claim_id)
+                if relation.source_claim_id is not None
+                else None
+            )
+            target_claim_key = (
+                target_key_by_id.get(relation.target_claim_id)
+                if relation.target_claim_id is not None
+                else None
+            )
+            if relation.source_claim_id is not None and source_claim_key is None:
+                continue
+            if relation.target_claim_id is not None and target_claim_key is None:
+                continue
+            relation_type = _relation_type_for_persistence(relation.relation_type)
+            reason_codes = tuple(relation.reason_codes)
+            payloads.append(
+                {
+                    "source_snapshot_key": source_snapshot_key,
+                    "target_snapshot_id": str(target_snapshot_id),
+                    "source_claim_key": source_claim_key,
+                    "target_claim_key": target_claim_key,
+                    "relation_type": relation_type,
+                    "scope_relation": (
+                        relation.scope_relation.value
+                        if relation.scope_relation is not None
+                        else None
+                    ),
+                    "qualifier_compatibility": (
+                        relation.qualifier_compatibility.value
+                        if relation.qualifier_compatibility is not None
+                        else None
+                    ),
+                    "temporal_relation": (
+                        relation.temporal_relation.value
+                        if relation.temporal_relation is not None
+                        else None
+                    ),
+                    "confidence": relation.confidence,
+                    "reason": ",".join(reason_codes) if reason_codes else None,
+                    "review_status": (
+                        "pending" if relation_type in _PENDING_REVIEW_TYPES else "auto_confirmed"
+                    ),
+                    "detector_name": "p3-unified-claim-analyzer",
+                    "detector_version": CLAIM_ALIGNMENT_VERSION,
+                    "evidence": {
+                        "reason_codes": list(reason_codes),
+                        "subject_key": relation.subject_key,
+                        "predicate": relation.predicate,
+                        "source_form": source_form,
+                        "target_form": target_form,
+                        "source_document_id": (
+                            source_rows[0][0].document_id if source_rows else None
+                        ),
+                        "target_document_id": str(target_row.document_id),
+                        "source_snapshot_key": source_snapshot_key,
+                        "target_snapshot_key": target_row.snapshot_key,
+                        "p2_gate": "exact_value_free_candidate_identity_overlap",
+                        "direction": "current_to_prior",
+                    },
+                }
+            )
+    return tuple(payloads)
+
+
 def _current_tables(
     analyses: Sequence[TableAnalysis],
     snapshots: Sequence[Mapping[str, object]],
@@ -89,7 +245,8 @@ def _current_tables(
         if str(snapshot.get("snapshot_key") or snapshot.get("table_id") or "").strip()
     }
     result: list[_CurrentTable] = []
-    for analysis in analyses:
+    for raw_analysis in analyses:
+        analysis = _canonical_table_analysis(raw_analysis)
         snapshot = snapshot_by_key.get(analysis.table_id, {})
         schema_fingerprint = str(snapshot.get("schema_fingerprint") or "").strip()
         normalized_schema = _schema_columns(snapshot.get("normalized_schema"))
@@ -123,6 +280,10 @@ def _prior_tables(
 
     result: list[_PriorTable] = []
     for snapshot_id, rows in grouped.items():
+        if rows[0].normalized_schema.get("source_form") == "prose":
+            # Prose candidates require the authoritative P1/P2 gate before P3
+            # alignment. The legacy table diff has no access to that gate.
+            continue
         claims: list[StructuredClaim] = []
         claim_key_by_domain_id: dict[str, str] = {}
         for row in rows:
@@ -141,25 +302,30 @@ def _prior_tables(
         confidence = (
             sum(claim.extraction_confidence for claim in claims) / len(claims) if claims else 0.0
         )
+        prior_analysis = _canonical_table_analysis(
+            TableAnalysis(
+                document_id=str(first.document_id),
+                table_id=first.snapshot_key,
+                claims=tuple(claims),
+                row_count=_row_count(claims),
+                normalized_schema=normalized_schema,
+                header_mapping=_header_mapping(first.normalized_schema),
+                confidence=confidence,
+                warnings=(),
+                extractor_version=claims[0].extractor_version if claims else "",
+            )
+        )
         result.append(
             _PriorTable(
-                analysis=TableAnalysis(
-                    document_id=str(first.document_id),
-                    table_id=first.snapshot_key,
-                    claims=tuple(claims),
-                    row_count=_row_count(claims),
-                    normalized_schema=normalized_schema,
-                    header_mapping=_header_mapping(first.normalized_schema),
-                    confidence=confidence,
-                    warnings=(),
-                    extractor_version=claims[0].extractor_version if claims else "",
-                ),
+                analysis=prior_analysis,
                 snapshot_id=snapshot_id,
                 snapshot_key=first.snapshot_key,
                 schema_fingerprint=first.schema_fingerprint,
                 template_fingerprint=first.template_fingerprint,
                 normalized_schema=normalized_schema,
-                candidate_hashes=frozenset(candidate.candidate_identity_hash for candidate in rows),
+                candidate_hashes=frozenset(
+                    claim.candidate_identity_hash for claim in prior_analysis.claims
+                ),
                 claim_key_by_domain_id=claim_key_by_domain_id,
             )
         )
@@ -314,6 +480,12 @@ def _header_mapping(value: object) -> dict[str, str]:
     return {str(key): str(item) for key, item in raw_mapping.items()}
 
 
+def _source_form(value: object) -> str:
+    if isinstance(value, Mapping) and value.get("source_form") == "prose":
+        return "prose"
+    return "table"
+
+
 def _row_count(claims: Sequence[StructuredClaim]) -> int:
     row_keys = {
         (
@@ -326,4 +498,17 @@ def _row_count(claims: Sequence[StructuredClaim]) -> int:
     return len(row_keys)
 
 
-__all__ = ["build_structured_relation_payloads"]
+def _canonical_table_analysis(analysis: TableAnalysis) -> TableAnalysis:
+    if "+p3-bridge-v1" in analysis.extractor_version:
+        return analysis
+    claims = canonicalize_table_claims(analysis)
+    return replace(
+        analysis,
+        claims=claims,
+        extractor_version=(
+            claims[0].extractor_version if claims else f"{analysis.extractor_version}+p3-bridge-v1"
+        ),
+    )
+
+
+__all__ = ["build_structured_relation_payloads", "build_unified_claim_relation_payloads"]

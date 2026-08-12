@@ -1,0 +1,92 @@
+{
+  "version": "p4-relation-aggregation-v1",
+  "status": "frozen",
+  "frozen_at_utc": "2026-08-12T06:01:36Z",
+  "git_head": "2d226aa045451109cdd4b89fc21dc7ed2494f5db",
+  "worktree_state": "dirty-local-p1-p4-preserved",
+  "rollout_default": "shadow",
+  "aggregation": {
+    "near_duplicate_min_source_coverage": 0.8,
+    "near_duplicate_min_target_coverage": 0.8,
+    "template_similarity_threshold": 0.94,
+    "minimum_claim_confidence": 0.75,
+    "precedence": [
+      "strict_exact_identity",
+      "tenant_and_business_identity_gate",
+      "claim_grounded_conflict",
+      "temporal_variant",
+      "conditional_variant",
+      "version_change",
+      "uncertainty",
+      "symmetric_near_duplicate",
+      "distinct"
+    ]
+  },
+  "authority": {
+    "version": "p4-source-authority-v1",
+    "approval_ranks": {
+      "approved": 50,
+      "reviewed": 40,
+      "unreviewed": 20,
+      "rejected": 0
+    },
+    "source_type_ranks": {
+      "approved_internal": 50,
+      "official_publisher": 40,
+      "reviewed_internal": 30,
+      "unreviewed_internal": 20,
+      "third_party": 10,
+      "unknown": 0
+    }
+  },
+  "retrieval": {
+    "version": "p4-relation-retrieval-v1",
+    "max_near_duplicate_representatives": 1,
+    "preserve_conflict_sides": true,
+    "preserve_uncertain": true,
+    "permission_filter_precedes_relation_policy": true
+  },
+  "production_mapping": {
+    "EXACT_DUPLICATE": "exact_content",
+    "NEAR_DUPLICATE": "near_duplicate",
+    "VERSION_UPDATE": "version",
+    "TEMPORAL_VARIANT": "temporal_series",
+    "CONDITIONAL_VARIANT": "related",
+    "TEMPLATE_VARIANT": "template_variant",
+    "CONFLICT": "conflict",
+    "DISTINCT": "distinct",
+    "UNCERTAIN": "related"
+  },
+  "targets": {
+    "macro_f1": 0.95,
+    "exact_duplicate_precision": 1.0,
+    "conflict_precision": 0.98,
+    "conflict_recall": 0.95,
+    "version_update_precision": 0.95,
+    "near_duplicate_precision": 0.97,
+    "false_exact_collapse": 0,
+    "conflict_suppression": 0,
+    "provenance_loss": 0,
+    "permission_leakage": 0
+  },
+  "frozen_inputs_sha256": {
+    "datasets/duplicate_conflict/gold_v1_dev.jsonl": "fb02b62a0b50248209d50b81c02aad456dc77481498f66a944cea3fbcdd10d8d",
+    "datasets/duplicate_conflict/gold_v1_test.jsonl": "f0e14d892e3f5e2d23bf9f1c11a08efde668f35ffcca017b8ad891f2b2d8c0f0",
+    "datasets/duplicate_conflict/p4_bridge_gold_v1.jsonl": "8f85563ddd9a7944997a945863c638b4ef16d23dd132ec2e358fbb0fabbb359c",
+    "configs/evaluation/p3_structured_claims.json": "a5bf4c391c27d7cf4535a6c853a24c55b40453e32f2d38f20b893c84cb34000e",
+    "app/knowledge_quality/domain/relation_models.py": "a9126c968bd8fe7ef7663df235689f2ee4feb9d4afb555c658487b9e59b15031",
+    "app/knowledge_quality/application/authority_policy.py": "27ed39c6eb5a6addfd2b1e689cd7a54c75ba482e76114414c0990eb0d6d442d0",
+    "app/knowledge_quality/application/version_lineage.py": "e31b6d30099e57e2aa6d63e7ee51f408f90a90a14b2cf8547680c66c523e0613",
+    "app/knowledge_quality/application/relation_aggregation.py": "a2abc493d0d8683ccdf4bd98626e28cebee7ab078a242ccf22592cc5247cd14d",
+    "app/knowledge_quality/application/persisted_relation_aggregation.py": "f42426e4ba6681977e8e41e1f70e59458b173ca422f263462db1ee8d0c5da884",
+    "app/knowledge_quality/application/relation_clusters.py": "0eaeb7e2ce616b9cc7d9d6f5360a813abb81d51a75b14157d7c5cfecbcc3c094",
+    "app/retrieval/application/relation_policy.py": "070399c77f9096cd226eb688131fab3796b12cb47544fa913ffbd4e2684ea8df",
+    "app/retrieval/ports/relation_metadata_port.py": "acdbcd5f92774ab86b2f2e4ab42c40f4a9c9699740f776d7c572a49e79957774",
+    "app/retrieval/adapters/postgrest_relation_metadata.py": "207240ad25fa44e7b1e2734ffcf17245539c130001d0db8ba2918e354e4d2c5b",
+    "app/retrieval/application/agentic_retrieval.py": "f18a6841db036b80ed70d74399097215676772998290190411b59ac767e07b6e",
+    "app/ingestion/application/worker.py": "6a1a86f7ce9fe9c4a89cd7e860ade9628963248a3bf3140556bac195b4666f0c",
+    "app/structured_facts/application/comparison.py": "97a0e47164b85a47cac7478484ffe5ca2b8a95f7075e59f407cb786135a3de2b",
+    "evaluation/duplicate_conflict/p4_relations.py": "37412663dcb346d282fb91e13f0a7fa5389049bc3f15c308634857915a3a944a",
+    "supabase/migrations/34_p4_relation_replacement.sql": "f57fb35ddeb5d400e99c808836724bed9543133fae22f9836dbba97ac6de8aa7"
+  }
+}

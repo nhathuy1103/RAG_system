@@ -8,6 +8,11 @@ from app.knowledge_quality.application.analysis import (
     loose_normalize_text,
     strict_normalize_text,
 )
+from app.knowledge_quality.application.authority_policy import (
+    AuthorityPolicy,
+    EvidencePreference,
+    select_preferred_evidence,
+)
 from app.knowledge_quality.application.business_scope import (
     ScopeTextContext,
     load_or_resolve_business_context,
@@ -33,11 +38,32 @@ from app.knowledge_quality.application.entity_resolution import (
     EntityTextContext,
     resolve_entities,
 )
+from app.knowledge_quality.application.persisted_relation_aggregation import (
+    aggregate_persisted_claim_relations,
+)
+from app.knowledge_quality.application.relation_aggregation import (
+    AggregationPolicy,
+    aggregate_claim_evidence,
+    production_relation_for,
+    to_quality_relation_candidate,
+)
+from app.knowledge_quality.application.relation_clusters import (
+    RelationCluster,
+    RelationClusterType,
+    build_relation_clusters,
+)
 from app.knowledge_quality.application.scope import (
     compare_claim_scopes,
     extract_claim_scope,
     extract_temporal_scope_qualifiers,
     temporal_scopes_diverge,
+)
+from app.knowledge_quality.application.version_lineage import (
+    VersionLineageEdge,
+    VersionLineageResult,
+    build_version_lineage,
+    determine_version_direction,
+    lineage_has_cycle,
 )
 
 __all__ = [
@@ -70,4 +96,20 @@ __all__ = [
     "strict_normalize_text",
     "ScopeTextContext",
     "temporal_scopes_diverge",
+    "AggregationPolicy",
+    "AuthorityPolicy",
+    "EvidencePreference",
+    "RelationCluster",
+    "RelationClusterType",
+    "VersionLineageEdge",
+    "VersionLineageResult",
+    "aggregate_claim_evidence",
+    "aggregate_persisted_claim_relations",
+    "build_relation_clusters",
+    "build_version_lineage",
+    "determine_version_direction",
+    "lineage_has_cycle",
+    "production_relation_for",
+    "select_preferred_evidence",
+    "to_quality_relation_candidate",
 ]

@@ -1,6 +1,7 @@
 """Structured business facts extracted alongside the generic RAG pipeline."""
 
 from app.structured_facts.domain import (
+    CLAIM_COMPARABLE_KEY_VERSION,
     BusinessScope,
     ClaimDerivation,
     ClaimProvenance,
@@ -24,10 +25,14 @@ from app.structured_facts.domain import (
     StructuredFactSnapshotEvidence,
     TemporalContext,
     TemporalRelation,
+    ValueExpression,
+    ValueExpressionRelation,
+    ValueOperator,
 )
 
 __all__ = [
     "BusinessScope",
+    "CLAIM_COMPARABLE_KEY_VERSION",
     "ClaimDerivation",
     "ClaimProvenance",
     "ClaimQualifiers",
@@ -50,4 +55,7 @@ __all__ = [
     "StructuredFactSnapshotEvidence",
     "TemporalContext",
     "TemporalRelation",
+    "ValueExpression",
+    "ValueExpressionRelation",
+    "ValueOperator",
 ]

@@ -28,6 +28,7 @@ from app.knowledge_quality.application.analysis import (
 from app.knowledge_quality.domain.models import (
     ChunkDedupCandidate,
     DocumentFingerprint,
+    QualityRelationCandidate,
 )
 from app.pipeline.bootstrap.composition import build_ingestion_embedding_pipeline
 from app.pipeline.bootstrap.settings import Settings
@@ -55,6 +56,9 @@ NOTEBOOK_ID = UUID("10000000-0000-0000-0000-000000000001")
 DOCUMENT_ID = UUID("30000000-0000-0000-0000-000000000003")
 JOB_ID = UUID("40000000-0000-0000-0000-000000000004")
 CONTENT = b"Revenue increased in 2026.\n\nCosts stayed controlled."
+PROSE_CLAIM_CONTENT = (
+    "Giá căn 2PN tại Vinhomes Project Alpha năm 2026 là 6,2 tỷ đồng/căn."
+).encode()
 CSV_CONTENT = (
     "Dự án,Tòa,Mã căn,Giá bán,Ngày hiệu lực\nSunrise,A,U01,3000000000,2025-03-01\n"
 ).encode()
@@ -123,6 +127,16 @@ def make_csv_job(*, structured_fact_mode: str = "shadow") -> ClaimedIngestionJob
         mime_type="text/csv",
         size_bytes=len(CSV_CONTENT),
         content_hash=sha256(CSV_CONTENT).hexdigest(),
+    )
+
+
+def make_prose_claim_job(*, structured_fact_mode: str = "shadow") -> ClaimedIngestionJob:
+    return replace(
+        make_job(structured_fact_mode=structured_fact_mode),
+        storage_object_path=f"{OWNER_ID}/{NOTEBOOK_ID}/{DOCUMENT_ID}/property-price.txt",
+        original_filename="property-price.txt",
+        size_bytes=len(PROSE_CLAIM_CONTENT),
+        content_hash=sha256(PROSE_CLAIM_CONTENT).hexdigest(),
     )
 
 
@@ -314,6 +328,7 @@ class FakeStructuredFactStore:
         self.fail_replace_attempts = fail_replace_attempts
         self.load_calls: list[dict[str, object]] = []
         self.replace_calls: list[dict[str, object]] = []
+        self.p4_replace_calls: list[dict[str, object]] = []
 
     async def load_claim_candidates(
         self,
@@ -368,6 +383,22 @@ class FakeStructuredFactStore:
             claim_count=len(claims),
             relation_count=len(relations),
         )
+
+    async def replace_p4_relations(
+        self,
+        *,
+        source_document_id: UUID,
+        detector_version: str,
+        relations: Sequence[QualityRelationCandidate],
+    ) -> int:
+        self.p4_replace_calls.append(
+            {
+                "source_document_id": source_document_id,
+                "detector_version": detector_version,
+                "relations": tuple(relations),
+            }
+        )
+        return len(relations)
 
 
 class TransactionalVectorIndex(InMemoryVectorIndex):
@@ -1060,6 +1091,33 @@ async def test_structured_shadow_persists_csv_facts_after_document_completion() 
 
 
 @pytest.mark.anyio
+async def test_structured_shadow_extracts_and_persists_prose_claims() -> None:
+    repository = FakeWorkerRepository(make_prose_claim_job())
+    fact_store = FakeStructuredFactStore()
+
+    processed = await make_worker(
+        repository,
+        structured_fact_mode="shadow",
+        structured_fact_store=fact_store,
+        object_storage=PayloadStorage(PROSE_CLAIM_CONTENT, "/property-price.txt"),
+    ).run_once()
+
+    assert processed is True
+    assert repository.completed is not None
+    assert repository.failed is None
+    assert len(fact_store.replace_calls) == 1
+    replacement = fact_store.replace_calls[0]
+    assert len(replacement["table_snapshots"]) == 1
+    assert replacement["table_snapshots"][0]["normalized_schema"]["source_form"] == "prose"
+    assert len(replacement["claims"]) == 1
+    claim = replacement["claims"][0]
+    assert claim["subject_key"] == "vinhomes_project_alpha"
+    assert claim["predicate"] == "property_price"
+    assert claim["value_expression"]["value"] == "6200000000"
+    assert claim["provenance"]["source_form"] == "prose"
+
+
+@pytest.mark.anyio
 async def test_structured_worker_diffs_loaded_candidate_before_atomic_replace() -> None:
     repository = FakeWorkerRepository(make_csv_job())
     fact_store = FakeStructuredFactStore(candidates=make_prior_csv_candidates())
@@ -1080,6 +1138,10 @@ async def test_structured_worker_diffs_loaded_candidate_before_atomic_replace() 
     assert relations[0]["review_status"] == "auto_confirmed"
     assert relations[0]["source_claim_key"]
     assert relations[0]["target_claim_key"]
+    assert len(fact_store.p4_replace_calls) == 1
+    p4_relations = fact_store.p4_replace_calls[0]["relations"]
+    assert len(p4_relations) == 1
+    assert p4_relations[0].signals["p4_primary_relation"] == "NEAR_DUPLICATE"
 
 
 @pytest.mark.anyio

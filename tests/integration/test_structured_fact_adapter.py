@@ -5,6 +5,7 @@ from uuid import UUID
 import httpx2 as httpx
 import pytest
 
+from app.knowledge_quality.domain.models import QualityRelationCandidate, RelationType
 from app.structured_facts.adapters.postgrest_repository import (
     PostgrestStructuredFactRepository,
 )
@@ -37,6 +38,40 @@ async def test_replaces_structured_facts_through_guarded_rpc() -> None:
 
     assert result.table_count == 1
     assert result.claim_count == 1
+
+
+@pytest.mark.anyio
+async def test_replaces_p4_document_relations_through_atomic_rpc() -> None:
+    target_id = UUID("30000000-0000-0000-0000-000000000003")
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.path.endswith("/rpc/replace_p4_document_relations")
+        body = json.loads(request.read())
+        assert body["p_source_document_id"] == "20000000-0000-0000-0000-000000000002"
+        assert body["p_detector_version"] == "p4-relation-aggregation-v1"
+        assert body["p_relations"][0]["target_document_id"] == str(target_id)
+        assert body["p_relations"][0]["signals"]["p4_review_status"] == "pending"
+        return httpx.Response(200, json=1)
+
+    relation = QualityRelationCandidate(
+        target_document_id=target_id,
+        relation_type=RelationType.CONFLICT,
+        confidence=0.91,
+        signals={"p4_review_status": "pending"},
+        reason="overlapping_value_conflict",
+        detector_version="p4-relation-aggregation-v1",
+    )
+    async with httpx.AsyncClient(
+        transport=httpx.MockTransport(handler),
+        base_url="https://supabase.test/rest/v1",
+    ) as client:
+        count = await PostgrestStructuredFactRepository(client).replace_p4_relations(
+            source_document_id=UUID("20000000-0000-0000-0000-000000000002"),
+            detector_version="p4-relation-aggregation-v1",
+            relations=(relation,),
+        )
+
+    assert count == 1
 
 
 @pytest.mark.anyio

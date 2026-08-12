@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
+from dataclasses import replace
 from uuid import UUID
 
 import pytest
@@ -22,6 +23,7 @@ from app.chat.domain.models import (
     NewCitation,
 )
 from app.generation.domain import CitationHit, GenerationEvent, TokenChunk
+from app.generation.domain.evidence import GenerationContext
 from app.retrieval.application.handle_retrieval_request import (
     ClarificationNeeded,
     FixedAnswer,
@@ -95,15 +97,18 @@ class _RetrievalHandler:
 class _AnswerGenerator:
     def __init__(self, events: tuple[GenerationEvent, ...] = ()) -> None:
         self.events = events
-        self.calls: list[tuple[str, tuple[RetrievalCandidate, ...]]] = []
+        self.calls: list[
+            tuple[str, tuple[RetrievalCandidate, ...], GenerationContext | None]
+        ] = []
 
     async def stream(
         self,
         *,
         question: str,
         evidence: tuple[RetrievalCandidate, ...],
+        generation_context: GenerationContext | None = None,
     ) -> AsyncIterator[GenerationEvent]:
-        self.calls.append((question, evidence))
+        self.calls.append((question, evidence, generation_context))
         for event in self.events:
             yield event
 
@@ -155,6 +160,8 @@ def _context() -> ChatContext:
 def _service(
     result: object,
     generator: _AnswerGenerator,
+    *,
+    p5_mode: str = "shadow",
 ) -> tuple[ChatService, _ChatRepository]:
     repository = _ChatRepository()
     service = ChatService(
@@ -164,12 +171,15 @@ def _service(
         retrieval_handler=_RetrievalHandler(result),  # type: ignore[arg-type]
         answer_generator=generator,
         chat_model_name="test-model",
+        p5_mode=p5_mode,  # type: ignore[arg-type]
     )
     return service, repository
 
 
-async def _events(service: ChatService) -> list[ChatEvent]:
-    return [event async for event in service.respond(_context())]
+async def _events(
+    service: ChatService, *, context: ChatContext | None = None
+) -> list[ChatEvent]:
+    return [event async for event in service.respond(context or _context())]
 
 
 @pytest.mark.anyio
@@ -309,3 +319,120 @@ async def test_valid_alias_cannot_attach_a_candidate_from_another_document() -> 
     assert repository.citations == []
     assert repository.failed[0]["error_message"] == CITATION_VALIDATION_FAILURE
     assert isinstance(events[-1], AnswerFailed)
+
+
+@pytest.mark.anyio
+async def test_p5_on_passes_typed_context_and_persists_valid_grounded_answer() -> None:
+    candidate = _candidate()
+    answer = "The policy grants 12 days [SRC-1]."
+    generator = _AnswerGenerator(
+        (
+            TokenChunk(answer),
+            CitationHit(source_id="SRC-1", ordinal=1, candidate=candidate),
+        )
+    )
+    service, repository = _service(
+        _result((candidate,), sufficient=True, gave_up=False),
+        generator,
+        p5_mode="on",
+    )
+
+    events = await _events(service)
+
+    assert generator.calls[0][2] is not None
+    assert [event.text for event in events if isinstance(event, AnswerToken)] == [answer]
+    assert repository.completed[0]["model"] == "test-model"
+    assert len(repository.citations[0]) == 1
+    assert repository.failed == []
+    assert isinstance(events[-1], AnswerDone)
+
+
+@pytest.mark.anyio
+async def test_p5_citation_exposes_structured_table_row_provenance() -> None:
+    candidate = RetrievalCandidate(
+        chunk=EvidenceChunk(
+            id=str(CHUNK_ID),
+            document_id=str(ALLOWED_DOCUMENT_ID),
+            text="The table reports 12 days.",
+            metadata={
+                "structured_value": {"value": "12"},
+                "structured_provenance": {
+                    "table_id": "benefits-table",
+                    "data_row_ordinal": 3,
+                },
+            },
+        ),
+        score=0.91,
+        rank=1,
+    )
+    generator = _AnswerGenerator(
+        (
+            TokenChunk("The table reports 12 days [SRC-1]."),
+            CitationHit(source_id="SRC-1", ordinal=1, candidate=candidate),
+        )
+    )
+    service, _ = _service(
+        _result((candidate,), sufficient=True, gave_up=False),
+        generator,
+        p5_mode="on",
+    )
+
+    events = await _events(service)
+    citation = next(event for event in events if isinstance(event, AnswerCitation))
+
+    assert citation.table_id == "benefits-table"
+    assert citation.row_ordinal == 3
+
+
+@pytest.mark.anyio
+async def test_p5_on_converts_invalid_citation_to_controlled_uncertainty() -> None:
+    candidate = _candidate()
+    generator = _AnswerGenerator((TokenChunk("Unsupported [SRC-999]."),))
+    service, repository = _service(
+        _result((candidate,), sufficient=True, gave_up=False),
+        generator,
+        p5_mode="on",
+    )
+
+    events = await _events(service)
+
+    assert len([event for event in events if isinstance(event, AnswerToken)]) == 1
+    assert repository.completed[0]["model"] is None
+    assert repository.citations == [()]
+    assert repository.failed == []
+    assert isinstance(events[-1], AnswerDone)
+
+
+@pytest.mark.anyio
+async def test_p5_on_does_not_guess_current_value_from_historical_evidence() -> None:
+    candidate = RetrievalCandidate(
+        chunk=EvidenceChunk(
+            id=str(CHUNK_ID),
+            document_id=str(ALLOWED_DOCUMENT_ID),
+            text="The 2024 price was 5 billion VND.",
+            metadata={
+                "version_family_id": "price-family",
+                "year": 2024,
+                "is_current": False,
+                "structured_value": {"value": "5"},
+            },
+        ),
+        score=0.91,
+        rank=1,
+    )
+    generator = _AnswerGenerator()
+    service, repository = _service(
+        _result((candidate,), sufficient=True, gave_up=False),
+        generator,
+        p5_mode="on",
+    )
+
+    events = await _events(
+        service,
+        context=replace(_context(), question="What is the current price?"),
+    )
+
+    assert generator.calls == []
+    assert repository.completed[0]["model"] is None
+    assert repository.citations == [()]
+    assert isinstance(events[-1], AnswerDone)

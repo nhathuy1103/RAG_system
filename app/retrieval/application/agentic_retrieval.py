@@ -3,11 +3,16 @@
 from __future__ import annotations
 
 import json
+import logging
 import math
 from dataclasses import dataclass, field, replace
 from typing import Literal
 
 from app.infrastructure.telemetry import Telemetry
+from app.retrieval.application.relation_policy import (
+    RetrievalPolicyConfig,
+    apply_relation_aware_policy,
+)
 from app.retrieval.domain.models import (
     AgenticRetrievalResult,
     AgenticRetrievalRound,
@@ -16,11 +21,13 @@ from app.retrieval.domain.models import (
     SufficiencyCheck,
 )
 from app.retrieval.ports.reformulation_port import QueryReformulatorPort
+from app.retrieval.ports.relation_metadata_port import RelationMetadataPort
 from app.retrieval.ports.reranker_port import RerankerPort
 from app.retrieval.ports.retrieval_port import RetrievalPort
 from app.retrieval.ports.sufficiency_port import SufficiencyCheckerPort
 
 DEFAULT_MAX_ROUNDS = 3
+LOGGER = logging.getLogger(__name__)
 _ALIAS_CHUNK_IDS_KEY = "duplicate_source_chunk_ids"
 _ALIAS_DOCUMENT_IDS_KEY = "duplicate_source_document_ids"
 _ALIAS_COUNT_KEY = "duplicate_source_count"
@@ -53,6 +60,16 @@ class AgenticRetrievalUseCase:
     rerank_pool_size: int | None = None
     max_chunks_per_document: int | None = None
     knowledge_quality_mode: Literal["off", "shadow", "on"] = "off"
+    relation_metadata_port: RelationMetadataPort | None = field(
+        default=None,
+        compare=False,
+        repr=False,
+    )
+    relation_policy_config: RetrievalPolicyConfig = field(
+        default_factory=RetrievalPolicyConfig,
+        compare=False,
+        repr=False,
+    )
     telemetry: Telemetry = field(default_factory=Telemetry, compare=False, repr=False)
 
     def run(
@@ -106,6 +123,26 @@ class AgenticRetrievalUseCase:
                 ) as round_observation:
                     candidates = self.retrieval_port.search(query, filters, top_k=search_top_k)
                     retrieved_count = len(candidates)
+                    relation_metadata_status = "off"
+                    shadow_relation_candidates: dict[str, RetrievalCandidate] = {}
+                    if (
+                        self.knowledge_quality_mode != "off"
+                        and self.relation_metadata_port is not None
+                    ):
+                        try:
+                            enriched = self.relation_metadata_port.enrich(candidates, filters)
+                            relation_metadata_status = "enriched"
+                            if self.knowledge_quality_mode == "on":
+                                candidates = enriched
+                            else:
+                                shadow_relation_candidates = {
+                                    item.chunk.id: item for item in enriched
+                                }
+                        except Exception:
+                            relation_metadata_status = "failed_open"
+                            LOGGER.exception(
+                                "P4 relation metadata enrichment failed; using base retrieval"
+                            )
                     round_quality_groups: dict[str, _QualityGroup] = {}
                     if self.knowledge_quality_mode == "on":
                         for candidate in candidates:
@@ -151,6 +188,23 @@ class AgenticRetrievalUseCase:
                             for candidate in candidates
                             if candidate.score >= self.score_threshold
                         )
+                    relation_policy_input = (
+                        tuple(
+                            shadow_relation_candidates.get(item.chunk.id, item)
+                            for item in candidates
+                        )
+                        if self.knowledge_quality_mode == "shadow"
+                        else candidates
+                    )
+                    relation_policy = apply_relation_aware_policy(
+                        relation_policy_input,
+                        query=original_question,
+                        filters=filters,
+                        mode=self.knowledge_quality_mode,
+                        config=self.relation_policy_config,
+                    )
+                    if self.knowledge_quality_mode == "on":
+                        candidates = relation_policy.evidence
                     document_cap = (
                         None
                         if filters.document_ids is not None and len(filters.document_ids) == 1
@@ -179,6 +233,13 @@ class AgenticRetrievalUseCase:
                             group.representative
                             for group in _collapse_quality_groups(tuple(quality_members.values()))
                         )
+                        collapsed = apply_relation_aware_policy(
+                            collapsed,
+                            query=original_question,
+                            filters=filters,
+                            mode="on",
+                            config=self.relation_policy_config,
+                        ).evidence
                         evidence = _apply_document_cap(
                             collapsed,
                             top_k=None,
@@ -252,6 +313,23 @@ class AgenticRetrievalUseCase:
                             "accumulated_evidence_count": len(evidence),
                             "exact_duplicate_observations": exact_duplicate_observations,
                             "quality_mode": self.knowledge_quality_mode,
+                            "p4_relation_policy": {
+                                "proposed_retained_ids": list(
+                                    relation_policy.diagnostics.proposed_retained_ids
+                                ),
+                                "suppressed_duplicate_ids": list(
+                                    relation_policy.diagnostics.suppressed_duplicate_ids
+                                ),
+                                "selected_version_ids": list(
+                                    relation_policy.diagnostics.selected_version_ids
+                                ),
+                                "preserved_conflict_ids": list(
+                                    relation_policy.diagnostics.preserved_conflict_ids
+                                ),
+                                "reason_codes": list(relation_policy.diagnostics.reason_codes),
+                                "latency_ms": relation_policy.diagnostics.latency_ms,
+                                "metadata_enrichment_status": relation_metadata_status,
+                            },
                             "sufficient": check.sufficient,
                         }
                     )

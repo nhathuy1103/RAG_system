@@ -10,10 +10,12 @@ import pytest
 
 from app.pipeline.documents.domain.parsed import ParsedTable
 from app.pipeline.indexing.domain.embedded_chunk import EmbeddedChunk
+from app.structured_facts.application.claim_extraction import extract_structured_claims
 from app.structured_facts.application.persistence import (
     build_structured_fact_persistence_batch,
 )
 from app.structured_facts.application.table_analyzer import TableAnalysis, analyze_table
+from app.structured_facts.domain.models import StructuredClaim, ValueOperator
 
 
 def _price_table(*, second_price: str = "4.8") -> ParsedTable:
@@ -307,3 +309,63 @@ def test_mapper_rejects_claim_with_mismatched_provenance_table() -> None:
             tables=(table,),
             embedded_chunks=(),
         )
+
+
+def test_persists_prose_claims_in_existing_structured_fact_contract() -> None:
+    text = "Giá căn 2PN tại Vinhomes Project Alpha năm 2026 là 6,2 tỷ đồng/căn."
+    chunk = EmbeddedChunk(
+        id="prose-chunk-1",
+        document_id="document-1",
+        document_version=1,
+        owner_id="owner-1",
+        tenant_id="notebook-1",
+        chunk_index=4,
+        page_number=7,
+        section_title="Bảng giá 2026",
+        checksum="not-a-sha256-checksum",
+        text=text,
+        canonical_text=text,
+        token_count=len(text.split()),
+        embedding=(0.1, 0.2),
+        embedding_model="test-model",
+        metadata={},
+    )
+    extracted = extract_structured_claims(
+        text,
+        document_id=chunk.document_id,
+        owner_id=chunk.owner_id,
+        notebook_id=chunk.tenant_id,
+        chunk_id=chunk.id,
+        page_number=chunk.page_number,
+    )
+
+    batch = build_structured_fact_persistence_batch(
+        analyses=(),
+        tables=(),
+        embedded_chunks=(chunk,),
+        prose_claims=extracted.claims,
+    )
+
+    assert len(batch.table_snapshots) == 1
+    assert len(batch.claims) == 1
+    snapshot = batch.table_snapshots[0]
+    claim_payload = batch.claims[0]
+    assert snapshot["snapshot_key"].startswith("prose:")
+    assert snapshot["normalized_schema"]["source_form"] == "prose"
+    assert snapshot["row_count"] == 1
+    assert snapshot["column_count"] == 0
+    assert claim_payload["predicate"] == "property_price"
+    assert claim_payload["value_expression"]["operator"] == "exact"
+    assert claim_payload["numeric_value"] == "6200000000"
+    assert claim_payload["source_text"] == text
+    assert claim_payload["provenance"]["source_form"] == "prose"
+    assert claim_payload["provenance"]["claim_temporal"]["reference_period"] == "2026"
+    assert claim_payload["provenance"]["claim_evidence"]
+    assert claim_payload["subject_identity"]["scope_identity_hash"]
+
+    restored = StructuredClaim.from_payload(claim_payload)
+    assert restored.value_expression is not None
+    assert restored.value_expression.operator is ValueOperator.EXACT
+    assert restored.temporal.reference_period == "2026"
+    assert restored.extractor_version == extracted.claims[0].extractor_version
+    assert restored.evidence == extracted.claims[0].evidence

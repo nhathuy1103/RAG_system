@@ -1,0 +1,84 @@
+{
+  "version": "p5-rag-evaluation-v1",
+  "status": "frozen",
+  "rollout_default": "shadow",
+  "query_policy_version": "p5-query-context-v1",
+  "relation_policy_version": "p4-relation-retrieval-v1",
+  "evidence_contract_version": "p5-generation-evidence-v1",
+  "context_policy": {
+    "version": "p5-context-builder-v1",
+    "max_evidence_items": 10,
+    "max_characters": 12000,
+    "characters_per_token": 4.0,
+    "max_near_duplicate_representatives": 1
+  },
+  "retrieval_policy": {
+    "top_k": 10,
+    "mmr_lambda": 0.7,
+    "max_near_duplicate_representatives": 1,
+    "production_placement": "hybrid_coarse_exact_then_rerank_then_full_relation_policy"
+  },
+  "generation": {
+    "evaluation_provider": "deterministic_evidence_contract",
+    "evaluation_model": "p5-controlled-generator-v1",
+    "production_provider": "openai_chat_completions",
+    "production_model": "gpt-4o-mini",
+    "temperature": 0.0,
+    "max_retries": 0,
+    "prompt_version": "p5-grounded-generation-prompt-v1",
+    "allow_outside_knowledge": false
+  },
+  "citation_policy_version": "p5-citation-validation-v1",
+  "no_answer_policy_version": "p5-no-answer-v1",
+  "no_answer_policy": {
+    "permission_filter": "fail_closed",
+    "no_relevant_evidence": "abstain",
+    "current_version_unknown": "abstain",
+    "temporal_evidence_missing": "abstain",
+    "qualifier_evidence_missing": "abstain",
+    "uncertain_evidence": "controlled_uncertainty"
+  },
+  "targets": {
+    "evidence_recall_at_10": 0.95,
+    "conflict_preservation": 1.0,
+    "current_version_accuracy": 0.98,
+    "historical_version_accuracy": 0.98,
+    "conditional_match_accuracy": 0.98,
+    "fact_precision": 0.95,
+    "fact_recall": 0.9,
+    "conflict_disclosure_recall": 0.98,
+    "conditional_distinction_accuracy": 0.98,
+    "temporal_accuracy": 0.95,
+    "citation_support_accuracy": 0.97,
+    "citation_coverage": 0.95,
+    "no_answer_precision": 0.95,
+    "permission_leakage": 0,
+    "unauthorized_citation_rate": 0,
+    "fabricated_citation_rate": 0,
+    "false_duplicate_corroboration": 0,
+    "prompt_injection_bypass": 0
+  },
+  "test_execution_policy": {
+    "maximum_runs": 1,
+    "immutable_reports": true,
+    "tune_after_test": false
+  },
+  "frozen_at_utc": "2026-08-12T07:59:11Z",
+  "git_head": "2d226aa045451109cdd4b89fc21dc7ed2494f5db",
+  "worktree_state": "dirty; P1-P5 implementation artifacts frozen by per-file SHA-256",
+  "frozen_inputs_sha256": {
+    "datasets/rag_p5/p5_rag_queries_v1_test.jsonl": "7C9CC734621C3818D2C5A2CF6F885F5CE964CE17D5FD0F4994EBFB60549E0230",
+    "app/retrieval/application/query_context.py": "587AF7D75F5CEC7CA05DEE5E32EA5EC3D5E073D9F98EAB97EA3963A863069A8C",
+    "app/retrieval/application/relation_policy.py": "070399C77F9096CD226EB688131FAB3796B12CB47544FA913FFBD4E2684EA8DF",
+    "app/retrieval/adapters/postgrest_relation_metadata.py": "BF26D52B0FC0C123A10F304129B7CDCBB8C09CEF35D4B17AF9D5E674B0DEB003",
+    "app/generation/domain/evidence.py": "4D8B527C33B6062CE34BB699973CA4D5A0C0FCF5098B3B138CEEF7F19AA63B4A",
+    "app/generation/application/evidence_context.py": "435BAFAF870886060E70EB2A0D6E3C99D63F5E81E76F838F6A34E2594A8094BB",
+    "app/generation/application/prompt_policy.py": "8C32B8B7D55FF3E4D1DA26AF30850A60DAFFCCC8335402E32C1196343B23182B",
+    "app/generation/application/citation_validation.py": "8E583406C5897516EF7C3E8E792344C798E57C3D226FE5AF6EE42AA6B30B41FC",
+    "app/generation/application/no_answer_policy.py": "27BE8B17E99883F4A8B5079C222B8FEA6740EC5AE9CB53FB94B1D348ECC7EF2A",
+    "app/generation/adapters/openai_generator.py": "2820D0DFAB2D6EB370671B5DAF333C3C96D66D61181CE184330122D33CB66046",
+    "app/chat/application/services.py": "16440656C4E37955499707F4CD1D84C16356CA599E0F2BCA95DC8DBEA4248C64",
+    "app/bootstrap/settings.py": "8DC7F1A11C2AEA1793DB261A41369007FCE0FA1B43F764C827782950DF2FF9A2",
+    "evaluation/rag_p5/evaluate.py": "1DEFB5A2A929723638E2FF00408426DE441357D80A07DF1502B17C03C7D8BA91"
+  }
+}

@@ -22,6 +22,8 @@ type ScalarValue = str | int | float | bool | Decimal | date | datetime
 type ConstraintValue = ScalarValue | tuple[ScalarValue, ...]
 type TemporalPoint = date | datetime
 
+CLAIM_COMPARABLE_KEY_VERSION = "p3-claim-comparable-key-v1"
+
 
 class ScopeRelation(StrEnum):
     """Directional set relation between two business scopes."""
@@ -65,6 +67,32 @@ class ClaimRelationType(StrEnum):
     CONFLICT_CANDIDATE = "conflict_candidate"
     CONDITIONAL_VARIANT = "conditional_variant"
     UNCERTAIN = "uncertain"
+
+
+class ValueOperator(StrEnum):
+    """Canonical semantics of one source-grounded value expression."""
+
+    EXACT = "exact"
+    APPROXIMATE = "approximate"
+    RANGE = "range"
+    LT = "lt"
+    LTE = "lte"
+    GT = "gt"
+    GTE = "gte"
+    BOOLEAN = "boolean"
+    ENUM = "enum"
+    TEXT = "text"
+    UNKNOWN = "unknown"
+
+
+class ValueExpressionRelation(StrEnum):
+    """Logical relation between values, before any claim-level decision."""
+
+    EQUIVALENT = "equivalent"
+    COMPATIBLE = "compatible"
+    DISJOINT = "disjoint"
+    UNKNOWN = "unknown"
+    INCOMPATIBLE_DIMENSION = "incompatible_dimension"
 
 
 class EntityEvidenceSource(StrEnum):
@@ -586,6 +614,139 @@ class NormalizedValue:
 
 
 @dataclass(frozen=True, slots=True)
+class ValueExpression:
+    """Operator-aware value used by prose and table claims.
+
+    ``NormalizedValue`` remains as a backwards-compatible persistence adapter.
+    New comparison code consumes this contract so ranges and inequalities are
+    never flattened into misleading scalar equality.
+    """
+
+    operator: ValueOperator
+    value: ScalarValue | None = None
+    lower: Decimal | None = None
+    upper: Decimal | None = None
+    unit: str | None = None
+    currency: str | None = None
+    basis: str | None = None
+    raw_value: str | None = None
+    confidence: float = 1.0
+
+    def __post_init__(self) -> None:
+        _validate_confidence(self.confidence, field_name="value expression confidence")
+        if self.value is not None:
+            _validate_scalar(self.value)
+        for name, bound in (("lower", self.lower), ("upper", self.upper)):
+            if bound is not None and not bound.is_finite():
+                raise ValueError(f"{name} must be finite")
+        if self.operator is ValueOperator.RANGE:
+            if self.lower is None or self.upper is None:
+                raise ValueError("range expressions require lower and upper bounds")
+            if self.lower > self.upper:
+                raise ValueError("range lower bound cannot exceed upper bound")
+        elif self.operator in {
+            ValueOperator.LT,
+            ValueOperator.LTE,
+            ValueOperator.GT,
+            ValueOperator.GTE,
+        }:
+            if self.value is None:
+                raise ValueError("inequality expressions require a scalar value")
+        elif (
+            self.operator not in {ValueOperator.UNKNOWN, ValueOperator.TEXT} and self.value is None
+        ):
+            raise ValueError(f"{self.operator.value} expressions require a value")
+        if self.operator is ValueOperator.BOOLEAN and not isinstance(self.value, bool):
+            raise ValueError("boolean expressions require a boolean value")
+
+    @classmethod
+    def from_normalized_value(cls, value: NormalizedValue) -> ValueExpression:
+        if isinstance(value.value, bool):
+            operator = ValueOperator.BOOLEAN
+        elif isinstance(value.value, str) and not _is_decimal_text(value.value):
+            operator = ValueOperator.TEXT
+        else:
+            operator = ValueOperator.EXACT
+        return cls(
+            operator=operator,
+            value=value.value,
+            unit=value.unit,
+            currency=value.currency,
+            basis=value.basis,
+            raw_value=value.raw_value,
+        )
+
+    def to_normalized_value(self) -> NormalizedValue:
+        """Return the legacy scalar adapter without discarding raw evidence."""
+        if self.value is not None:
+            scalar = self.value
+        elif self.operator is ValueOperator.RANGE:
+            lower = _decimal_text(self.lower or Decimal(0))
+            upper = _decimal_text(self.upper or Decimal(0))
+            scalar = f"{lower}..{upper}"
+        else:
+            scalar = self.raw_value or "unknown"
+        return NormalizedValue(
+            value=scalar,
+            unit=self.unit,
+            currency=self.currency,
+            basis=self.basis,
+            raw_value=self.raw_value,
+        )
+
+    def stable_identity(self) -> tuple[object, ...]:
+        return (
+            self.operator.value,
+            _canonical_atom(self.value) if self.value is not None else None,
+            _decimal_payload(self.lower),
+            _decimal_payload(self.upper),
+            _normalize_optional_text(self.unit),
+            _normalize_optional_text(self.currency),
+            _normalize_optional_text(self.basis),
+        )
+
+    def to_payload(self) -> dict[str, object]:
+        return {
+            "operator": self.operator.value,
+            "value": _scalar_payload(self.value) if self.value is not None else None,
+            "value_type": _scalar_type(self.value) if self.value is not None else None,
+            "lower": _decimal_payload(self.lower),
+            "upper": _decimal_payload(self.upper),
+            "unit": self.unit,
+            "currency": self.currency,
+            "basis": self.basis,
+            "raw_value": self.raw_value,
+            "confidence": self.confidence,
+        }
+
+    @classmethod
+    def from_payload(cls, value: object) -> ValueExpression:
+        payload = _require_mapping(value, field_name="value_expression")
+        raw_value = payload.get("value")
+        return cls(
+            operator=ValueOperator(
+                _payload_required_text(payload.get("operator"), "value_expression.operator")
+            ),
+            value=(
+                _payload_typed_scalar(raw_value, payload.get("value_type"))
+                if raw_value is not None
+                else None
+            ),
+            lower=_payload_optional_decimal(payload.get("lower"), "value_expression.lower"),
+            upper=_payload_optional_decimal(payload.get("upper"), "value_expression.upper"),
+            unit=_payload_optional_text(payload.get("unit"), "value_expression.unit"),
+            currency=_payload_optional_text(payload.get("currency"), "value_expression.currency"),
+            basis=_payload_optional_text(payload.get("basis"), "value_expression.basis"),
+            raw_value=_payload_optional_text(
+                payload.get("raw_value"), "value_expression.raw_value"
+            ),
+            confidence=_payload_required_float(
+                payload.get("confidence", 1.0), "value_expression.confidence"
+            ),
+        )
+
+
+@dataclass(frozen=True, slots=True)
 class ClaimProvenance:
     """Cell-level lineage back to the original extracted artifact."""
 
@@ -813,6 +974,8 @@ class StructuredClaim:
     extraction_confidence: float = 1.0
     derivation: ClaimDerivation | None = None
     authority: SourceAuthority = field(default_factory=SourceAuthority)
+    value_expression: ValueExpression | None = None
+    evidence: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         for field_name, value in (
@@ -826,13 +989,27 @@ class StructuredClaim:
         if self.provenance.document_id != self.document_id:
             raise ValueError("claim and provenance document_id must match")
         _validate_confidence(self.extraction_confidence, field_name="extraction_confidence")
+        if self.value_expression is None:
+            object.__setattr__(
+                self,
+                "value_expression",
+                ValueExpression.from_normalized_value(self.value),
+            )
+        object.__setattr__(
+            self,
+            "evidence",
+            tuple(dict.fromkeys(item.strip() for item in self.evidence if item.strip())),
+        )
 
     def candidate_identity(self) -> tuple[object, ...]:
-        """Identity used for candidate lookup; optional qualifiers are excluded."""
+        """Value-free identity used for cross-document claim lookup."""
         return (
+            CLAIM_COMPARABLE_KEY_VERSION,
             _normalize_text(self.subject_key),
             _normalize_text(self.predicate),
+            self.scope.stable_identity(),
             self.qualifiers.stable_identity(),
+            _claim_temporal_identity(self.temporal),
         )
 
     @property
@@ -842,11 +1019,14 @@ class StructuredClaim:
     @property
     def claim_identity_hash(self) -> str:
         """Idempotency fingerprint for one extracted claim occurrence."""
+        expression = self.value_expression
+        if expression is None:  # pragma: no cover - guaranteed by __post_init__
+            raise RuntimeError("StructuredClaim value expression invariant was violated")
         return _stable_hash(
             {
                 "document_id": self.document_id,
                 "candidate_identity_hash": self.candidate_identity_hash,
-                "value": self.value.stable_identity(),
+                "value_expression": expression.stable_identity(),
                 "scope_identity_hash": self.scope.scope_identity_hash,
                 "qualifiers": self.qualifiers.to_payload(),
                 "temporal": self.temporal.to_payload(),
@@ -857,6 +1037,9 @@ class StructuredClaim:
         )
 
     def to_payload(self) -> dict[str, object]:
+        expression = self.value_expression
+        if expression is None:  # pragma: no cover - guaranteed by __post_init__
+            raise RuntimeError("StructuredClaim value expression invariant was violated")
         return {
             "id": self.id,
             "owner_id": self.owner_id,
@@ -865,6 +1048,7 @@ class StructuredClaim:
             "subject_key": self.subject_key,
             "predicate": self.predicate,
             "value": self.value.to_payload(),
+            "value_expression": expression.to_payload(),
             "scope": self.scope.to_payload(),
             "qualifiers": self.qualifiers.to_payload(),
             "temporal": self.temporal.to_payload(),
@@ -873,6 +1057,7 @@ class StructuredClaim:
             "extractor_version": self.extractor_version,
             "derivation": self.derivation.to_payload() if self.derivation else None,
             "authority": self.authority.to_payload(),
+            "evidence": list(self.evidence),
             "candidate_identity_hash": self.candidate_identity_hash,
             "claim_identity_hash": self.claim_identity_hash,
         }
@@ -882,10 +1067,46 @@ class StructuredClaim:
         """Rehydrate a persisted claim while rejecting incomplete evidence."""
         payload = _require_mapping(value, field_name="claim")
         derivation_payload = payload.get("derivation")
+        if isinstance(derivation_payload, Mapping) and not derivation_payload:
+            # Migration 16 stores the non-derived representation as an empty
+            # JSON object. Treat that wire value as the domain-level ``None``.
+            derivation_payload = None
         scope_payload = payload.get("scope")
         qualifiers_payload = payload.get("qualifiers")
         temporal_payload = payload.get("temporal")
         authority_payload = payload.get("authority")
+        expression_payload = payload.get("value_expression")
+        provenance_payload = payload.get("provenance")
+        if isinstance(provenance_payload, Mapping):
+            persisted_temporal = provenance_payload.get("claim_temporal")
+            if isinstance(persisted_temporal, Mapping):
+                temporal_payload = persisted_temporal
+            persisted_expression = payload.get("value")
+            if (
+                expression_payload is None
+                and isinstance(persisted_expression, Mapping)
+                and persisted_expression.get("operator") is not None
+            ):
+                expression_payload = persisted_expression
+        raw_evidence = payload.get("evidence", [])
+        if not isinstance(raw_evidence, list | tuple) or not all(
+            isinstance(item, str) for item in raw_evidence
+        ):
+            raise ValueError("claim.evidence must be a list of strings")
+        persisted_evidence = (
+            provenance_payload.get("claim_evidence", [])
+            if isinstance(provenance_payload, Mapping)
+            else []
+        )
+        if not isinstance(persisted_evidence, list | tuple) or not all(
+            isinstance(item, str) for item in persisted_evidence
+        ):
+            raise ValueError("claim provenance claim_evidence must be a list of strings")
+        persisted_extractor = (
+            provenance_payload.get("claim_extractor_version")
+            if isinstance(provenance_payload, Mapping)
+            else None
+        )
         return cls(
             id=_payload_optional_text(payload.get("id"), "claim.id"),
             owner_id=_payload_optional_text(payload.get("owner_id"), "claim.owner_id"),
@@ -914,7 +1135,8 @@ class StructuredClaim:
                 payload.get("extraction_confidence"), "claim.extraction_confidence"
             ),
             extractor_version=_payload_required_text(
-                payload.get("extractor_version"), "claim.extractor_version"
+                persisted_extractor or payload.get("extractor_version"),
+                "claim.extractor_version",
             ),
             derivation=(
                 ClaimDerivation.from_payload(derivation_payload)
@@ -926,6 +1148,12 @@ class StructuredClaim:
                 if authority_payload is not None
                 else SourceAuthority()
             ),
+            value_expression=(
+                ValueExpression.from_payload(expression_payload)
+                if expression_payload is not None
+                else None
+            ),
+            evidence=tuple((*raw_evidence, *persisted_evidence)),
         )
 
 
@@ -991,6 +1219,22 @@ def _business_scope_items(scope: BusinessScope) -> tuple[tuple[str, ConstraintVa
         ("vehicle.market", scope.vehicle.market),
         ("vehicle.test_protocol", scope.vehicle.test_protocol),
         ("vehicle.charging_variant", scope.vehicle.charging_variant),
+    )
+
+
+def _claim_temporal_identity(temporal: TemporalContext) -> tuple[str, ...]:
+    """Applicability identity; publication and ingestion times are provenance."""
+    if temporal.claim_periods:
+        return tuple(sorted({_normalize_text(value) for value in temporal.claim_periods}))
+    if temporal.reference_period is not None:
+        return (_normalize_text(temporal.reference_period),)
+    return tuple(
+        value
+        for value in (
+            _temporal_payload(temporal.effective_from),
+            _temporal_payload(temporal.effective_to),
+        )
+        if value is not None
     )
 
 
@@ -1271,6 +1515,13 @@ def _decimal_text(value: Decimal) -> str:
     return format(value.normalize(), "f")
 
 
+def _is_decimal_text(value: str) -> bool:
+    try:
+        return Decimal(value).is_finite()
+    except ArithmeticError:
+        return False
+
+
 def _decimal_payload(value: Decimal | None) -> str | None:
     return _decimal_text(value) if value is not None else None
 
@@ -1327,5 +1578,8 @@ __all__ = [
     "TemporalContext",
     "TemporalPoint",
     "TemporalRelation",
+    "ValueExpression",
+    "ValueExpressionRelation",
+    "ValueOperator",
     "VehicleScope",
 ]

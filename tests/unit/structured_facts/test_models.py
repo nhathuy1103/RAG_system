@@ -154,7 +154,9 @@ def test_value_or_provenance_changes_claim_identity() -> None:
         value=NormalizedValue(value=Decimal("4600000000"), currency="VND"),
         provenance=claim.provenance,
         extractor_version=claim.extractor_version,
+        scope=claim.scope,
         qualifiers=claim.qualifiers,
+        temporal=claim.temporal,
     )
 
     assert claim.candidate_identity_hash == changed.candidate_identity_hash

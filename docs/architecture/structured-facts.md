@@ -35,10 +35,12 @@ review queue.
 
 ```text
 canonical extraction
-  -> physical table rows/header/cells
-  -> semantic header normalization
-  -> business scope and row identity
-  -> structured claims with qualifiers, time, authority, and provenance
+  -> prose clauses OR physical table rows/header/cells
+  -> P2 entity/business-scope evidence
+  -> versioned predicate and ValueExpression normalization
+  -> unified StructuredClaim with qualifiers, time, authority, and provenance
+  -> value-free comparable claim identity
+  -> bounded claim alignment
   -> indexed row-key lookup
   -> qualifier compatibility
   -> temporal compatibility
@@ -50,24 +52,26 @@ canonical extraction
   -> cited generation using the original row/cell evidence
 ```
 
-Row-key comparison is `O(n + m)` for two tables. SimHash and ANN are fallbacks
+Unique-key claim comparison is `O(n + m)` for prose and tables. SimHash and ANN are fallbacks
 when a deterministic key cannot be extracted; increasing fuzzy probe counts is
 not the primary table-comparison strategy.
 
 ## Ingestion and comparison lifecycle
 
-1. Canonical extraction keeps the physical table, source page, row, and cell
-   coordinates. The analyzer normalizes headers, business scope, row identity,
-   values, units, qualifiers, authority, and effective time without storing a
-   second raw-table dump.
-2. The worker builds `table_snapshots` and `structured_claims`. A claim receives
+1. Canonical extraction keeps prose spans or the physical table source page,
+   row, and cell coordinates. Prose and table adapters emit the same
+   `StructuredClaim`, predicate, scope, qualifier, temporal, and
+   `ValueExpression` contract without storing a second raw-source dump.
+2. The worker builds source snapshots and `structured_claims`. A claim receives
    a chunk citation only when that chunk demonstrably covers the source row;
    uncitable claims remain stored but cannot enter structured retrieval.
 3. Before replacing one document's extractor output, the worker loads prior
    candidates by indexed candidate-identity and schema fingerprints. A current
    table is compared only with a unique compatible prior table; an ambiguous
    best match is skipped.
-4. Deterministic row-key diff classifies comparable claims. Persistence maps
+4. Deterministic table diff handles table↔table; the P3 claim aligner handles
+   every pair where either snapshot is prose after an exact value-free
+   candidate-identity seed. Persistence maps
    current-only and prior-only rows to directional `source_only` and
    `target_only` relations. `conflict_candidate` and `uncertain` enter
    `pending`; deterministic `unchanged`, `updated`, `conditional_variant`, and
@@ -155,6 +159,40 @@ All tables have owner/notebook RLS. Atomic replacement and candidate loading
 require `service_role`; search is owner-scoped; review is authenticated,
 owner-scoped, and concurrency-guarded. The service-role key remains backend
 only.
+
+P3 reuses this schema: operator/range fields live in normalized-value JSON and
+claim extraction/time/evidence versions live in provenance. Prose is stored as
+a deterministic zero-column source snapshot. No additional P3 migration or
+second claim store is required.
+
+## P4 relation materialization and retrieval
+
+After the P3 replacement and its bounded reconciliation finish, the ingestion
+worker aggregates the already-produced claim edges once. It does not rerun
+claim alignment. The resulting document relation keeps the primary P4 label,
+secondary conflict/version/conditional/temporal facets, symmetric claim
+coverage, exact conflicting claim values, reason codes, source preference,
+review status, and P3/P4 policy versions in `document_relations.signals`.
+
+Migration 34 adds only the worker-only
+`replace_p4_document_relations` RPC; it does not add a parallel relation table.
+The RPC atomically replaces recomputable `pending`/`auto_confirmed` rows for one
+source and detector version, preserves `confirmed`/`dismissed` human decisions,
+validates both endpoints against the same owner/notebook, and appends an audit
+event. Conflict and uncertain relations remain pending. Deterministic safe
+relations can be auto-confirmed, while preferred evidence remains separate
+from relation type.
+
+At query time the base hybrid retrieval and its permission filters run first.
+The relation metadata adapter only accepts an edge when both endpoint documents
+are already visible in the retrieved candidate set. It then creates separate
+exact, near-duplicate, version, and conflict groups. No hidden document ID or
+provenance is copied into evidence. In `shadow`, the proposed suppression and
+version choices are recorded but the original candidates are returned. In
+`on`, the policy selects representative documents while retaining every
+relevant retrieved chunk from that representative, preserves both conflict
+sides, keeps uncertain evidence, and selects historical/current versions only
+when query and validity metadata make that deterministic.
 
 ## Promotion gates
 

@@ -22,6 +22,17 @@ from app.knowledge_quality.domain.models import (
     ScopeComparison,
     TextRelationAnalysis,
 )
+from app.knowledge_quality.domain.relation_models import (
+    AGGREGATION_POLICY_VERSION,
+    AUTHORITY_POLICY_VERSION,
+    RETRIEVAL_POLICY_VERSION,
+    ClaimConflictEvidence,
+    DocumentRelationContext,
+    FinalRelationType,
+    RelationEvidenceSummary,
+    RelationFacets,
+    VersionDirection,
+)
 
 __all__ = [
     "CHUNK_NORMALIZATION_VERSION",
@@ -46,4 +57,13 @@ __all__ = [
     "ScopeComparison",
     "ResolutionAction",
     "TextRelationAnalysis",
+    "AGGREGATION_POLICY_VERSION",
+    "AUTHORITY_POLICY_VERSION",
+    "RETRIEVAL_POLICY_VERSION",
+    "ClaimConflictEvidence",
+    "DocumentRelationContext",
+    "FinalRelationType",
+    "RelationEvidenceSummary",
+    "RelationFacets",
+    "VersionDirection",
 ]

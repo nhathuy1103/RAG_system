@@ -88,6 +88,9 @@ sự thật vẫn là thư mục đó — các file ở đây để đọc/tra c
 33. `33_domain_entity_scope_metadata.sql` — thêm partial index cho envelope metadata
     `entity_scope` có version trên notebook/Enterprise chunks; dữ liệu cũ không bắt buộc
     backfill và tiếp tục dùng deterministic extraction fallback.
+34. `34_p4_relation_replacement.sql` — materialize P4 document relations atomically
+    from persisted P3 claim evidence, preserve reviewed rows, enforce tenant scope,
+    and record an append-only recomputation audit event.
 
 Migration phải chạy đúng thứ tự; 09 phụ thuộc 08 và chuỗi Enterprise 17–31 phụ
 thuộc toàn bộ nền tảng 01–16; migration 32 bổ sung trên candidate path cũ và migration
@@ -121,7 +124,7 @@ pipeline.
 
 Phần schema sau marker `-- Extensions required by the schema.` trong
 `RESET_AND_REBUILD.sql` phải là bản nối **nguyên văn, đúng thứ tự** của mọi migration
-canonical `01_*.sql` đến migration mới nhất (`33_*.sql` hiện tại). Không sửa phần này
+canonical `01_*.sql` đến migration mới nhất (`34_*.sql` hiện tại). Không sửa phần này
 bằng tay. Sau khi đổi hoặc
 thêm migration, chạy từ thư mục gốc:
 

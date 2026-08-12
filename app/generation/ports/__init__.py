@@ -6,6 +6,7 @@ from collections.abc import AsyncIterator
 from typing import Protocol
 
 from app.generation.domain import GenerationEvent
+from app.generation.domain.evidence import GenerationContext
 from app.retrieval.domain.models import RetrievalCandidate
 
 
@@ -17,6 +18,7 @@ class AnswerGeneratorPort(Protocol):
         *,
         question: str,
         evidence: tuple[RetrievalCandidate, ...],
+        generation_context: GenerationContext | None = None,
     ) -> AsyncIterator[GenerationEvent]: ...
 
 

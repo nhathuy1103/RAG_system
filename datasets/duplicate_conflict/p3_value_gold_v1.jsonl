@@ -1,0 +1,40 @@
+{"id":"dev_money_decimal_comma","split":"dev","text":"6,2 tỷ VND/căn","predicate":"property_price","expected":{"operator":"exact","value":"6200000000.0","unit":"money","currency":"VND","basis":"total_unit"}}
+{"id":"dev_money_million","split":"dev","text":"6200 triệu VND/căn","predicate":"property_price","expected":{"operator":"exact","value":"6200000000","unit":"money","currency":"VND","basis":"total_unit"}}
+{"id":"dev_money_grouped_comma","split":"dev","text":"6,200,000,000 VND/căn","predicate":"property_price","expected":{"operator":"exact","value":"6200000000","unit":"money","currency":"VND","basis":"total_unit"}}
+{"id":"dev_money_grouped_dot","split":"dev","text":"6.200.000.000 VND/căn","predicate":"property_price","expected":{"operator":"exact","value":"6200000000","unit":"money","currency":"VND","basis":"total_unit"}}
+{"id":"dev_money_per_sqm","split":"dev","text":"100 triệu VND/m²","predicate":"property_price","expected":{"operator":"exact","value":"100000000","unit":"money","currency":"VND","basis":"per_sqm"}}
+{"id":"dev_money_usd","split":"dev","text":"75000 USD/căn","predicate":"property_price","expected":{"operator":"exact","value":"75000","unit":"money","currency":"USD","basis":"total_unit"}}
+{"id":"dev_approximate","split":"dev","text":"khoảng 6,2 tỷ VND/căn","predicate":"property_price","expected":{"operator":"approximate","value":"6200000000.0","unit":"money","currency":"VND","basis":"total_unit"}}
+{"id":"dev_range","split":"dev","text":"5,8–6,4 tỷ VND/căn","predicate":"property_price","expected":{"operator":"range","lower":"5800000000.0","upper":"6400000000.0","unit":"money","currency":"VND","basis":"total_unit"}}
+{"id":"dev_lte","split":"dev","text":"tối đa 6,5 tỷ VND/căn","predicate":"property_price","expected":{"operator":"lte","value":"6500000000.0","unit":"money","currency":"VND","basis":"total_unit"}}
+{"id":"dev_gte","split":"dev","text":"ít nhất 5 tỷ VND/căn","predicate":"property_price","expected":{"operator":"gte","value":"5000000000","unit":"money","currency":"VND","basis":"total_unit"}}
+{"id":"dev_gt","split":"dev","text":"trên 450 km","predicate":"driving_range","expected":{"operator":"gt","value":"450","unit":"km"}}
+{"id":"dev_lt","split":"dev","text":"dưới 450 km","predicate":"driving_range","expected":{"operator":"lt","value":"450","unit":"km"}}
+{"id":"dev_km","split":"dev","text":"450 km","predicate":"driving_range","expected":{"operator":"exact","value":"450","unit":"km"}}
+{"id":"dev_metre","split":"dev","text":"450000 m","predicate":"driving_range","expected":{"operator":"exact","value":"450000","unit":"m"}}
+{"id":"dev_kwh","split":"dev","text":"87,7 kWh","predicate":"battery_capacity","expected":{"operator":"exact","value":"87.7","unit":"kWh"}}
+{"id":"dev_wh","split":"dev","text":"87700 Wh","predicate":"battery_capacity","expected":{"operator":"exact","value":"87700","unit":"Wh"}}
+{"id":"dev_kw","split":"dev","text":"150 kW","predicate":"motor_power","expected":{"operator":"exact","value":"150","unit":"kW"}}
+{"id":"dev_watt","split":"dev","text":"150000 W","predicate":"motor_power","expected":{"operator":"exact","value":"150000","unit":"W"}}
+{"id":"dev_torque","split":"dev","text":"300 Nm","predicate":"torque","expected":{"operator":"exact","value":"300","unit":"Nm"}}
+{"id":"dev_minutes","split":"dev","text":"31 phút","predicate":"charging_time","expected":{"operator":"exact","value":"31","unit":"minute"}}
+{"id":"dev_percent_range","split":"dev","text":"10–80%","predicate":"discount_rate","expected":{"operator":"range","lower":"10","upper":"80","unit":"percent"}}
+{"id":"dev_boolean_true","split":"dev","text":"có hỗ trợ giữ làn","predicate":"feature_availability","expected":{"operator":"boolean","value":true}}
+{"id":"dev_boolean_false","split":"dev","text":"không được trang bị hỗ trợ giữ làn","predicate":"feature_availability","expected":{"operator":"boolean","value":false}}
+{"id":"dev_ocr_unknown","split":"dev","text":"45O km","predicate":"driving_range","expected":{"operator":"unknown"}}
+{"id":"test_money_english","split":"test","text":"6.2 billion VND per unit","predicate":"property_price","expected":{"operator":"exact","value":"6200000000.0","unit":"money","currency":"VND","basis":"total_unit"}}
+{"id":"test_money_vietnamese_million","split":"test","text":"6.200 triệu VNĐ/căn","predicate":"property_price","expected":{"operator":"exact","value":"6200000000","unit":"money","currency":"VND","basis":"total_unit"}}
+{"id":"test_range_english","split":"test","text":"between 5.8 and 6.4 billion VND","predicate":"property_price","expected":{"operator":"range","lower":"5800000000.0","upper":"6400000000.0","unit":"money","currency":"VND","basis":"total_unit"}}
+{"id":"test_approx_english","split":"test","text":"about 450 km","predicate":"driving_range","expected":{"operator":"approximate","value":"450","unit":"km"}}
+{"id":"test_lte_english","split":"test","text":"no more than 6.5 billion VND","predicate":"property_price","expected":{"operator":"lte","value":"6500000000.0","unit":"money","currency":"VND","basis":"total_unit"}}
+{"id":"test_gte_english","split":"test","text":"no less than 400 km","predicate":"driving_range","expected":{"operator":"gte","value":"400","unit":"km"}}
+{"id":"test_seconds","split":"test","text":"1860 seconds","predicate":"charging_time","expected":{"operator":"exact","value":"1860","unit":"second"}}
+{"id":"test_battery","split":"test","text":"87700 Wh","predicate":"battery_capacity","expected":{"operator":"exact","value":"87700","unit":"Wh"}}
+{"id":"test_power","split":"test","text":"6200000 W","predicate":"motor_power","expected":{"operator":"exact","value":"6200000","unit":"W"}}
+{"id":"test_warranty_year","split":"test","text":"10 years","predicate":"warranty_duration","expected":{"operator":"exact","value":"10","unit":"year"}}
+{"id":"test_warranty_month","split":"test","text":"120 months","predicate":"warranty_duration","expected":{"operator":"exact","value":"120","unit":"month"}}
+{"id":"test_boolean_support","split":"test","text":"supports blind spot monitoring","predicate":"feature_availability","expected":{"operator":"boolean","value":true}}
+{"id":"test_boolean_without","split":"test","text":"without blind spot monitoring","predicate":"feature_availability","expected":{"operator":"boolean","value":false}}
+{"id":"test_eur","split":"test","text":"70000 EUR/unit","predicate":"vehicle_price","expected":{"operator":"exact","value":"70000","unit":"money","currency":"EUR","basis":"total_unit"}}
+{"id":"test_percentage","split":"test","text":"12 percent","predicate":"discount_rate","expected":{"operator":"exact","value":"12","unit":"percent"}}
+{"id":"test_ocr_unknown","split":"test","text":"2O26","predicate":"warranty_duration","expected":{"operator":"unknown"}}

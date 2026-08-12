@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 
 import pytest
 
@@ -87,6 +88,27 @@ class FixedReformulator:
         return self.next_query
 
 
+class StaticRelationMetadataPort:
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def enrich(self, candidates, filters):  # type: ignore[no-untyped-def]
+        self.calls += 1
+        return tuple(
+            replace(
+                candidate,
+                chunk=replace(
+                    candidate.chunk,
+                    metadata={
+                        **dict(candidate.chunk.metadata),
+                        "p4_exact_duplicate_group_id": "p4-visible-exact",
+                    },
+                ),
+            )
+            for candidate in candidates
+        )
+
+
 def test_stops_on_first_round_when_sufficient() -> None:
     retrieval_port = FakeRetrievalPort([(_candidate("c1"),)])
     checker = ScriptedChecker([SufficiencyCheck(sufficient=True, reasoning="ok")])
@@ -108,6 +130,37 @@ def test_stops_on_first_round_when_sufficient() -> None:
     assert [c.chunk.id for c in result.evidence] == ["c1"]
     assert retrieval_port.queries == ["doanh thu quý 3 là bao nhiêu?"]
     assert reformulator.calls == []
+
+
+@pytest.mark.parametrize(("mode", "expected_ids"), [("shadow", ["a", "b"]), ("on", ["a"])])
+def test_relation_metadata_is_shadow_only_or_applied_in_on_mode(
+    mode: str,
+    expected_ids: list[str],
+) -> None:
+    metadata_port = StaticRelationMetadataPort()
+    use_case = AgenticRetrievalUseCase(
+        retrieval_port=FakeRetrievalPort(
+            [
+                (
+                    _candidate("a", document_id="doc-a", score=1.0),
+                    _candidate("b", document_id="doc-b", score=0.9),
+                )
+            ]
+        ),
+        sufficiency_checker=ScriptedChecker([SufficiencyCheck(sufficient=True)]),
+        reformulator=FixedReformulator("unused"),
+        knowledge_quality_mode=mode,  # type: ignore[arg-type]
+        relation_metadata_port=metadata_port,
+    )
+
+    result = use_case.run(original_question="q", filters=FILTERS, top_k=2)
+
+    assert [item.chunk.id for item in result.evidence] == expected_ids
+    assert metadata_port.calls == 1
+    if mode == "shadow":
+        assert all(
+            "p4_exact_duplicate_group_id" not in item.chunk.metadata for item in result.evidence
+        )
 
 
 def test_retries_with_reformulated_query_and_accumulates_evidence() -> None:

@@ -8,6 +8,7 @@ from uuid import UUID
 
 import httpx2 as httpx
 
+from app.knowledge_quality.domain.models import QualityRelationCandidate
 from app.structured_facts.domain.review import (
     StructuredClaimRelation,
     StructuredClaimRelationEvidence,
@@ -181,6 +182,33 @@ class PostgrestStructuredFactRepository:
             raise StructuredFactRepositoryError(
                 "Failed to load structured claim candidates"
             ) from exc
+
+    async def replace_p4_relations(
+        self,
+        *,
+        source_document_id: UUID,
+        detector_version: str,
+        relations: Sequence[QualityRelationCandidate],
+    ) -> int:
+        """Atomically replace recomputable P4 rows without touching reviews."""
+        if not detector_version.strip():
+            raise ValueError("detector_version is required")
+        try:
+            response = await self._client.post(
+                "/rpc/replace_p4_document_relations",
+                json={
+                    "p_source_document_id": str(source_document_id),
+                    "p_detector_version": detector_version,
+                    "p_relations": [relation.to_payload() for relation in relations],
+                },
+            )
+            response.raise_for_status()
+            payload = response.json()
+            if isinstance(payload, bool) or not isinstance(payload, int):
+                raise TypeError("P4 relation replacement response must be an integer")
+            return payload
+        except (httpx.HTTPError, OSError, TypeError, ValueError) as exc:
+            raise StructuredFactRepositoryError("Failed to replace P4 document relations") from exc
 
 
 class PostgrestStructuredFactReviewRepository(StructuredFactReviewRepository):

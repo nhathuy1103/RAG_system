@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, StringConstraints
+from pydantic import BaseModel, ConfigDict, Field, StringConstraints
 
 ChatQuestion = Annotated[
     str,
@@ -36,6 +36,18 @@ class CitationResponse(BaseModel):
     document_version: int
     excerpt: str
     retrieval_score: float | None
+    claim_ids: list[str] = Field(default_factory=list)
+    table_id: str | None = None
+    row_ordinal: int | None = None
+    evidence_group_id: str | None = None
+    occurrence_count: int = 1
+    independent_source_count: int = 1
+    relation_type: str | None = None
+    evidence_status: str | None = None
+    authority_level: int | None = None
+    source_type: str | None = None
+    approval_status: str | None = None
+    authority_reason: str | None = None
 
 
 class ChatResponse(BaseModel):

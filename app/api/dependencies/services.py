@@ -25,6 +25,7 @@ from app.documents.application.services import DocumentService
 from app.documents.ports.repositories import DocumentRepository
 from app.documents.ports.storage import DocumentObjectStorage
 from app.generation.adapters.openai_generator import OpenAIAnswerGenerator
+from app.generation.application.evidence_context import EvidenceContextPolicy
 from app.infrastructure.telemetry import Telemetry
 from app.infrastructure.telemetry.openai import create_openai_client
 from app.ingestion.application.worker import build_ingestion_profile
@@ -46,6 +47,9 @@ from app.retrieval.adapters.local_sufficiency import KeywordOverlapSufficiencyCh
 from app.retrieval.adapters.mmr_reranker import MaximalMarginalRelevanceReranker
 from app.retrieval.adapters.postgrest_full_text_search import (
     PostgrestFullTextRetrievalAdapter,
+)
+from app.retrieval.adapters.postgrest_relation_metadata import (
+    PostgrestRelationMetadataAdapter,
 )
 from app.retrieval.adapters.qdrant_dense_search import (
     DenseVectorRetrievalAdapter,
@@ -216,6 +220,7 @@ def get_chat_service(
             ),
             max_chunks_per_document=(settings.retrieval_max_chunks_per_document),
             knowledge_quality_mode=settings.knowledge_quality_mode,
+            relation_metadata_port=PostgrestRelationMetadataAdapter(chunks_client),
             telemetry=telemetry,
         )
         retrieval_handler = RetrievalRequestHandler(
@@ -278,4 +283,11 @@ def get_chat_service(
                 else None
             ),
             document_scope_planner_mode=settings.retrieval_document_scope_planner_mode,
+            p5_mode=settings.rag_p5_mode,
+            p5_context_policy=EvidenceContextPolicy(
+                max_evidence_items=settings.rag_p5_context_max_items,
+                max_characters=settings.rag_p5_context_max_characters,
+                characters_per_token=settings.rag_p5_characters_per_token,
+                max_near_duplicate_representatives=(settings.rag_p5_near_duplicate_representatives),
+            ),
         )

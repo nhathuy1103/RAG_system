@@ -90,6 +90,18 @@ def _citation_response(citation: AnswerCitation) -> CitationResponse:
         document_version=citation.document_version,
         excerpt=citation.excerpt,
         retrieval_score=citation.retrieval_score,
+        claim_ids=list(citation.claim_ids),
+        table_id=citation.table_id,
+        row_ordinal=citation.row_ordinal,
+        evidence_group_id=citation.evidence_group_id,
+        occurrence_count=citation.occurrence_count,
+        independent_source_count=citation.independent_source_count,
+        relation_type=citation.relation_type,
+        evidence_status=citation.evidence_status,
+        authority_level=citation.authority_level,
+        source_type=citation.source_type,
+        approval_status=citation.approval_status,
+        authority_reason=citation.authority_reason,
     )
 
 
